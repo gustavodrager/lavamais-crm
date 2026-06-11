@@ -1,76 +1,1048 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LavaMais CRM — Protótipo</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LavaMais CRM e Relacionamento - Protótipo</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<aside>
-  <div class="logo"><b>LM</b><div><strong>LavaMais</strong><span>CRM e Relacionamento</span></div></div>
-  <button class="nav active" data-page="dashboard">Dashboard</button>
-  <button class="nav" data-page="central">Central de Relacionamento</button>
-  <button class="nav" data-page="clientes">Clientes 360°</button>
-  <button class="nav" data-page="campanhas">Campanhas</button>
-  <button class="nav" data-page="notificacoes">Notificações</button>
-  <button class="nav" data-page="metas">Metas</button>
-  <div class="unit"><small>Unidade</small><b>LavaMais Praia Grande</b></div>
-</aside>
-<main>
-<header><div><h1 id="title">Dashboard Comercial</h1><p id="subtitle">Visão geral e oportunidades de relacionamento.</p></div><div class="user">Major<br><small>Administrador</small></div></header>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Menu principal">
+      <div class="brand" aria-label="LavaMais Lavanderia Praia Grande">
+        <div class="brand-mark">lm</div>
+        <div>
+          <strong>lavamais</strong>
+          <span>lavanderia</span>
+          <small>Praia Grande</small>
+        </div>
+      </div>
 
-<section id="dashboard" class="page active">
-  <div class="hero"><div><small>HOJE</small><h2>18 oportunidades de relacionamento</h2><p>Clientes inativos, VIPs sem contato, aniversariantes e queda de frequência.</p></div><button data-go="central">Abrir Central</button></div>
-  <div class="grid4">
-    <div class="card kpi"><span>Faturamento hoje</span><b>R$ 2.840</b><small>+12% vs média</small></div>
-    <div class="card kpi"><span>Clientes atendidos</span><b>24</b><small>6 novos no mês</small></div>
-    <div class="card kpi"><span>Ticket médio</span><b>R$ 118</b><small>Meta R$ 125</small></div>
-    <div class="card kpi"><span>Meta mensal</span><b>66%</b><small>R$ 26.500 / R$ 40.000</small></div>
+      <nav class="main-nav">
+        <button class="nav active" type="button" data-page="dashboard">
+          <span class="nav-icon">D</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav" type="button" data-page="central">
+          <span class="nav-icon">C</span>
+          <span>Relacionamento</span>
+        </button>
+        <button class="nav" type="button" data-page="clientes">
+          <span class="nav-icon">360</span>
+          <span>Clientes 360°</span>
+        </button>
+        <button class="nav" type="button" data-page="campanhas">
+          <span class="nav-icon">W</span>
+          <span>Campanhas</span>
+        </button>
+        <button class="nav" type="button" data-page="notificacoes">
+          <span class="nav-icon">N</span>
+          <span>Notificações</span>
+        </button>
+        <button class="nav" type="button" data-page="metas">
+          <span class="nav-icon">M</span>
+          <span>Metas</span>
+        </button>
+        <button class="nav" type="button" data-page="relatorios">
+          <span class="nav-icon">R</span>
+          <span>Relatórios</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-card">
+        <small>Implantação inicial</small>
+        <b>Versão 1.0</b>
+        <span>CRM comercial, WhatsApp manual e Cliente 360°.</span>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Central de Relacionamento Comercial</p>
+          <h1 id="title">Dashboard Comercial</h1>
+          <p id="subtitle">Visão do dia, oportunidades de relacionamento e foco comercial.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="ghost-button" type="button" data-go="whatsapp">Preparar WhatsApp</button>
+          <div class="user-pill">
+            <span>Major</span>
+            <small>Administrador</small>
+          </div>
+        </div>
+      </header>
+
+      <section id="dashboard" class="page active" data-nav="dashboard">
+        <div class="water-hero">
+          <div class="hero-copy">
+            <span class="badge badge-yellow">Hoje na LavaMais Praia Grande</span>
+            <h2>18 oportunidades para vender melhor falando com o cliente certo.</h2>
+            <p>A primeira fase de implantação organiza relacionamento, histórico comercial e ações de WhatsApp para a equipe atender de forma mais pessoal.</p>
+            <div class="hero-actions">
+              <button class="primary-button" type="button" data-go="central">Abrir Central de Relacionamento</button>
+              <button class="secondary-button" type="button" data-go="perfil">Ver Cliente 360°</button>
+            </div>
+          </div>
+          <div class="hero-panel">
+            <span>Prioridade do dia</span>
+            <strong>Recuperar clientes em risco</strong>
+            <p>VIPs sem contato recente, inativos e reclamações aguardando retorno.</p>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <article class="card kpi-card">
+            <span>Faturamento hoje</span>
+            <strong>R$ 2.840</strong>
+            <small>12% acima da média diária</small>
+          </article>
+          <article class="card kpi-card">
+            <span>Clientes atendidos</span>
+            <strong>24</strong>
+            <small>6 clientes novos no mês</small>
+          </article>
+          <article class="card kpi-card">
+            <span>Ticket médio</span>
+            <strong>R$ 118</strong>
+            <small>Meta comercial: R$ 125</small>
+          </article>
+          <article class="card kpi-card">
+            <span>Meta mensal</span>
+            <strong>66%</strong>
+            <small>R$ 26.500 de R$ 40.000</small>
+          </article>
+          <article class="card kpi-card">
+            <span>Clientes recuperados</span>
+            <strong>8</strong>
+            <small>R$ 3.120 em valor gerado</small>
+          </article>
+          <article class="card kpi-card risk">
+            <span>Clientes em risco</span>
+            <strong>14</strong>
+            <small>Precisam de contato humano</small>
+          </article>
+        </div>
+
+        <div class="content-grid two-columns">
+          <article class="card action-card">
+            <div class="section-heading compact">
+              <div>
+                <span class="badge">Ações recomendadas para hoje</span>
+                <h3>Onde a equipe deve focar primeiro</h3>
+              </div>
+              <button class="text-button" type="button" data-go="central">Ver fila</button>
+            </div>
+            <div class="recommendation-list">
+              <button class="recommendation" type="button" data-go="central">
+                <b>5</b>
+                <span>Clientes inativos</span>
+                <small>Reativar com mensagem personalizada.</small>
+              </button>
+              <button class="recommendation" type="button" data-go="central">
+                <b>4</b>
+                <span>VIPs sem contato recente</span>
+                <small>Manter relacionamento antes de perder frequência.</small>
+              </button>
+              <button class="recommendation" type="button" data-go="central">
+                <b>3</b>
+                <span>Aniversariantes</span>
+                <small>Enviar cumprimento com tom pessoal.</small>
+              </button>
+              <button class="recommendation" type="button" data-go="central">
+                <b>2</b>
+                <span>Reclamações aguardando retorno</span>
+                <small>Registrar resposta e próxima ação.</small>
+              </button>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="section-heading compact">
+              <div>
+                <span class="badge">Pulso comercial</span>
+                <h3>O que mudou nas últimas horas</h3>
+              </div>
+            </div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <span>WhatsApp</span>
+                <p><b>Maria Oliveira</b> recebeu mensagem VIP e precisa de acompanhamento amanhã.</p>
+              </div>
+              <div class="timeline-item">
+                <span>Campanha</span>
+                <p><b>Reativação de inativos</b> abriu 18 conversas via WhatsApp.</p>
+              </div>
+              <div class="timeline-item">
+                <span>Interação</span>
+                <p><b>Carla Mendes</b> elogiou o atendimento e indicou uma conta corporativa.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <article class="card controls-card">
+          <div>
+            <span class="badge badge-soft">Controles da primeira fase</span>
+            <h3>Usuários, permissões, auditoria e LGPD básica</h3>
+            <p>O protótipo também posiciona a operação comercial com perfis de acesso, registro de alterações e consentimento básico de comunicação.</p>
+          </div>
+          <button class="secondary-button" type="button" data-go="relatorios">Ver relatórios comerciais</button>
+        </article>
+      </section>
+
+      <section id="central" class="page" data-nav="central">
+        <div class="section-heading">
+          <div>
+            <span class="badge badge-yellow">Tela principal da apresentação</span>
+            <h2>Central de Relacionamento</h2>
+            <p>Fila comercial do dia com alertas, próxima melhor ação e botões para agir rápido.</p>
+          </div>
+          <button class="primary-button" type="button" data-go="interacao">Registrar interação</button>
+        </div>
+
+        <div class="summary-strip">
+          <article class="mini-stat">
+            <strong>18</strong>
+            <span>Pendências do dia</span>
+          </article>
+          <article class="mini-stat">
+            <strong>6</strong>
+            <span>Alta prioridade</span>
+          </article>
+          <article class="mini-stat">
+            <strong>4</strong>
+            <span>VIPs sem contato</span>
+          </article>
+          <article class="mini-stat">
+            <strong>2</strong>
+            <span>Reclamações abertas</span>
+          </article>
+        </div>
+
+        <div class="quick-filters" aria-label="Filtros rápidos da central">
+          <button class="filter-pill active" type="button" data-filter="todos">Todos</button>
+          <button class="filter-pill" type="button" data-filter="risco">Em risco</button>
+          <button class="filter-pill" type="button" data-filter="inativo">Inativos</button>
+          <button class="filter-pill" type="button" data-filter="vip">VIP</button>
+          <button class="filter-pill" type="button" data-filter="aniversariante">Aniversariantes</button>
+          <button class="filter-pill" type="button" data-filter="reclamacao">Reclamações</button>
+          <button class="filter-pill" type="button" data-filter="alto-ticket">Alto ticket</button>
+          <button class="filter-pill" type="button" data-filter="delivery">Delivery</button>
+          <button class="filter-pill" type="button" data-filter="corporativo">Corporativo</button>
+        </div>
+
+        <p class="filter-status"><span id="central-count">6</span> clientes na fila selecionada.</p>
+
+        <div class="relationship-grid">
+          <article class="card client-alert" data-tags="vip delivery risco alto-ticket" data-client="Maria Oliveira">
+            <div class="client-alert-head">
+              <div>
+                <h3>Maria Oliveira</h3>
+                <div class="tag-row">
+                  <span>VIP</span>
+                  <span>Delivery</span>
+                  <span>Em risco</span>
+                </div>
+              </div>
+              <strong>R$ 165</strong>
+            </div>
+            <dl class="client-facts">
+              <div><dt>Bairro</dt><dd>Canto do Forte</dd></div>
+              <div><dt>Última utilização</dt><dd>08/06/2026</dd></div>
+              <div><dt>Ticket médio</dt><dd>R$ 165</dd></div>
+            </dl>
+            <p><b>Motivo do alerta:</b> VIP sem contato recente depois de uma reclamação sobre atraso na última entrega.</p>
+            <p class="next-action"><b>Próxima melhor ação:</b> Enviar mensagem pessoal, pedir desculpas e oferecer acompanhamento do próximo atendimento.</p>
+            <div class="card-actions">
+              <button type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button type="button" data-go="whatsapp">Enviar WhatsApp</button>
+              <button type="button" data-go="interacao">Registrar Interação</button>
+              <button class="resolve-action" type="button">Resolver</button>
+            </div>
+          </article>
+
+          <article class="card client-alert" data-tags="inativo alto-ticket risco delivery" data-client="João Santos">
+            <div class="client-alert-head">
+              <div>
+                <h3>João Santos</h3>
+                <div class="tag-row">
+                  <span>Inativo</span>
+                  <span>Alto ticket</span>
+                  <span>Delivery</span>
+                </div>
+              </div>
+              <strong>R$ 210</strong>
+            </div>
+            <dl class="client-facts">
+              <div><dt>Bairro</dt><dd>Boqueirão</dd></div>
+              <div><dt>Última utilização</dt><dd>10/05/2026</dd></div>
+              <div><dt>Ticket médio</dt><dd>R$ 210</dd></div>
+            </dl>
+            <p><b>Motivo do alerta:</b> Cliente de alto valor sem nova utilização há mais de 30 dias.</p>
+            <p class="next-action"><b>Próxima melhor ação:</b> Enviar reativação com retirada agendada e registrar retorno.</p>
+            <div class="card-actions">
+              <button type="button" data-go="perfil-joao">Ver Perfil 360°</button>
+              <button type="button" data-go="whatsapp">Enviar WhatsApp</button>
+              <button type="button" data-go="interacao">Registrar Interação</button>
+              <button class="resolve-action" type="button">Resolver</button>
+            </div>
+          </article>
+
+          <article class="card client-alert" data-tags="aniversariante vip alto-ticket" data-client="Ana Costa">
+            <div class="client-alert-head">
+              <div>
+                <h3>Ana Costa</h3>
+                <div class="tag-row">
+                  <span>Aniversariante</span>
+                  <span>VIP</span>
+                  <span>Alto ticket</span>
+                </div>
+              </div>
+              <strong>R$ 148</strong>
+            </div>
+            <dl class="client-facts">
+              <div><dt>Bairro</dt><dd>Aviação</dd></div>
+              <div><dt>Última utilização</dt><dd>11/06/2026</dd></div>
+              <div><dt>Ticket médio</dt><dd>R$ 148</dd></div>
+            </dl>
+            <p><b>Motivo do alerta:</b> Aniversário hoje e histórico de boa resposta a mensagens personalizadas.</p>
+            <p class="next-action"><b>Próxima melhor ação:</b> Enviar cumprimento com benefício comercial leve.</p>
+            <div class="card-actions">
+              <button type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button type="button" data-go="whatsapp">Enviar WhatsApp</button>
+              <button type="button" data-go="interacao">Registrar Interação</button>
+              <button class="resolve-action" type="button">Resolver</button>
+            </div>
+          </article>
+
+          <article class="card client-alert" data-tags="reclamacao risco delivery" data-client="Roberto Lima">
+            <div class="client-alert-head">
+              <div>
+                <h3>Roberto Lima</h3>
+                <div class="tag-row">
+                  <span>Reclamação</span>
+                  <span>Em risco</span>
+                  <span>Delivery</span>
+                </div>
+              </div>
+              <strong>R$ 96</strong>
+            </div>
+            <dl class="client-facts">
+              <div><dt>Bairro</dt><dd>Guilhermina</dd></div>
+              <div><dt>Última utilização</dt><dd>09/06/2026</dd></div>
+              <div><dt>Ticket médio</dt><dd>R$ 96</dd></div>
+            </dl>
+            <p><b>Motivo do alerta:</b> Reclamação aguardando retorno desde ontem.</p>
+            <p class="next-action"><b>Próxima melhor ação:</b> Ligar, registrar solução combinada e marcar retorno.</p>
+            <div class="card-actions">
+              <button type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button type="button" data-go="whatsapp">Enviar WhatsApp</button>
+              <button type="button" data-go="interacao">Registrar Interação</button>
+              <button class="resolve-action" type="button">Resolver</button>
+            </div>
+          </article>
+
+          <article class="card client-alert" data-tags="corporativo alto-ticket vip" data-client="Condomínio Atlântico">
+            <div class="client-alert-head">
+              <div>
+                <h3>Condomínio Atlântico</h3>
+                <div class="tag-row">
+                  <span>Corporativo</span>
+                  <span>VIP</span>
+                  <span>Alto ticket</span>
+                </div>
+              </div>
+              <strong>R$ 520</strong>
+            </div>
+            <dl class="client-facts">
+              <div><dt>Bairro</dt><dd>Tupi</dd></div>
+              <div><dt>Última utilização</dt><dd>05/06/2026</dd></div>
+              <div><dt>Ticket médio</dt><dd>R$ 520</dd></div>
+            </dl>
+            <p><b>Motivo do alerta:</b> Conta corporativa com potencial de recorrência e sem visita comercial recente.</p>
+            <p class="next-action"><b>Próxima melhor ação:</b> Agendar conversa com o responsável e registrar oportunidade.</p>
+            <div class="card-actions">
+              <button type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button type="button" data-go="whatsapp">Enviar WhatsApp</button>
+              <button type="button" data-go="interacao">Registrar Interação</button>
+              <button class="resolve-action" type="button">Resolver</button>
+            </div>
+          </article>
+
+          <article class="card client-alert" data-tags="inativo aniversariante reclamacao" data-client="Patrícia Rocha">
+            <div class="client-alert-head">
+              <div>
+                <h3>Patrícia Rocha</h3>
+                <div class="tag-row">
+                  <span>Inativo</span>
+                  <span>Reclamação</span>
+                  <span>Retorno pendente</span>
+                </div>
+              </div>
+              <strong>R$ 132</strong>
+            </div>
+            <dl class="client-facts">
+              <div><dt>Bairro</dt><dd>Ocian</dd></div>
+              <div><dt>Última utilização</dt><dd>20/04/2026</dd></div>
+              <div><dt>Ticket médio</dt><dd>R$ 132</dd></div>
+            </dl>
+            <p><b>Motivo do alerta:</b> Cliente parou de usar após reclamação e ainda não recebeu retorno final.</p>
+            <p class="next-action"><b>Próxima melhor ação:</b> Fazer contato humano, ouvir o caso e tentar recuperar confiança.</p>
+            <div class="card-actions">
+              <button type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button type="button" data-go="whatsapp">Enviar WhatsApp</button>
+              <button type="button" data-go="interacao">Registrar Interação</button>
+              <button class="resolve-action" type="button">Resolver</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="clientes" class="page" data-nav="clientes">
+        <div class="section-heading">
+          <div>
+            <span class="badge">Ativo principal</span>
+            <h2>Clientes 360°</h2>
+            <p>Base comercial com busca, filtros, tags e ações rápidas de relacionamento.</p>
+          </div>
+          <button class="primary-button" type="button">Novo cliente</button>
+        </div>
+
+        <div class="card search-panel">
+          <label for="client-search">Buscar cliente</label>
+          <div class="search-row">
+            <input id="client-search" type="search" placeholder="Nome, WhatsApp, bairro ou tag">
+            <button type="button" id="clear-client-search">Limpar</button>
+          </div>
+          <div class="quick-filters small" aria-label="Filtros da base de clientes">
+            <button class="client-filter active" type="button" data-client-filter="todos">Todos</button>
+            <button class="client-filter" type="button" data-client-filter="vip">VIP</button>
+            <button class="client-filter" type="button" data-client-filter="risco">Em risco</button>
+            <button class="client-filter" type="button" data-client-filter="delivery">Delivery</button>
+            <button class="client-filter" type="button" data-client-filter="corporativo">Corporativo</button>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Tags</th>
+                <th>Bairro</th>
+                <th>Última utilização</th>
+                <th>Ticket</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="client-row" data-client-tags="vip delivery risco" data-search="maria oliveira canto do forte vip delivery risco whatsapp">
+                <td data-label="Cliente"><b>Maria Oliveira</b><small>(13) 99999-9999</small></td>
+                <td data-label="Tags"><span class="table-tag">VIP</span><span class="table-tag">Delivery</span></td>
+                <td data-label="Bairro">Canto do Forte</td>
+                <td data-label="Última utilização">08/06/2026</td>
+                <td data-label="Ticket">R$ 165</td>
+                <td data-label="Ações">
+                  <div class="table-actions">
+                    <button type="button" data-go="perfil">Perfil</button>
+                    <button type="button" data-go="whatsapp">WhatsApp</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="client-row" data-client-tags="inativo alto-ticket risco delivery" data-search="joao santos boqueirao inativo alto ticket risco delivery">
+                <td data-label="Cliente"><b>João Santos</b><small>(13) 98888-8888</small></td>
+                <td data-label="Tags"><span class="table-tag">Inativo</span><span class="table-tag">Alto ticket</span></td>
+                <td data-label="Bairro">Boqueirão</td>
+                <td data-label="Última utilização">10/05/2026</td>
+                <td data-label="Ticket">R$ 210</td>
+                <td data-label="Ações">
+                  <div class="table-actions">
+                    <button type="button" data-go="perfil-joao">Perfil</button>
+                    <button type="button" data-go="whatsapp">WhatsApp</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="client-row" data-client-tags="vip aniversariante alto-ticket" data-search="ana costa aviacao vip aniversariante alto ticket">
+                <td data-label="Cliente"><b>Ana Costa</b><small>(13) 97777-7777</small></td>
+                <td data-label="Tags"><span class="table-tag">VIP</span><span class="table-tag">Aniversariante</span></td>
+                <td data-label="Bairro">Aviação</td>
+                <td data-label="Última utilização">11/06/2026</td>
+                <td data-label="Ticket">R$ 148</td>
+                <td data-label="Ações">
+                  <div class="table-actions">
+                    <button type="button" data-go="perfil">Perfil</button>
+                    <button type="button" data-go="whatsapp">WhatsApp</button>
+                  </div>
+                </td>
+              </tr>
+              <tr class="client-row" data-client-tags="corporativo vip alto-ticket" data-search="condominio atlantico tupi corporativo vip alto ticket">
+                <td data-label="Cliente"><b>Condomínio Atlântico</b><small>(13) 96666-6666</small></td>
+                <td data-label="Tags"><span class="table-tag">Corporativo</span><span class="table-tag">VIP</span></td>
+                <td data-label="Bairro">Tupi</td>
+                <td data-label="Última utilização">05/06/2026</td>
+                <td data-label="Ticket">R$ 520</td>
+                <td data-label="Ações">
+                  <div class="table-actions">
+                    <button type="button" data-go="perfil">Perfil</button>
+                    <button type="button" data-go="interacao">Interação</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="empty-state" id="client-empty" hidden>Nenhum cliente encontrado para esse filtro.</p>
+        </div>
+      </section>
+
+      <section id="perfil" class="page" data-nav="clientes">
+        <article class="profile-header">
+          <div class="profile-watermark">360°</div>
+          <div class="profile-main">
+            <span class="badge badge-yellow">Cliente 360°</span>
+            <h2>Maria Oliveira</h2>
+            <p>WhatsApp (13) 99999-9999 · Canto do Forte · Atendimento delivery</p>
+            <div class="tag-row strong">
+              <span>VIP</span>
+              <span>Em risco</span>
+              <span>Preferência: manhã</span>
+              <span>Potencial corporativo</span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="primary-button" type="button" data-go="whatsapp">Enviar WhatsApp</button>
+            <button class="secondary-button" type="button" data-go="interacao">Nova Interação</button>
+            <button class="ghost-button" type="button">Editar</button>
+          </div>
+        </article>
+
+        <div class="kpi-grid profile-kpis">
+          <article class="card kpi-card"><span>Cliente desde</span><strong>12/01/2025</strong><small>Relacionamento ativo</small></article>
+          <article class="card kpi-card"><span>Última utilização</span><strong>08/06/2026</strong><small>Há 3 dias</small></article>
+          <article class="card kpi-card"><span>Ticket médio</span><strong>R$ 165</strong><small>Acima da média</small></article>
+          <article class="card kpi-card"><span>Total gasto</span><strong>R$ 2.850</strong><small>Últimos 18 meses</small></article>
+          <article class="card kpi-card"><span>Frequência</span><strong>2,4x/mês</strong><small>Queda recente</small></article>
+          <article class="card kpi-card"><span>Campanhas recebidas</span><strong>7</strong><small>3 respostas</small></article>
+          <article class="card kpi-card"><span>Notificações enviadas</span><strong>18</strong><small>Canal WhatsApp</small></article>
+        </div>
+
+        <div class="content-grid two-columns">
+          <article class="card context-card">
+            <div class="section-heading compact">
+              <div>
+                <span class="badge">Contexto importante</span>
+                <h3>O que a equipe precisa saber antes de falar</h3>
+              </div>
+            </div>
+            <ul class="check-list">
+              <li>Prefere retirada pela manhã.</li>
+              <li>Não gosta de contato aos domingos.</li>
+              <li>Reclamou de atraso na última entrega.</li>
+              <li>Cliente com potencial corporativo.</li>
+            </ul>
+          </article>
+
+          <article class="card next-best-card">
+            <span class="badge badge-yellow">Próxima melhor ação</span>
+            <h3>Contato humano com pedido de desculpas e oferta de acompanhamento.</h3>
+            <p>Mensagem curta, pessoal e com espaço para retorno. Depois do WhatsApp, registrar se houve resposta para atualizar o histórico do Cliente 360°.</p>
+            <div class="card-actions">
+              <button type="button" data-go="whatsapp">Preparar mensagem</button>
+              <button type="button" data-go="interacao">Registrar retorno</button>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="section-heading compact">
+            <div>
+              <span class="badge">Histórico comercial e relacionamento</span>
+              <h3>Linha do tempo do Cliente 360°</h3>
+            </div>
+          </div>
+          <div class="timeline rich">
+            <div class="timeline-item">
+              <span>Interação</span>
+              <p><b>10/06/2026</b> - Maria avisou que prefere retirada pela manhã e pediu confirmação pelo WhatsApp.</p>
+            </div>
+            <div class="timeline-item">
+              <span>WhatsApp enviado</span>
+              <p><b>08/06/2026</b> - Mensagem de acompanhamento enviada manualmente via link wa.me.</p>
+            </div>
+            <div class="timeline-item">
+              <span>Movimentação comercial</span>
+              <p><b>08/06/2026</b> - Atendimento de R$ 148 registrado no histórico comercial.</p>
+            </div>
+            <div class="timeline-item warning">
+              <span>Reclamação</span>
+              <p><b>02/06/2026</b> - Cliente relatou atraso. Retorno pendente de acompanhamento.</p>
+            </div>
+            <div class="timeline-item">
+              <span>Campanha</span>
+              <p><b>28/05/2026</b> - Recebeu campanha VIP e respondeu pedindo agendamento futuro.</p>
+            </div>
+            <div class="timeline-item success">
+              <span>Elogio</span>
+              <p><b>14/05/2026</b> - Elogiou o atendimento pelo WhatsApp e indicou uma amiga.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="perfil-joao" class="page" data-nav="clientes">
+        <article class="profile-header">
+          <div class="profile-watermark">360°</div>
+          <div class="profile-main">
+            <span class="badge badge-yellow">Cliente 360°</span>
+            <h2>João Santos</h2>
+            <p>WhatsApp (13) 98888-8888 · Boqueirão · Atendimento delivery</p>
+            <div class="tag-row strong">
+              <span>Inativo</span>
+              <span>Alto ticket</span>
+              <span>Em risco</span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="primary-button" type="button" data-go="whatsapp">Enviar WhatsApp</button>
+            <button class="secondary-button" type="button" data-go="interacao">Nova Interação</button>
+            <button class="ghost-button" type="button">Editar</button>
+          </div>
+        </article>
+
+        <div class="kpi-grid profile-kpis">
+          <article class="card kpi-card"><span>Cliente desde</span><strong>05/09/2024</strong><small>Base antiga</small></article>
+          <article class="card kpi-card"><span>Última utilização</span><strong>10/05/2026</strong><small>Mais de 30 dias</small></article>
+          <article class="card kpi-card"><span>Ticket médio</span><strong>R$ 210</strong><small>Alto valor</small></article>
+          <article class="card kpi-card"><span>Total gasto</span><strong>R$ 4.420</strong><small>Grande potencial</small></article>
+          <article class="card kpi-card"><span>Frequência</span><strong>1,8x/mês</strong><small>Queda acentuada</small></article>
+          <article class="card kpi-card"><span>Campanhas recebidas</span><strong>5</strong><small>1 resposta</small></article>
+          <article class="card kpi-card"><span>Notificações enviadas</span><strong>12</strong><small>Canal WhatsApp</small></article>
+        </div>
+
+        <div class="content-grid two-columns">
+          <article class="card context-card">
+            <span class="badge">Contexto importante</span>
+            <h3>Antes do contato</h3>
+            <ul class="check-list">
+              <li>Costuma responder no fim da tarde.</li>
+              <li>Prefere atendimento por WhatsApp.</li>
+              <li>Sem nova utilização desde maio.</li>
+              <li>Bom candidato para campanha de reativação.</li>
+            </ul>
+          </article>
+          <article class="card next-best-card">
+            <span class="badge badge-yellow">Próxima melhor ação</span>
+            <h3>Reativar com convite direto e atendimento personalizado.</h3>
+            <p>Preparar mensagem com tom consultivo e perguntar se deseja agendar a próxima retirada.</p>
+            <button type="button" data-go="whatsapp">Preparar WhatsApp</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="whatsapp" class="page" data-nav="central">
+        <div class="modal-shell">
+          <article class="card whatsapp-card">
+            <div class="section-heading compact">
+              <div>
+                <span class="badge badge-yellow">WhatsApp manual na Versão 1.0</span>
+                <h2>Preparar mensagem</h2>
+                <p>O sistema prepara o texto, abre o WhatsApp com a mensagem pronta e depois pergunta se o usuário enviou.</p>
+              </div>
+            </div>
+
+            <div class="info-banner">
+              <b>Importante:</b> nesta implantação inicial o envio não é automático. A equipe revisa a mensagem, abre o WhatsApp via link wa.me e confirma o registro no histórico.
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Cliente
+                <select id="whatsapp-client">
+                  <option>Maria Oliveira</option>
+                  <option>João Santos</option>
+                  <option>Ana Costa</option>
+                  <option>Condomínio Atlântico</option>
+                </select>
+              </label>
+              <label>
+                Template
+                <select id="template-select">
+                  <option value="vip">VIP sem contato recente</option>
+                  <option value="inativo">Reativação de cliente inativo</option>
+                  <option value="aniversario">Aniversariante do mês</option>
+                  <option value="reclamacao">Retorno de reclamação</option>
+                  <option value="corporativo">Oportunidade corporativa</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="full-label" for="message-preview">
+              Preview da mensagem
+              <textarea id="message-preview" rows="7">Oi, Maria! Aqui é da LavaMais Praia Grande. Passando para saber se ficou tudo certo no último atendimento e se podemos ajudar em algo esta semana. Se preferir, já deixo uma retirada agendada para o melhor horário.</textarea>
+            </label>
+
+            <div class="message-preview-box">
+              <span>Como ficará no WhatsApp</span>
+              <p id="message-rendered">Oi, Maria! Aqui é da LavaMais Praia Grande. Passando para saber se ficou tudo certo no último atendimento e se podemos ajudar em algo esta semana. Se preferir, já deixo uma retirada agendada para o melhor horário.</p>
+            </div>
+
+            <div class="card-actions end">
+              <button class="secondary-button" type="button" data-go="central">Cancelar</button>
+              <button class="primary-button" type="button" id="open-whatsapp">Abrir WhatsApp</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="whatsapp-confirmacao" class="page" data-nav="central">
+        <div class="modal-shell">
+          <article class="card success-card">
+            <div class="success-icon">?</div>
+            <span class="badge">Confirmação manual</span>
+            <h2>Você enviou a mensagem?</h2>
+            <p>Depois de abrir o WhatsApp, confirme o que aconteceu para manter o histórico do Cliente 360° atualizado.</p>
+            <div class="stacked-actions">
+              <button class="primary-button" type="button" data-go="whatsapp-registrado">Sim, registrar no histórico</button>
+              <button class="secondary-button" type="button" data-go="central">Não, cancelar</button>
+              <button class="ghost-button" type="button" data-go="interacao">Registrar retorno/interação</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="whatsapp-registrado" class="page" data-nav="central">
+        <div class="modal-shell">
+          <article class="card success-card">
+            <div class="success-icon check">✓</div>
+            <span class="badge badge-yellow">Histórico atualizado</span>
+            <h2>WhatsApp registrado no Cliente 360°</h2>
+            <p>A mensagem ficou registrada como WhatsApp aberto e enviado manualmente pela equipe.</p>
+            <div class="stacked-actions">
+              <button class="primary-button" type="button" data-go="interacao">Registrar retorno/interação</button>
+              <button class="secondary-button" type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button class="ghost-button" type="button" data-go="central">Voltar para Central</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="interacao" class="page" data-nav="central">
+        <div class="modal-shell">
+          <article class="card form-card">
+            <div class="section-heading compact">
+              <div>
+                <span class="badge badge-yellow">Relacionamento humano</span>
+                <h2>Nova Interação</h2>
+                <p>Registre WhatsApp, ligação, observação, reclamação, elogio, pedido especial, retorno de campanha ou visita comercial.</p>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label>
+                Cliente
+                <select>
+                  <option>Maria Oliveira</option>
+                  <option>João Santos</option>
+                  <option>Ana Costa</option>
+                  <option>Roberto Lima</option>
+                </select>
+              </label>
+              <label>
+                Tipo
+                <select>
+                  <option>WhatsApp</option>
+                  <option>Ligação</option>
+                  <option>Observação</option>
+                  <option>Reclamação</option>
+                  <option>Elogio</option>
+                  <option>Pedido especial</option>
+                  <option>Retorno de campanha</option>
+                  <option>Visita comercial</option>
+                </select>
+              </label>
+              <label>
+                Responsável
+                <input type="text" value="Major">
+              </label>
+              <label>
+                Data de retorno
+                <input type="date" value="2026-06-12">
+              </label>
+            </div>
+
+            <label class="full-label">
+              Resumo
+              <input type="text" value="Cliente prefere retirada pela manhã">
+            </label>
+
+            <label class="full-label">
+              Descrição
+              <textarea rows="6">Cliente informou que prefere retirada sempre no período da manhã e pediu confirmação por WhatsApp antes da equipe sair.</textarea>
+            </label>
+
+            <label class="check-line">
+              <input type="checkbox" checked>
+              Marcar como importante no Cliente 360°
+            </label>
+
+            <label class="full-label">
+              Próxima ação
+              <input type="text" value="Confirmar próximo atendimento por WhatsApp amanhã cedo.">
+            </label>
+
+            <div class="card-actions end">
+              <button class="secondary-button" type="button" data-go="central">Cancelar</button>
+              <button class="primary-button" type="button" data-go="interacao-ok">Salvar interação</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="interacao-ok" class="page" data-nav="central">
+        <div class="modal-shell">
+          <article class="card success-card">
+            <div class="success-icon check">✓</div>
+            <span class="badge badge-yellow">Interação salva</span>
+            <h2>Informação adicionada ao Cliente 360°</h2>
+            <p>O registro aparece na linha do tempo, nos alertas importantes e ajuda a sugerir a próxima melhor ação.</p>
+            <div class="stacked-actions">
+              <button class="primary-button" type="button" data-go="perfil">Ver Perfil 360°</button>
+              <button class="secondary-button" type="button" data-go="central">Voltar para Central</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="campanhas" class="page" data-nav="campanhas">
+        <div class="section-heading">
+          <div>
+            <span class="badge">Campanhas comerciais</span>
+            <h2>Campanhas de relacionamento</h2>
+            <p>Segmentos simples para abrir WhatsApp, medir resposta e recuperar clientes.</p>
+          </div>
+          <button class="primary-button" type="button" data-go="nova-campanha">Nova campanha</button>
+        </div>
+
+        <div class="campaign-grid">
+          <article class="card campaign-card">
+            <span class="status active">Ativa</span>
+            <h3>Reativação de clientes inativos</h3>
+            <p>Segmento: sem utilização há mais de 30 dias.</p>
+            <div class="campaign-metrics">
+              <span>25 clientes</span><span>18 WhatsApps abertos</span><span>4 respostas</span><span>2 recuperados</span><span>R$ 1.280 estimados</span>
+            </div>
+            <button type="button" data-go="detalhe-campanha">Ver detalhes</button>
+          </article>
+          <article class="card campaign-card">
+            <span class="status active">Ativa</span>
+            <h3>Promoção camisa social</h3>
+            <p>Segmento: clientes ativos com ticket acima de R$ 100.</p>
+            <div class="campaign-metrics">
+              <span>42 clientes</span><span>31 WhatsApps abertos</span><span>8 respostas</span><span>5 vendas</span><span>R$ 1.950 gerados</span>
+            </div>
+            <button type="button" data-go="detalhe-campanha">Ver detalhes</button>
+          </article>
+          <article class="card campaign-card">
+            <span class="status draft">Pronta</span>
+            <h3>Aniversariantes do mês</h3>
+            <p>Segmento: clientes com aniversário em junho.</p>
+            <div class="campaign-metrics">
+              <span>12 clientes</span><span>9 WhatsApps abertos</span><span>5 respostas</span><span>1 recuperado</span><span>R$ 420 estimados</span>
+            </div>
+            <button type="button" data-go="detalhe-campanha">Ver detalhes</button>
+          </article>
+          <article class="card campaign-card">
+            <span class="status active">Ativa</span>
+            <h3>Clientes VIP</h3>
+            <p>Segmento: maiores tickets e relacionamento prioritário.</p>
+            <div class="campaign-metrics">
+              <span>18 clientes</span><span>15 WhatsApps abertos</span><span>7 respostas</span><span>3 vendas</span><span>R$ 2.260 gerados</span>
+            </div>
+            <button type="button" data-go="detalhe-campanha">Ver detalhes</button>
+          </article>
+          <article class="card campaign-card">
+            <span class="status scheduled">Agendada</span>
+            <h3>Delivery por bairro</h3>
+            <p>Segmento: Canto do Forte, Boqueirão e Aviação.</p>
+            <div class="campaign-metrics">
+              <span>36 clientes</span><span>0 WhatsApps abertos</span><span>0 respostas</span><span>0 recuperados</span><span>R$ 1.600 estimados</span>
+            </div>
+            <button type="button" data-go="detalhe-campanha">Ver detalhes</button>
+          </article>
+          <article class="card campaign-card">
+            <span class="status draft">Rascunho</span>
+            <h3>Corporativos</h3>
+            <p>Segmento: empresas, condomínios e contatos de alto potencial.</p>
+            <div class="campaign-metrics">
+              <span>9 clientes</span><span>0 WhatsApps abertos</span><span>0 respostas</span><span>0 recuperados</span><span>R$ 4.500 estimados</span>
+            </div>
+            <button type="button" data-go="detalhe-campanha">Ver detalhes</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="nova-campanha" class="page" data-nav="campanhas">
+        <div class="modal-shell">
+          <article class="card form-card">
+            <span class="badge">Campanhas</span>
+            <h2>Nova campanha</h2>
+            <div class="form-grid">
+              <label>Nome<input type="text" value="Reativação clientes inativos - Junho"></label>
+              <label>Segmento<select><option>Clientes inativos</option><option>Clientes VIP</option><option>Delivery por bairro</option><option>Corporativos</option></select></label>
+              <label>Template<select><option>Cliente inativo</option><option>Promoção camisa social</option><option>Aniversariante</option></select></label>
+              <label>Responsável<input type="text" value="Equipe comercial"></label>
+            </div>
+            <div class="info-banner">
+              <b>Prévia:</b> 25 clientes encontrados. Canal WhatsApp via link wa.me. Envio manual, cliente por cliente, com confirmação no histórico.
+            </div>
+            <div class="card-actions end">
+              <button class="secondary-button" type="button" data-go="campanhas">Cancelar</button>
+              <button class="primary-button" type="button" data-go="detalhe-campanha">Salvar campanha</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="detalhe-campanha" class="page" data-nav="campanhas">
+        <div class="section-heading">
+          <div>
+            <span class="badge badge-yellow">Campanha ativa</span>
+            <h2>Reativação de clientes inativos</h2>
+            <p>Segmento: clientes sem utilização há mais de 30 dias.</p>
+          </div>
+          <button class="secondary-button" type="button" data-go="campanhas">Voltar</button>
+        </div>
+        <div class="kpi-grid">
+          <article class="card kpi-card"><span>Clientes selecionados</span><strong>25</strong><small>Base filtrada</small></article>
+          <article class="card kpi-card"><span>WhatsApps abertos</span><strong>18</strong><small>Envio manual</small></article>
+          <article class="card kpi-card"><span>Respostas</span><strong>4</strong><small>22% de retorno</small></article>
+          <article class="card kpi-card"><span>Clientes recuperados</span><strong>2</strong><small>R$ 1.280 estimados</small></article>
+        </div>
+        <article class="card">
+          <h3>Próximos contatos da campanha</h3>
+          <div class="compact-list">
+            <p><b>João Santos</b><span>Reativação com alto ticket</span><button type="button" data-go="whatsapp">Abrir WhatsApp</button></p>
+            <p><b>Patrícia Rocha</b><span>Retorno de reclamação antes da oferta</span><button type="button" data-go="interacao">Registrar interação</button></p>
+            <p><b>Helena Duarte</b><span>Sem contato há 42 dias</span><button type="button" data-go="whatsapp">Abrir WhatsApp</button></p>
+          </div>
+        </article>
+      </section>
+
+      <section id="notificacoes" class="page" data-nav="notificacoes">
+        <div class="section-heading">
+          <div>
+            <span class="badge">Histórico de comunicação</span>
+            <h2>Notificações</h2>
+            <p>Registro de mensagens preparadas e abertas no WhatsApp pela equipe.</p>
+          </div>
+        </div>
+        <div class="card table-card">
+          <table class="responsive-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Cliente</th>
+                <th>Template</th>
+                <th>Canal</th>
+                <th>Status</th>
+                <th>Responsável</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-label="Data">11/06/2026 14:30</td>
+                <td data-label="Cliente">Maria Oliveira</td>
+                <td data-label="Template">VIP sem contato recente</td>
+                <td data-label="Canal">WhatsApp</td>
+                <td data-label="Status"><span class="table-tag success">Registrada</span></td>
+                <td data-label="Responsável">Major</td>
+              </tr>
+              <tr>
+                <td data-label="Data">11/06/2026 13:10</td>
+                <td data-label="Cliente">João Santos</td>
+                <td data-label="Template">Cliente inativo</td>
+                <td data-label="Canal">WhatsApp</td>
+                <td data-label="Status"><span class="table-tag">Aberta no WhatsApp</span></td>
+                <td data-label="Responsável">Equipe comercial</td>
+              </tr>
+              <tr>
+                <td data-label="Data">11/06/2026 11:40</td>
+                <td data-label="Cliente">Ana Costa</td>
+                <td data-label="Template">Aniversariante do mês</td>
+                <td data-label="Canal">WhatsApp</td>
+                <td data-label="Status"><span class="table-tag success">Respondida</span></td>
+                <td data-label="Responsável">Atendimento</td>
+              </tr>
+              <tr>
+                <td data-label="Data">10/06/2026 17:05</td>
+                <td data-label="Cliente">Roberto Lima</td>
+                <td data-label="Template">Retorno de reclamação</td>
+                <td data-label="Canal">WhatsApp</td>
+                <td data-label="Status"><span class="table-tag warning">Aguardando retorno</span></td>
+                <td data-label="Responsável">Major</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="metas" class="page" data-nav="metas">
+        <div class="section-heading">
+          <div>
+            <span class="badge">Gestão comercial</span>
+            <h2>Metas Comerciais</h2>
+            <p>Acompanhamento simples de faturamento, recuperação e ticket médio.</p>
+          </div>
+        </div>
+
+        <article class="card goal-card">
+          <div>
+            <span class="badge badge-yellow">Meta mensal de faturamento</span>
+            <h3>R$ 26.500 realizados de R$ 40.000</h3>
+            <p>Faltam R$ 13.500 para a meta. Projeção atual: R$ 42.300 se o ritmo for mantido.</p>
+          </div>
+          <div class="progress-wrap" aria-label="66% da meta mensal">
+            <div class="progress-bar"><span style="width: 66%"></span></div>
+            <strong>66%</strong>
+          </div>
+        </article>
+
+        <div class="kpi-grid">
+          <article class="card kpi-card"><span>Realizado</span><strong>R$ 26.500</strong><small>Até hoje</small></article>
+          <article class="card kpi-card"><span>Faltante</span><strong>R$ 13.500</strong><small>Para bater a meta</small></article>
+          <article class="card kpi-card"><span>Projeção</span><strong>R$ 42.300</strong><small>Com ritmo atual</small></article>
+          <article class="card kpi-card"><span>Clientes novos</span><strong>32 / 50</strong><small>64% da meta</small></article>
+          <article class="card kpi-card"><span>Clientes recuperados</span><strong>8 / 20</strong><small>40% da meta</small></article>
+          <article class="card kpi-card"><span>Peças informadas</span><strong>1.350</strong><small>Indicador comercial</small></article>
+          <article class="card kpi-card"><span>Ticket médio</span><strong>R$ 118</strong><small>Meta R$ 125</small></article>
+        </div>
+      </section>
+
+      <section id="relatorios" class="page" data-nav="relatorios">
+        <div class="section-heading">
+          <div>
+            <span class="badge">Relatórios Comerciais</span>
+            <h2>Relatórios Comerciais</h2>
+            <p>Visões simples para apresentação, acompanhamento da equipe e decisão comercial.</p>
+          </div>
+          <button class="primary-button" type="button">Exportar prévia</button>
+        </div>
+
+        <div class="report-grid">
+          <article class="card report-card"><h3>Relatório diário</h3><p>Faturamento, clientes atendidos, WhatsApps abertos e pendências do dia.</p><button type="button" data-go="dashboard">Abrir</button></article>
+          <article class="card report-card"><h3>Relatório semanal</h3><p>Evolução de ticket médio, clientes recuperados e alertas resolvidos.</p><button type="button" data-go="metas">Abrir</button></article>
+          <article class="card report-card"><h3>Relatório mensal</h3><p>Meta, realizado, projeção e resultado comercial consolidado.</p><button type="button" data-go="metas">Abrir</button></article>
+          <article class="card report-card"><h3>Ranking de clientes</h3><p>Clientes por valor total gasto, frequência e potencial de retorno.</p><button type="button" data-go="clientes">Abrir</button></article>
+          <article class="card report-card"><h3>Ranking de bairros</h3><p>Onde estão os clientes mais ativos, VIPs e oportunidades de delivery.</p><button type="button" data-go="clientes">Abrir</button></article>
+          <article class="card report-card"><h3>Resultado de campanhas</h3><p>WhatsApps abertos, respostas, recuperados e valor gerado.</p><button type="button" data-go="campanhas">Abrir</button></article>
+          <article class="card report-card"><h3>Clientes recuperados</h3><p>Quem voltou depois de campanha ou contato humano da equipe.</p><button type="button" data-go="central">Abrir</button></article>
+          <article class="card report-card"><h3>Clientes inativos</h3><p>Lista priorizada para relacionamento e reativação comercial.</p><button type="button" data-go="central">Abrir</button></article>
+        </div>
+      </section>
+    </main>
   </div>
-  <div class="grid2">
-    <div class="card"><h3>Oportunidades de hoje</h3><ul class="list"><li><b>5</b> Clientes inativos para recuperar</li><li><b>3</b> Aniversariantes</li><li><b>4</b> VIPs sem contato recente</li><li><b>6</b> Clientes com queda de frequência</li></ul></div>
-    <div class="card"><h3>Últimas interações</h3><div class="timeline"><p><b>Maria Oliveira</b><br>Preferência por retirada pela manhã.</p><p><b>João Santos</b><br>Recebeu mensagem de reativação.</p><p><b>Carla Mendes</b><br>Respondeu campanha de aniversário.</p></div></div>
-  </div>
-</section>
 
-<section id="central" class="page">
- <div class="head"><div><h2>Central de Relacionamento</h2><p>Fila diária para saber com quem falar e qual ação tomar.</p></div><div><button class="chip active">Hoje</button><button class="chip">Semana</button><button class="chip">Todos</button></div></div>
- <div class="grid3"><div class="card center"><b>18</b><span>Pendentes</span></div><div class="card center"><b>7</b><span>Em andamento</span></div><div class="card center"><b>12</b><span>Resolvidas</span></div></div>
- <article class="card opp"><div><h3>Maria Oliveira</h3><p><span>VIP</span><span>Delivery</span><span>Sem contato há 18 dias</span></p></div><b>Ticket R$ 165</b><p><strong>Motivo:</strong> Cliente VIP sem contato recente. Última utilização em 25/05/2026.</p><div class="actions"><button data-go="perfil">Ver Perfil 360°</button><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Registrar Interação</button><button>Resolver</button></div></article>
- <article class="card opp"><div><h3>João Santos</h3><p><span>Inativo</span><span>Alto ticket</span><span>30+ dias sem movimento</span></p></div><b>Ticket R$ 210</b><p><strong>Motivo:</strong> Cliente sem movimento há 30 dias. Bom candidato para reativação.</p><div class="actions"><button data-go="perfil-joao">Ver Perfil 360°</button><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Registrar Interação</button><button>Resolver</button></div></article>
- <article class="card opp"><div><h3>Ana Costa</h3><p><span>Aniversariante</span><span>Ativa</span><span>Canto do Forte</span></p></div><b>Ticket R$ 98</b><p><strong>Motivo:</strong> Cliente faz aniversário hoje. Enviar mensagem personalizada.</p><div class="actions"><button data-go="perfil">Ver Perfil 360°</button><button data-go="whatsapp-aniversario">Enviar WhatsApp</button><button data-go="interacao">Registrar Interação</button><button>Resolver</button></div></article>
-</section>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<section id="clientes" class="page">
- <div class="head"><div><h2>Clientes 360°</h2><p>Base de clientes com busca, filtros e ações rápidas.</p></div><button>+ Novo Cliente</button></div>
- <div class="search"><input placeholder="Buscar por nome, WhatsApp ou bairro"><button>Filtrar</button></div>
- <div class="card table"><table><thead><tr><th>Cliente</th><th>Tags</th><th>Última utilização</th><th>Ticket</th><th>Ações</th></tr></thead><tbody><tr><td>Maria Oliveira</td><td>VIP · Delivery</td><td>08/06/2026</td><td>R$ 142</td><td><button data-go="perfil">Perfil</button></td></tr><tr><td>João Santos</td><td>Inativo · Alto ticket</td><td>10/05/2026</td><td>R$ 210</td><td><button data-go="perfil-joao">Perfil</button></td></tr><tr><td>Ana Costa</td><td>Ativa · Aniversário</td><td>11/06/2026</td><td>R$ 98</td><td><button data-go="perfil">Perfil</button></td></tr></tbody></table></div>
-</section>
-
-<section id="perfil" class="page profile">
- <div class="card profiletop"><div><small>CLIENTE 360°</small><h2>Maria Oliveira</h2><p>WhatsApp: (13) 99999-9999 · Bairro: Canto do Forte</p><p><span>VIP</span><span>Delivery</span><span>Ativa</span></p></div><div class="actions"><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Nova Interação</button><button>Editar</button></div></div>
- <div class="grid4"><div class="card kpi"><span>Cliente desde</span><b>12/01/2025</b></div><div class="card kpi"><span>Última utilização</span><b>08/06/2026</b></div><div class="card kpi"><span>Ticket médio</span><b>R$ 142</b></div><div class="card kpi"><span>Total gasto</span><b>R$ 2.850</b></div></div>
- <div class="grid2"><div class="card"><h3>Alertas e contexto</h3><ul><li>Prefere retirada pela manhã.</li><li>Reclamou de atraso em 02/06/2026.</li><li>VIP sem contato há 18 dias.</li></ul></div><div class="card"><h3>Próxima melhor ação</h3><p>Enviar mensagem personalizada para manter relacionamento VIP.</p><button data-go="whatsapp">Enviar agora</button></div></div>
- <div class="card"><h3>Linha do tempo</h3><div class="timeline"><p><b>10/06/2026 — Interação</b><br>Cliente informou que viajará por 20 dias.</p><p><b>08/06/2026 — Movimentação Comercial</b><br>Valor R$ 148 · 12 peças · Delivery.</p><p><b>03/06/2026 — WhatsApp</b><br>Mensagem de roupa pronta enviada.</p></div></div>
-</section>
-
-<section id="perfil-joao" class="page profile">
- <div class="card profiletop"><div><small>CLIENTE 360°</small><h2>João Santos</h2><p>WhatsApp: (13) 98888-8888 · Bairro: Boqueirão</p><p><span>Inativo</span><span>Alto ticket</span><span>Em risco</span></p></div><div class="actions"><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Nova Interação</button></div></div>
- <div class="grid4"><div class="card kpi"><span>Cliente desde</span><b>05/09/2024</b></div><div class="card kpi"><span>Última utilização</span><b>10/05/2026</b></div><div class="card kpi"><span>Ticket médio</span><b>R$ 210</b></div><div class="card kpi"><span>Total gasto</span><b>R$ 4.420</b></div></div>
- <div class="grid2"><div class="card"><h3>Alertas e contexto</h3><ul><li>Cliente de alto ticket sem movimento há mais de 30 dias.</li><li>Costuma usar delivery aos sábados.</li><li>Boa oportunidade para reativação.</li></ul></div><div class="card"><h3>Próxima melhor ação</h3><p>Enviar mensagem de reativação com oferta de retirada agendada.</p><button data-go="whatsapp">Enviar agora</button></div></div>
-</section>
-
-<section id="whatsapp" class="page"><div class="card form"><small>WHATSAPP</small><h2>Enviar mensagem</h2><label>Template</label><select><option>Cliente inativo</option><option>VIP sem contato</option><option>Roupa pronta</option></select><label>Mensagem</label><textarea>Oi, Maria! Tudo bem? Faz um tempinho que a gente não fala com você. Quer agendar uma retirada com a LavaMais Praia Grande?</textarea><label class="check"><input type="checkbox" checked> Registrar histórico ao abrir o WhatsApp</label><div class="actions"><button data-go="whatsapp-ok">Abrir WhatsApp</button><button data-go="perfil">Voltar</button></div></div></section>
-<section id="whatsapp-aniversario" class="page"><div class="card form"><small>WHATSAPP</small><h2>Mensagem de aniversário</h2><label>Mensagem</label><textarea>Oi, Ana! A equipe da LavaMais Praia Grande deseja um feliz aniversário para você. Esperamos que seu dia seja especial!</textarea><label class="check"><input type="checkbox" checked> Registrar histórico</label><div class="actions"><button data-go="whatsapp-ok">Abrir WhatsApp</button><button data-go="central">Voltar</button></div></div></section>
-<section id="whatsapp-ok" class="page"><div class="card success"><div>✓</div><h2>Histórico registrado</h2><p>Mensagem registrada como “Aberta no WhatsApp”.</p><button data-go="interacao">Registrar retorno/interação</button><button data-go="central">Voltar para Central</button></div></section>
-<section id="interacao" class="page"><div class="card form"><small>RELACIONAMENTO</small><h2>Nova Interação</h2><label>Cliente</label><input value="Maria Oliveira"><label>Tipo</label><select><option>WhatsApp</option><option>Ligação</option><option>Observação</option><option>Reclamação</option><option>Elogio</option></select><label>Resumo</label><input value="Cliente prefere retirada pela manhã"><label>Descrição</label><textarea>Cliente informou que prefere retirada sempre no período da manhã e pediu confirmação pelo WhatsApp antes da equipe sair.</textarea><div class="actions"><button data-go="interacao-ok">Salvar interação</button><button data-go="perfil">Cancelar</button></div></div></section>
-<section id="interacao-ok" class="page"><div class="card success"><div>✓</div><h2>Interação salva</h2><p>A informação aparecerá na linha do tempo e nos alertas do Cliente 360°.</p><button data-go="perfil">Ver Perfil 360°</button><button data-go="central">Voltar para Central</button></div></section>
-
-<section id="campanhas" class="page"><div class="head"><div><h2>Campanhas</h2><p>Ações comerciais por segmentação.</p></div><button data-go="nova-campanha">+ Nova Campanha</button></div><div class="grid3"><div class="card campaign"><small>ATIVA</small><h3>Reativação Junho</h3><p>Clientes inativos há mais de 30 dias.</p><b>25 clientes · 4 respostas</b><button data-go="detalhe-campanha">Ver detalhes</button></div><div class="card campaign"><small>ATIVA</small><h3>Promoção Camisa Social</h3><p>Clientes ativos com ticket acima de R$ 100.</p><b>42 clientes · 8 respostas</b><button data-go="detalhe-campanha">Ver detalhes</button></div><div class="card campaign"><small>RASCUNHO</small><h3>Aniversariantes Junho</h3><p>Relacionamento com aniversariantes.</p><b>12 clientes</b><button data-go="detalhe-campanha">Ver detalhes</button></div></div></section>
-<section id="nova-campanha" class="page"><div class="card form"><small>CAMPANHAS</small><h2>Nova Campanha</h2><label>Nome</label><input value="Reativação clientes inativos - Junho"><label>Segmento</label><select><option>Clientes inativos</option><option>Clientes VIP</option><option>Clientes Delivery</option></select><label>Template</label><select><option>Cliente inativo</option><option>Promoção camisa social</option></select><p class="box"><b>Clientes encontrados:</b> 25<br><b>Canal:</b> WhatsApp via wa.me<br><b>Envio:</b> manual, cliente por cliente</p><button data-go="detalhe-campanha">Salvar e iniciar</button></div></section>
-<section id="detalhe-campanha" class="page"><div class="head"><div><small>CAMPANHA ATIVA</small><h2>Reativação clientes inativos - Junho</h2><p>Segmento: clientes sem movimento há mais de 30 dias.</p></div><button data-go="campanhas">Voltar</button></div><div class="grid4"><div class="card kpi"><span>Selecionados</span><b>25</b></div><div class="card kpi"><span>WhatsApp aberto</span><b>18</b></div><div class="card kpi"><span>Respostas</span><b>4</b></div><div class="card kpi"><span>Convertidos</span><b>2</b></div></div></section>
-<section id="notificacoes" class="page"><h2>Notificações</h2><div class="card table"><table><tr><th>Data</th><th>Cliente</th><th>Template</th><th>Status</th></tr><tr><td>11/06/2026 14:30</td><td>Maria Oliveira</td><td>Cliente inativo</td><td>Aberta no WhatsApp</td></tr><tr><td>11/06/2026 13:10</td><td>João Santos</td><td>Roupa pronta</td><td>Enviada</td></tr></table></div></section>
-<section id="metas" class="page"><h2>Metas Comerciais</h2><div class="card"><h3>Meta mensal</h3><div class="bar"><i></i></div><p>Realizado: R$ 26.500 · Meta: R$ 40.000 · 66%</p></div><div class="grid4"><div class="card kpi"><span>Clientes novos</span><b>32 / 50</b></div><div class="card kpi"><span>Recuperados</span><b>8 / 20</b></div><div class="card kpi"><span>Peças</span><b>1.350 / 2.000</b></div><div class="card kpi"><span>Ticket médio</span><b>R$ 118</b></div></div></section>
-</main>
-<script src="script.js"></script>
-</body></html>
+  <script src="script.js"></script>
+</body>
+</html>
