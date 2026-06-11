@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LavaMais CRM — Protótipo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<aside>
+  <div class="logo"><b>LM</b><div><strong>LavaMais</strong><span>CRM e Relacionamento</span></div></div>
+  <button class="nav active" data-page="dashboard">Dashboard</button>
+  <button class="nav" data-page="central">Central de Relacionamento</button>
+  <button class="nav" data-page="clientes">Clientes 360°</button>
+  <button class="nav" data-page="campanhas">Campanhas</button>
+  <button class="nav" data-page="notificacoes">Notificações</button>
+  <button class="nav" data-page="metas">Metas</button>
+  <div class="unit"><small>Unidade</small><b>LavaMais Praia Grande</b></div>
+</aside>
+<main>
+<header><div><h1 id="title">Dashboard Comercial</h1><p id="subtitle">Visão geral e oportunidades de relacionamento.</p></div><div class="user">Major<br><small>Administrador</small></div></header>
+
+<section id="dashboard" class="page active">
+  <div class="hero"><div><small>HOJE</small><h2>18 oportunidades de relacionamento</h2><p>Clientes inativos, VIPs sem contato, aniversariantes e queda de frequência.</p></div><button data-go="central">Abrir Central</button></div>
+  <div class="grid4">
+    <div class="card kpi"><span>Faturamento hoje</span><b>R$ 2.840</b><small>+12% vs média</small></div>
+    <div class="card kpi"><span>Clientes atendidos</span><b>24</b><small>6 novos no mês</small></div>
+    <div class="card kpi"><span>Ticket médio</span><b>R$ 118</b><small>Meta R$ 125</small></div>
+    <div class="card kpi"><span>Meta mensal</span><b>66%</b><small>R$ 26.500 / R$ 40.000</small></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Oportunidades de hoje</h3><ul class="list"><li><b>5</b> Clientes inativos para recuperar</li><li><b>3</b> Aniversariantes</li><li><b>4</b> VIPs sem contato recente</li><li><b>6</b> Clientes com queda de frequência</li></ul></div>
+    <div class="card"><h3>Últimas interações</h3><div class="timeline"><p><b>Maria Oliveira</b><br>Preferência por retirada pela manhã.</p><p><b>João Santos</b><br>Recebeu mensagem de reativação.</p><p><b>Carla Mendes</b><br>Respondeu campanha de aniversário.</p></div></div>
+  </div>
+</section>
+
+<section id="central" class="page">
+ <div class="head"><div><h2>Central de Relacionamento</h2><p>Fila diária para saber com quem falar e qual ação tomar.</p></div><div><button class="chip active">Hoje</button><button class="chip">Semana</button><button class="chip">Todos</button></div></div>
+ <div class="grid3"><div class="card center"><b>18</b><span>Pendentes</span></div><div class="card center"><b>7</b><span>Em andamento</span></div><div class="card center"><b>12</b><span>Resolvidas</span></div></div>
+ <article class="card opp"><div><h3>Maria Oliveira</h3><p><span>VIP</span><span>Delivery</span><span>Sem contato há 18 dias</span></p></div><b>Ticket R$ 165</b><p><strong>Motivo:</strong> Cliente VIP sem contato recente. Última utilização em 25/05/2026.</p><div class="actions"><button data-go="perfil">Ver Perfil 360°</button><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Registrar Interação</button><button>Resolver</button></div></article>
+ <article class="card opp"><div><h3>João Santos</h3><p><span>Inativo</span><span>Alto ticket</span><span>30+ dias sem movimento</span></p></div><b>Ticket R$ 210</b><p><strong>Motivo:</strong> Cliente sem movimento há 30 dias. Bom candidato para reativação.</p><div class="actions"><button data-go="perfil-joao">Ver Perfil 360°</button><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Registrar Interação</button><button>Resolver</button></div></article>
+ <article class="card opp"><div><h3>Ana Costa</h3><p><span>Aniversariante</span><span>Ativa</span><span>Canto do Forte</span></p></div><b>Ticket R$ 98</b><p><strong>Motivo:</strong> Cliente faz aniversário hoje. Enviar mensagem personalizada.</p><div class="actions"><button data-go="perfil">Ver Perfil 360°</button><button data-go="whatsapp-aniversario">Enviar WhatsApp</button><button data-go="interacao">Registrar Interação</button><button>Resolver</button></div></article>
+</section>
+
+<section id="clientes" class="page">
+ <div class="head"><div><h2>Clientes 360°</h2><p>Base de clientes com busca, filtros e ações rápidas.</p></div><button>+ Novo Cliente</button></div>
+ <div class="search"><input placeholder="Buscar por nome, WhatsApp ou bairro"><button>Filtrar</button></div>
+ <div class="card table"><table><thead><tr><th>Cliente</th><th>Tags</th><th>Última utilização</th><th>Ticket</th><th>Ações</th></tr></thead><tbody><tr><td>Maria Oliveira</td><td>VIP · Delivery</td><td>08/06/2026</td><td>R$ 142</td><td><button data-go="perfil">Perfil</button></td></tr><tr><td>João Santos</td><td>Inativo · Alto ticket</td><td>10/05/2026</td><td>R$ 210</td><td><button data-go="perfil-joao">Perfil</button></td></tr><tr><td>Ana Costa</td><td>Ativa · Aniversário</td><td>11/06/2026</td><td>R$ 98</td><td><button data-go="perfil">Perfil</button></td></tr></tbody></table></div>
+</section>
+
+<section id="perfil" class="page profile">
+ <div class="card profiletop"><div><small>CLIENTE 360°</small><h2>Maria Oliveira</h2><p>WhatsApp: (13) 99999-9999 · Bairro: Canto do Forte</p><p><span>VIP</span><span>Delivery</span><span>Ativa</span></p></div><div class="actions"><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Nova Interação</button><button>Editar</button></div></div>
+ <div class="grid4"><div class="card kpi"><span>Cliente desde</span><b>12/01/2025</b></div><div class="card kpi"><span>Última utilização</span><b>08/06/2026</b></div><div class="card kpi"><span>Ticket médio</span><b>R$ 142</b></div><div class="card kpi"><span>Total gasto</span><b>R$ 2.850</b></div></div>
+ <div class="grid2"><div class="card"><h3>Alertas e contexto</h3><ul><li>Prefere retirada pela manhã.</li><li>Reclamou de atraso em 02/06/2026.</li><li>VIP sem contato há 18 dias.</li></ul></div><div class="card"><h3>Próxima melhor ação</h3><p>Enviar mensagem personalizada para manter relacionamento VIP.</p><button data-go="whatsapp">Enviar agora</button></div></div>
+ <div class="card"><h3>Linha do tempo</h3><div class="timeline"><p><b>10/06/2026 — Interação</b><br>Cliente informou que viajará por 20 dias.</p><p><b>08/06/2026 — Movimentação Comercial</b><br>Valor R$ 148 · 12 peças · Delivery.</p><p><b>03/06/2026 — WhatsApp</b><br>Mensagem de roupa pronta enviada.</p></div></div>
+</section>
+
+<section id="perfil-joao" class="page profile">
+ <div class="card profiletop"><div><small>CLIENTE 360°</small><h2>João Santos</h2><p>WhatsApp: (13) 98888-8888 · Bairro: Boqueirão</p><p><span>Inativo</span><span>Alto ticket</span><span>Em risco</span></p></div><div class="actions"><button data-go="whatsapp">Enviar WhatsApp</button><button data-go="interacao">Nova Interação</button></div></div>
+ <div class="grid4"><div class="card kpi"><span>Cliente desde</span><b>05/09/2024</b></div><div class="card kpi"><span>Última utilização</span><b>10/05/2026</b></div><div class="card kpi"><span>Ticket médio</span><b>R$ 210</b></div><div class="card kpi"><span>Total gasto</span><b>R$ 4.420</b></div></div>
+ <div class="grid2"><div class="card"><h3>Alertas e contexto</h3><ul><li>Cliente de alto ticket sem movimento há mais de 30 dias.</li><li>Costuma usar delivery aos sábados.</li><li>Boa oportunidade para reativação.</li></ul></div><div class="card"><h3>Próxima melhor ação</h3><p>Enviar mensagem de reativação com oferta de retirada agendada.</p><button data-go="whatsapp">Enviar agora</button></div></div>
+</section>
+
+<section id="whatsapp" class="page"><div class="card form"><small>WHATSAPP</small><h2>Enviar mensagem</h2><label>Template</label><select><option>Cliente inativo</option><option>VIP sem contato</option><option>Roupa pronta</option></select><label>Mensagem</label><textarea>Oi, Maria! Tudo bem? Faz um tempinho que a gente não fala com você. Quer agendar uma retirada com a LavaMais Praia Grande?</textarea><label class="check"><input type="checkbox" checked> Registrar histórico ao abrir o WhatsApp</label><div class="actions"><button data-go="whatsapp-ok">Abrir WhatsApp</button><button data-go="perfil">Voltar</button></div></div></section>
+<section id="whatsapp-aniversario" class="page"><div class="card form"><small>WHATSAPP</small><h2>Mensagem de aniversário</h2><label>Mensagem</label><textarea>Oi, Ana! A equipe da LavaMais Praia Grande deseja um feliz aniversário para você. Esperamos que seu dia seja especial!</textarea><label class="check"><input type="checkbox" checked> Registrar histórico</label><div class="actions"><button data-go="whatsapp-ok">Abrir WhatsApp</button><button data-go="central">Voltar</button></div></div></section>
+<section id="whatsapp-ok" class="page"><div class="card success"><div>✓</div><h2>Histórico registrado</h2><p>Mensagem registrada como “Aberta no WhatsApp”.</p><button data-go="interacao">Registrar retorno/interação</button><button data-go="central">Voltar para Central</button></div></section>
+<section id="interacao" class="page"><div class="card form"><small>RELACIONAMENTO</small><h2>Nova Interação</h2><label>Cliente</label><input value="Maria Oliveira"><label>Tipo</label><select><option>WhatsApp</option><option>Ligação</option><option>Observação</option><option>Reclamação</option><option>Elogio</option></select><label>Resumo</label><input value="Cliente prefere retirada pela manhã"><label>Descrição</label><textarea>Cliente informou que prefere retirada sempre no período da manhã e pediu confirmação pelo WhatsApp antes da equipe sair.</textarea><div class="actions"><button data-go="interacao-ok">Salvar interação</button><button data-go="perfil">Cancelar</button></div></div></section>
+<section id="interacao-ok" class="page"><div class="card success"><div>✓</div><h2>Interação salva</h2><p>A informação aparecerá na linha do tempo e nos alertas do Cliente 360°.</p><button data-go="perfil">Ver Perfil 360°</button><button data-go="central">Voltar para Central</button></div></section>
+
+<section id="campanhas" class="page"><div class="head"><div><h2>Campanhas</h2><p>Ações comerciais por segmentação.</p></div><button data-go="nova-campanha">+ Nova Campanha</button></div><div class="grid3"><div class="card campaign"><small>ATIVA</small><h3>Reativação Junho</h3><p>Clientes inativos há mais de 30 dias.</p><b>25 clientes · 4 respostas</b><button data-go="detalhe-campanha">Ver detalhes</button></div><div class="card campaign"><small>ATIVA</small><h3>Promoção Camisa Social</h3><p>Clientes ativos com ticket acima de R$ 100.</p><b>42 clientes · 8 respostas</b><button data-go="detalhe-campanha">Ver detalhes</button></div><div class="card campaign"><small>RASCUNHO</small><h3>Aniversariantes Junho</h3><p>Relacionamento com aniversariantes.</p><b>12 clientes</b><button data-go="detalhe-campanha">Ver detalhes</button></div></div></section>
+<section id="nova-campanha" class="page"><div class="card form"><small>CAMPANHAS</small><h2>Nova Campanha</h2><label>Nome</label><input value="Reativação clientes inativos - Junho"><label>Segmento</label><select><option>Clientes inativos</option><option>Clientes VIP</option><option>Clientes Delivery</option></select><label>Template</label><select><option>Cliente inativo</option><option>Promoção camisa social</option></select><p class="box"><b>Clientes encontrados:</b> 25<br><b>Canal:</b> WhatsApp via wa.me<br><b>Envio:</b> manual, cliente por cliente</p><button data-go="detalhe-campanha">Salvar e iniciar</button></div></section>
+<section id="detalhe-campanha" class="page"><div class="head"><div><small>CAMPANHA ATIVA</small><h2>Reativação clientes inativos - Junho</h2><p>Segmento: clientes sem movimento há mais de 30 dias.</p></div><button data-go="campanhas">Voltar</button></div><div class="grid4"><div class="card kpi"><span>Selecionados</span><b>25</b></div><div class="card kpi"><span>WhatsApp aberto</span><b>18</b></div><div class="card kpi"><span>Respostas</span><b>4</b></div><div class="card kpi"><span>Convertidos</span><b>2</b></div></div></section>
+<section id="notificacoes" class="page"><h2>Notificações</h2><div class="card table"><table><tr><th>Data</th><th>Cliente</th><th>Template</th><th>Status</th></tr><tr><td>11/06/2026 14:30</td><td>Maria Oliveira</td><td>Cliente inativo</td><td>Aberta no WhatsApp</td></tr><tr><td>11/06/2026 13:10</td><td>João Santos</td><td>Roupa pronta</td><td>Enviada</td></tr></table></div></section>
+<section id="metas" class="page"><h2>Metas Comerciais</h2><div class="card"><h3>Meta mensal</h3><div class="bar"><i></i></div><p>Realizado: R$ 26.500 · Meta: R$ 40.000 · 66%</p></div><div class="grid4"><div class="card kpi"><span>Clientes novos</span><b>32 / 50</b></div><div class="card kpi"><span>Recuperados</span><b>8 / 20</b></div><div class="card kpi"><span>Peças</span><b>1.350 / 2.000</b></div><div class="card kpi"><span>Ticket médio</span><b>R$ 118</b></div></div></section>
+</main>
+<script src="script.js"></script>
+</body></html>
