@@ -74,6 +74,14 @@ As memberships atuais confirmam acesso ao tenant, mas nao carregam `Administrado
 
 Em desenvolvimento, a validacao inicial pode ser exercitada antes da emissao de `aud`, mas essa excecao nao e aceitavel para homologacao ou producao.
 
+## Implementacao no CRM
+
+A CRM API valida tokens com o middleware JWT Bearer e descobre metadados e chaves a partir da autoridade configurada. A opcao `Autenticacao:ValidarAudiencia=false` e rejeitada fora do ambiente `Development`.
+
+O contexto empresarial deriva exclusivamente os claims `sub` e `tenant_id` do principal autenticado. O acesso aos endpoints de autorizacao exige usuario ativo com papel local `Administrador` no mesmo tenant.
+
+O primeiro administrador nao e criado durante o login. Ele e provisionado por operacao controlada no CRM Worker, que exige `tenant_id` e `sub` explicitos e recusa duplicidade.
+
 ## Fonte verificada
 
 Contrato confirmado no repositorio local `quebranunca/identity-hub`, especialmente em `README.md` e `AuthorizationController.cs`.

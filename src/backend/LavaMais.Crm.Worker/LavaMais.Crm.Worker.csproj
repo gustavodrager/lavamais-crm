@@ -2,5 +2,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" />
     <ProjectReference Include="../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+    <ProjectReference Include="../Modulos/Autorizacao/LavaMais.Crm.Modulos.Autorizacao.csproj" />
   </ItemGroup>
 </Project>

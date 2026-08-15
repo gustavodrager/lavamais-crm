@@ -45,4 +45,14 @@ Os testes de integracao usam PostgreSQL real por Testcontainers e, portanto, exi
 
 ## Migrations
 
-Cada modulo tera seu proprio `DbContext`, schema e historico de migrations. O bloco `AdicionarContextoDoModulo` centraliza a configuracao do provedor sem criar um contexto compartilhado. A primeira migration sera criada junto do primeiro modelo persistente da fatia correspondente; a Fundacao nao cria tabelas vazias.
+Cada modulo possui seu proprio `DbContext`, schema e historico de migrations. O bloco `AdicionarContextoDoModulo` centraliza a configuracao do provedor sem criar um contexto compartilhado. A primeira migration pertence ao modulo `Autorizacao`; os demais modulos permanecem sem tabelas ate suas respectivas fatias.
+
+## Provisionar o primeiro administrador
+
+O primeiro administrador de cada tenant e criado somente por operacao controlada, usando os identificadores emitidos pelo Identity Hub:
+
+```bash
+dotnet run --project src/backend/LavaMais.Crm.Worker -- provisionar-administrador <tenant-id> <sub>
+```
+
+O comando aplica as migrations pendentes do modulo `Autorizacao` e recusa duplicidade de `tenant_id + sub`. Nao existe autoatribuicao de papel no primeiro login.

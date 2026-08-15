@@ -13,5 +13,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <ProjectReference Include="../../../src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj" />
+    <ProjectReference Include="../../../src/backend/Modulos/Autorizacao/LavaMais.Crm.Modulos.Autorizacao.csproj" />
   </ItemGroup>
 </Project>

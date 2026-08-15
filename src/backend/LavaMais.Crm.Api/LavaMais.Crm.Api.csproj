@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <ProjectReference Include="../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
     <ProjectReference Include="../Modulos/AcoesComerciais/LavaMais.Crm.Modulos.AcoesComerciais.csproj" />
