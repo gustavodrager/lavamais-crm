@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Autorizacao.Aplicacao;
 using LavaMais.Crm.Modulos.Autorizacao.Dominio;
 using LavaMais.Crm.Modulos.Autorizacao.Infraestrutura;
@@ -24,9 +25,9 @@ public static class ExtensoesDoModuloAutorizacao
         servicos.AddScoped<IAuthorizationHandler, TratadorDePapelDoCrm>();
         servicos.AddAuthorization(opcoes =>
         {
-            opcoes.AddPolicy(PoliticasDoCrm.UsuarioAtivo, politica =>
+            opcoes.AddPolicy(PoliticasDeAutorizacao.UsuarioAtivo, politica =>
                 politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(null)));
-            opcoes.AddPolicy(PoliticasDoCrm.Administrador, politica =>
+            opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica =>
                 politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador)));
         });
         return servicos;
@@ -35,7 +36,7 @@ public static class ExtensoesDoModuloAutorizacao
     public static IEndpointRouteBuilder MapearModuloAutorizacao(this IEndpointRouteBuilder endpoints)
     {
         var grupo = endpoints.MapGroup("/api/v1/usuarios-crm")
-            .RequireAuthorization(PoliticasDoCrm.Administrador)
+            .RequireAuthorization(PoliticasDeAutorizacao.Administrador)
             .WithTags("Autorizacao");
 
         grupo.MapGet("/", async (GerenciadorDeUsuariosCrm gerenciador, CancellationToken cancellationToken) =>

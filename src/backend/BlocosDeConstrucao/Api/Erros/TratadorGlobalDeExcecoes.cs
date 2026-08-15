@@ -2,6 +2,8 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Dominio;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace LavaMais.Crm.BlocosDeConstrucao.Api.Erros;
 
@@ -15,6 +17,7 @@ public sealed class TratadorGlobalDeExcecoes(
         {
             ExcecaoDeRecursoNaoEncontrado => (StatusCodes.Status404NotFound, "Recurso nao encontrado", "recurso_nao_encontrado"),
             ExcecaoDeConflito conflito => (StatusCodes.Status409Conflict, "Conflito", conflito.Codigo),
+            DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } => (StatusCodes.Status409Conflict, "Conflito", "restricao_unica"),
             ExcecaoDeRegraDeNegocio regra => (StatusCodes.Status422UnprocessableEntity, "Regra de negocio nao atendida", regra.Codigo),
             ExcecaoDeDominio => (StatusCodes.Status422UnprocessableEntity, "Regra de dominio nao atendida", "regra_de_dominio"),
             BadHttpRequestException => (StatusCodes.Status400BadRequest, "Requisicao invalida", "requisicao_invalida"),

@@ -2,6 +2,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Api;
 using LavaMais.Crm.BlocosDeConstrucao.Api.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Autorizacao.Api;
+using LavaMais.Crm.Modulos.Clientes.Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
@@ -14,6 +15,7 @@ construtor.Services.AdicionarFundacaoDaApi(construtor.Configuration);
 construtor.Services.AddHttpContextAccessor();
 construtor.Services.AddScoped<IContextoDoUsuario, ContextoDoUsuarioHttp>();
 construtor.Services.AdicionarModuloAutorizacao(construtor.Configuration);
+construtor.Services.AdicionarModuloClientes(construtor.Configuration);
 construtor.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opcoes =>
 {
     var secao = construtor.Configuration.GetRequiredSection("Autenticacao");
@@ -50,6 +52,7 @@ aplicacao.UseAuthentication();
 aplicacao.UseAuthorization();
 aplicacao.MapOpenApi("/openapi/{documentName}.json");
 aplicacao.MapearModuloAutorizacao();
+aplicacao.MapearModuloClientes();
 
 await aplicacao.RunAsync();
 

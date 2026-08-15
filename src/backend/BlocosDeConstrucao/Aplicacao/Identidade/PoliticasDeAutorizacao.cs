@@ -1,6 +1,6 @@
-namespace LavaMais.Crm.Modulos.Autorizacao.Aplicacao;
+namespace LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 
-public static class PoliticasDoCrm
+public static class PoliticasDeAutorizacao
 {
     public const string UsuarioAtivo = "UsuarioCrmAtivo";
     public const string Administrador = "AdministradorDoCrm";
