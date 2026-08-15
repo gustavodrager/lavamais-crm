@@ -1,5 +1,7 @@
 # Mapa de Navegação
 
+> Status: historico e substituido. Este mapa possui telas fora da Versao 1.0 atual.
+
 ## Menu principal
 
 ```text

@@ -1,48 +1,57 @@
-# Critérios de Aceite Iniciais
+# Criterios de Aceite da Versao 1.0
 
-## Cadastro de cliente
+## Identidade e tenant
 
-- Deve permitir cadastrar cliente com nome e WhatsApp.
-- Nome e WhatsApp devem ser obrigatórios.
-- Deve permitir salvar e abrir o Perfil 360°.
-- Deve validar duplicidade básica por WhatsApp.
+- O CRM nao possui tela ou tabela de senha.
+- Requisicoes empresariais exigem `tenant_id` valido no token.
+- O servidor ignora qualquer tenant informado pelo navegador para fins de autorizacao.
+- Usuario sem papel ativo no CRM recebe acesso negado.
 
-## Perfil 360°
+## Cliente
 
-- Deve exibir dados básicos do cliente.
-- Deve exibir resumo comercial.
-- Deve exibir tags/classificações.
-- Deve exibir linha do tempo.
-- Deve permitir enviar WhatsApp.
-- Deve permitir registrar interação.
+- Nome e WhatsApp sao obrigatorios.
+- WhatsApp e normalizado antes de validar duplicidade.
+- A unicidade e aplicada por tenant.
+- Cliente pode possuir endereco, etiquetas e permissao de comunicacao.
+- Cliente inativo nao entra em novas audiencias.
 
-## Interação
+## Importacao
 
-- Deve permitir escolher tipo de interação.
-- Deve exigir resumo.
-- Deve registrar usuário e data.
-- Deve aparecer na linha do tempo do cliente.
+- CSV e pre-visualizado antes da gravacao.
+- Colunas podem ser mapeadas para campos conhecidos.
+- Linhas invalidas exibem motivo e numero da linha.
+- O resultado informa inseridos, atualizados e rejeitados.
+- Repetir o arquivo nao cria duplicidades silenciosas.
 
-## WhatsApp
+## Acao Comercial
 
-- Deve permitir escolher template.
-- Deve substituir variáveis como `{nome}`.
-- Deve permitir editar mensagem antes de abrir o WhatsApp.
-- Deve abrir link `wa.me`.
-- Deve registrar histórico da tentativa/envio.
+- Uma acao comeca em `Rascunho`.
+- Item do catalogo e modelo de mensagem sao obrigatorios para preparar.
+- A simulacao lista total elegivel e motivos de exclusao.
+- O usuario pode remover destinatarios antes da preparacao.
+- A preparacao congela audiencia, destino e versao do modelo.
+- Uma acao preparada nao aceita alteracao dos criterios.
+- Cada cliente aparece no maximo uma vez na audiencia da acao.
 
-## Central de Relacionamento
+## Envio
 
-- Deve listar oportunidades de contato.
-- Deve exibir motivo da oportunidade.
-- Deve permitir abrir Perfil 360°.
-- Deve permitir enviar WhatsApp.
-- Deve permitir registrar interação.
-- Deve permitir marcar como resolvida.
+- Apenas acao `Preparada` pode iniciar processamento.
+- Cada destinatario possui chave de idempotencia deterministica.
+- Repetir a operacao nao cria nova notificacao no Notification Hub.
+- Credencial do hub nunca chega ao navegador.
+- Falhas individuais nao interrompem os demais destinatarios.
+- O CRM apresenta estado consolidado de solicitacao e entrega.
 
-## Campanhas
+## Resultado comercial
 
-- Deve permitir criar campanha com nome, objetivo, segmento e template.
-- Deve listar clientes elegíveis.
-- Deve permitir enviar WhatsApp para clientes da campanha.
-- Deve registrar status por cliente.
+- Resultado e independente do estado tecnico de entrega.
+- Operador pode registrar `SemRetorno`, `Respondeu`, `Interessado`, `Convertido` ou `NaoTemInteresse`.
+- Conversao pode registrar valor opcional em `decimal`.
+- Mudancas de resultado sao auditadas.
+
+## Seguranca e qualidade
+
+- Todas as consultas sao isoladas por tenant.
+- Operacoes importantes possuem auditoria com usuario e data UTC.
+- Regras de dominio possuem testes automatizados.
+- Fluxo principal possui teste ponta a ponta.

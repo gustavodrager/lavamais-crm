@@ -1,35 +1,51 @@
-# LGPD
+# Protecao de Dados e Privacidade
 
-O LavaMais CRM e Relacionamento lida com dados pessoais de clientes e deve considerar boas práticas básicas de LGPD desde a Versão 1.0.
+Este documento define requisitos tecnicos iniciais. Base legal, textos de consentimento, prazos de retencao e atendimento de direitos precisam de validacao juridica e operacional antes da producao.
 
-## Dados pessoais envolvidos
+## Dados tratados inicialmente
 
 - nome;
-- telefone;
-- WhatsApp;
-- e-mail;
-- endereço;
-- bairro;
-- data de nascimento;
-- histórico de relacionamento;
-- histórico comercial;
-- observações.
+- telefone e WhatsApp;
+- e-mail opcional;
+- endereco e bairro opcionais;
+- data de nascimento opcional;
+- tipo, etiquetas e interesses;
+- permissao de comunicacao;
+- participacao e resultado em acoes comerciais;
+- auditoria de operacoes.
 
-## Cuidados necessários
+## Principios de implementacao
 
-- controle de acesso por perfil;
-- não expor dados desnecessários;
-- restringir acesso da franqueadora a dados pessoais;
-- registrar auditoria de ações críticas;
-- permitir exportação de dados;
-- permitir inativação de cliente;
-- proteger credenciais;
-- usar HTTPS;
-- aplicar backup;
-- manter confidencialidade.
+- coletar apenas campos necessarios ao uso declarado;
+- separar permissao por canal e finalidade;
+- restringir dados pelo tenant e papel;
+- evitar dados pessoais em logs e mensagens de erro;
+- proteger segredos e trafego;
+- auditar alteracoes e envios;
+- permitir correcao e inativacao;
+- definir exportacao, anonimização e exclusao antes da producao;
+- documentar operadores externos envolvidos no processamento.
 
-## Franqueadora
+## Importacoes
 
-A franqueadora pode ter acesso a indicadores comerciais autorizados.
+- arquivos devem ser autorizados pela LavaMais;
+- pre-visualizacao nao deve expor dados alem do necessario;
+- arquivo temporario possui acesso restrito;
+- prazo de retencao precisa ser configurado;
+- linhas rejeitadas nao devem permanecer indefinidamente sem finalidade.
 
-Não deve ter acesso irrestrito aos dados pessoais dos clientes sem decisão formal e adequação LGPD.
+## Mensagens
+
+- elegibilidade verifica permissao de comunicacao;
+- destinatarios sao congelados para auditoria;
+- conteudo e dados enviados ao Notification Hub sao limitados ao template;
+- revogacao futura impede novas acoes, sem apagar automaticamente o historico necessario a auditoria.
+
+## Pendencias obrigatorias antes da producao
+
+- validar textos, finalidade e base aplicavel com responsavel qualificado;
+- definir prazos de retencao;
+- definir procedimento de solicitacao do titular;
+- definir resposta a incidente;
+- revisar contratos e responsabilidades dos provedores;
+- testar backup, restauracao e controle de acesso.

@@ -1,26 +1,33 @@
 # Auditoria
 
-A auditoria deve registrar ações importantes realizadas no sistema.
+## Eventos obrigatorios
 
-## Eventos auditáveis
+- criacao, alteracao e inativacao de cliente;
+- alteracao de permissao de comunicacao;
+- importacao de clientes e seu resultado;
+- criacao, preparacao, inicio e cancelamento de Acao Comercial;
+- inclusao ou remocao manual de destinatario;
+- solicitacao e reprocessamento de envio;
+- alteracao de resultado comercial;
+- alteracao de papel do CRM;
+- exportacao futura de dados;
+- alteracao de configuracao sensivel.
 
-- login;
-- criação de cliente;
-- edição de cliente;
-- inativação de cliente;
-- envio de WhatsApp;
-- criação de campanha;
-- alteração de campanha;
-- registro de interação;
-- alteração de permissões;
-- exportação de dados;
-- alteração de metas.
+## Dados registrados
 
-## Dados do log
+- `TenantId`;
+- `UsuarioIdentidadeId`, obtido do claim `sub`;
+- tipo da acao;
+- recurso e identificador afetado;
+- data e hora UTC;
+- resultado;
+- IP e agente do cliente, quando aplicavel;
+- correlacao da requisicao;
+- metadados seguros da alteracao.
 
-- usuário;
-- ação;
-- entidade afetada;
-- data e hora;
-- IP, se disponível;
-- dados principais da alteração, quando aplicável.
+## Restricoes
+
+- nao registrar credenciais, tokens ou chaves de API;
+- evitar copiar conteudo integral de mensagens e dados pessoais desnecessarios;
+- registros de auditoria nao podem ser alterados pela interface comum;
+- acesso a auditoria exige papel `Administrador`.

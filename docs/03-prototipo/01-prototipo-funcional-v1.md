@@ -1,5 +1,7 @@
 # Protótipo Funcional — Versão 1.0
 
+> Status: historico e substituido. Consulte `docs/11-implantacao-inicial/` para o fluxo vigente.
+
 ## Objetivo
 
 Definir o protótipo funcional da Versão 1.0 do LavaMais CRM e Relacionamento.

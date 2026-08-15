@@ -1,44 +1,31 @@
-# Segmentações
+# Regras de Segmentacao
 
-Segmentações automáticas ajudam a equipe a identificar oportunidades sem precisar criar filtros complexos.
+## Dados permitidos na Versao 1.0
 
-## Segmentações iniciais
+- bairro e cidade;
+- tipo de cliente;
+- etiquetas e interesses;
+- periodo de cadastro;
+- periodo de aniversario;
+- permissao de comunicacao;
+- IDs selecionados manualmente.
 
-### Cliente ativo
+## Criterios tecnicos
 
-Cliente com movimentação nos últimos 30 dias.
+- Criterios sao objetos tipados, serializados em `jsonb` com campo `versao`.
+- Filtros diferentes sao combinados por `E`.
+- Valores dentro do mesmo filtro, como varios bairros, sao combinados por `OU`.
+- Se nenhum filtro for informado, a interface exige confirmacao explicita antes de simular toda a base.
+- O tenant e aplicado pelo servidor e nunca faz parte dos criterios editaveis.
 
-### Cliente em risco
+## Elegibilidade obrigatoria
 
-Cliente sem movimentação entre 31 e 60 dias.
+Um cliente e excluido quando estiver inativo, sem WhatsApp valido, sem permissao de marketing para WhatsApp ou duplicado na audiencia.
 
-### Cliente inativo
+## Snapshot
 
-Cliente sem movimentação há mais de 60 dias.
+A simulacao nao reserva destinatarios. A preparacao reavalia a elegibilidade dentro da operacao e persiste o snapshot final. O resultado da preparacao e a fonte de verdade para o envio.
 
-### Cliente recuperado
+## Regras futuras
 
-Cliente que estava inativo e voltou a ter movimentação.
-
-### Cliente VIP
-
-Cliente marcado manualmente como VIP ou identificado por critérios comerciais.
-
-Critérios possíveis:
-
-- total gasto acima de determinado valor;
-- ticket médio acima de determinado valor;
-- frequência alta;
-- relacionamento estratégico.
-
-### Cliente com queda de frequência
-
-Cliente que reduziu a frequência de compra em comparação ao próprio histórico.
-
-### Cliente sem contato recente
-
-Cliente sem interação ou notificação registrada nos últimos X dias.
-
-### Aniversariante
-
-Cliente com data de nascimento igual ao dia atual ou dentro do período selecionado.
+Regras dependentes de pedidos ou movimentacoes ficam proibidas ate existir fonte confiavel e ADR para o contrato de integracao.

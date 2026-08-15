@@ -1,41 +1,43 @@
-# Regras de Campanhas
+# Regras de Acoes Comerciais
 
-## Campanhas permitidas
+## Estados da acao
 
-- Inativos;
-- VIP;
-- Delivery;
-- Corporativos;
-- Bairro;
-- Aniversariantes;
-- Promoção camisa social;
-- Campanhas sazonais.
+```text
+Rascunho
+  ↓ preparar
+Preparada
+  ↓ iniciar
+EmProcessamento
+  ↓
+Concluida ou ConcluidaComFalhas
 
-## Status da campanha
+Rascunho ou Preparada → Cancelada
+```
 
-- Rascunho;
-- Ativa;
-- Pausada;
-- Encerrada;
-- Cancelada.
+## Regras de transicao
 
-## Status por cliente
+- `Rascunho` aceita alteracoes de objetivo, item, criterios e modelo.
+- `Preparada` possui audiencia congelada e nao aceita alteracoes comerciais.
+- `EmProcessamento` nao pode ser cancelada globalmente depois que o primeiro envio foi solicitado.
+- `Concluida` indica que todos os destinatarios terminaram sem falha tecnica.
+- `ConcluidaComFalhas` indica pelo menos uma falha tecnica final.
+- Uma nova tentativa comercial deve ser uma nova acao; reprocessamento tecnico preserva a mesma acao e idempotencia.
 
-- Pendente;
-- Aberta no WhatsApp;
-- Enviada;
-- Respondida;
-- Convertida;
-- Sem resposta;
-- Removida.
+## Estados por destinatario
 
-## Resultado da campanha
+- `Pendente`;
+- `Removido`;
+- `AguardandoSolicitacao`;
+- `Solicitado`;
+- `Enviado`;
+- `Entregue`;
+- `Lido`;
+- `Falhou`.
 
-Uma campanha pode medir:
+## Resultado comercial
 
-- total de clientes selecionados;
-- total de mensagens abertas;
-- total de respostas;
-- total de conversões;
-- valor gerado;
-- clientes recuperados.
+O resultado comercial nao altera automaticamente o estado tecnico e vice-versa. `Convertido` exige registro humano na Versao 1.0.
+
+## Campanhas
+
+Campanhas recorrentes, pausaveis, agendadas ou multietapas pertencem ao roadmap e nao devem ser misturadas ao agregado inicial.

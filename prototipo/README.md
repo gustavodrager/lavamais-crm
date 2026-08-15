@@ -1,8 +1,10 @@
 # LavaMais CRM - Protótipo Recepção e Administrador
 
+> Status: prototipo historico. Nao define a Versao 1.0 vigente. Consulte `../docs/11-implantacao-inicial/`.
+
 ## Objetivo
 
-Protótipo navegável em HTML, CSS e JavaScript puro para validar duas experiências especializadas da LavaMais Praia Grande.
+Protótipo navegável em HTML, CSS e JavaScript puro criado para validar uma proposta anterior com duas experiências especializadas da LavaMais Praia Grande.
 
 - **Seleção de perfil**: tela inicial do protótipo para escolher entre Recepção e Gerente, sem login.
 - **Recepção**: operação rápida, poucos cliques e experiência próxima de caixa/POS.

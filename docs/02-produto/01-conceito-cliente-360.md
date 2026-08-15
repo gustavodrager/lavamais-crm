@@ -1,5 +1,7 @@
 # Cliente 360°
 
+> Status: roadmap. Fora do escopo da Versao 1.0. Os indicadores dependentes de movimentacoes so poderao ser implementados depois de existir fonte confiavel.
+
 O Cliente 360° é o centro do LavaMais CRM e Relacionamento.
 
 Ele deve reunir todas as informações relevantes para atendimento, relacionamento e ação comercial.

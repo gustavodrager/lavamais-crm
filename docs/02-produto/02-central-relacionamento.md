@@ -1,5 +1,7 @@
 # Central de Relacionamento
 
+> Status: roadmap. Fora do escopo da Versao 1.0. A implantacao inicial usa a lista de Acoes Comerciais como entrada operacional.
+
 A Central de Relacionamento deve ser a principal tela operacional do sistema.
 
 Ela responde à pergunta:

@@ -1,5 +1,89 @@
-# APIs
+# Superficie Inicial da API
 
-Pasta reservada para contratos futuros de API.
+Todos os endpoints empresariais usam `/api/v1`, exigem access token valido e derivam o tenant do claim `tenant_id`.
 
-Não detalhar endpoints antes da validação do protótipo e backlog.
+## Clientes
+
+```text
+GET    /api/v1/clientes
+POST   /api/v1/clientes
+GET    /api/v1/clientes/{id}
+PUT    /api/v1/clientes/{id}
+POST   /api/v1/clientes/{id}/inativar
+GET    /api/v1/etiquetas
+POST   /api/v1/etiquetas
+```
+
+Listagens usam `pagina`, `tamanhoPagina`, ordenacao permitida e filtros explicitos.
+
+## Importacoes
+
+```text
+POST   /api/v1/importacoes/clientes/pre-visualizar
+POST   /api/v1/importacoes/clientes
+GET    /api/v1/importacoes/clientes/{id}
+```
+
+A confirmacao recebe uma referencia segura ao arquivo temporario e o mapeamento validado; nao confia novamente em totais enviados pelo navegador.
+
+## Catalogo e modelos
+
+```text
+GET    /api/v1/itens-de-catalogo
+POST   /api/v1/itens-de-catalogo
+PUT    /api/v1/itens-de-catalogo/{id}
+GET    /api/v1/modelos-de-mensagem
+POST   /api/v1/modelos-de-mensagem
+POST   /api/v1/modelos-de-mensagem/{id}/publicar
+```
+
+## Acoes comerciais
+
+```text
+GET    /api/v1/acoes-comerciais
+POST   /api/v1/acoes-comerciais
+GET    /api/v1/acoes-comerciais/{id}
+PUT    /api/v1/acoes-comerciais/{id}
+POST   /api/v1/acoes-comerciais/{id}/simular-publico
+POST   /api/v1/acoes-comerciais/{id}/preparar
+POST   /api/v1/acoes-comerciais/{id}/iniciar
+POST   /api/v1/acoes-comerciais/{id}/cancelar
+GET    /api/v1/acoes-comerciais/{id}/destinatarios
+PUT    /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/resultado
+```
+
+Comandos de transicao validam estado e versao do agregado. Conflitos de concorrencia retornam `409`.
+
+## Autorizacao
+
+```text
+GET    /api/v1/usuarios-crm
+POST   /api/v1/usuarios-crm
+PUT    /api/v1/usuarios-crm/{id}/papel
+POST   /api/v1/usuarios-crm/{id}/inativar
+```
+
+Disponivel somente para `Administrador`.
+
+## Auditoria
+
+```text
+GET    /api/v1/auditoria
+GET    /api/v1/auditoria/{id}
+```
+
+Disponivel somente para `Administrador`, com paginacao e filtros controlados.
+
+## Convencoes HTTP
+
+- JSON em portugues e `camelCase`;
+- erros no formato Problem Details;
+- `400` para contrato invalido;
+- `401` para ausencia ou invalidade de autenticacao;
+- `403` para falta de tenant ou permissao;
+- `404` sem revelar existencia em outro tenant;
+- `409` para conflito de estado, concorrencia ou unicidade;
+- `422` para regra de negocio que impede a operacao;
+- `X-Correlation-Id` propagado entre Web, API, Worker e hubs.
+
+Os schemas detalhados serao gerados no OpenAPI junto com a implementacao e nao devem duplicar diretamente entidades de persistencia.

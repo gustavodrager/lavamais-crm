@@ -1,34 +1,40 @@
-# Notificações WhatsApp
+# Comunicacao por WhatsApp
 
-Na Versão 1.0, o envio de mensagens será feito via link `wa.me`.
+## Canal inicial
 
-## Objetivo
+A Versao 1.0 usa WhatsApp por meio do Notification Hub e da WhatsApp Cloud API. O CRM nao abre links `wa.me` e nao conversa diretamente com a Meta.
 
-Facilitar o envio de mensagens prontas e registrar histórico de comunicação com o cliente.
+## Responsabilidades do CRM
 
-## Regras
+- selecionar destinatarios elegiveis;
+- apresentar o modelo comercial e suas variaveis;
+- criar uma chave de idempotencia por destinatario;
+- solicitar a notificacao ao Notification Hub;
+- guardar o identificador externo;
+- reconciliar o estado consolidado;
+- registrar o resultado comercial informado pela equipe.
 
-Cada envio deve registrar:
+## Responsabilidades do Notification Hub
 
-- cliente;
-- usuário;
-- template;
-- mensagem enviada/preparada;
-- data;
-- status;
-- origem do envio.
+- renderizar e congelar o template tecnico;
+- enfileirar e processar o envio;
+- aplicar retry;
+- registrar tentativas e respostas do provedor;
+- receber webhooks da Meta;
+- distinguir submissao, entrega, leitura e falha.
 
-## Status sugeridos
+## Mensagens proativas
 
-- Preparada;
-- Aberta no WhatsApp;
-- Enviada manualmente;
-- Respondida;
-- Sem resposta;
-- Cancelada.
+Acoes comerciais sao comunicacoes proativas. Portanto, usam templates aprovados no provedor e parametros ordenados. A Versao 1.0 nao permite editar livremente o corpo depois de escolher o template.
 
-## Observação importante
+## Estados apresentados pelo CRM
 
-Como o envio via `wa.me` não confirma automaticamente se a mensagem foi realmente enviada, a Versão 1.0 deve permitir controle manual de status.
+- `Pendente`;
+- `Solicitada`;
+- `Enviada`;
+- `Entregue`;
+- `Lida`;
+- `Falhou`;
+- `Removida`.
 
-A integração com WhatsApp Business API fica para uma fase futura.
+Os estados tecnicos originais permanecem no Notification Hub; o CRM mantem uma projecao voltada ao usuario.

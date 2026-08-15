@@ -1,41 +1,32 @@
 # Contexto do Projeto
 
-O cliente é **Anderson Mendes**, conhecido como **Major**, proprietário da unidade **LavaMais Praia Grande**.
+O cliente inicial e Anderson Mendes, conhecido como Major, responsavel pela unidade LavaMais Praia Grande.
 
-Inicialmente foi considerada a criação de uma plataforma completa para lavanderia, porém o projeto foi separado em duas frentes:
+O projeto foi separado em duas frentes:
 
-1. **LavaMais CRM e Relacionamento**
-2. **LavaMais Operação e Produção**, para uma fase futura
+1. LavaMais CRM, tratado neste repositorio;
+2. LavaMais Operacao e Producao, para uma iniciativa futura.
 
-Este projeto atual é exclusivamente focado em relacionamento, comunicação, vendas, campanhas, metas e indicadores comerciais.
+## Dor central
 
-## Dor principal identificada
+O conhecimento sobre os clientes esta disperso entre equipe, WhatsApp, memoria das pessoas e sistema operacional atual. A LavaMais precisa transformar esse conhecimento em comunicacao comercial organizada e mensuravel.
 
-A principal dor do Major não é apenas cadastro de clientes.
+## Restricao inicial
 
-A principal dor é:
+Nao teremos acesso imediato ao ambiente atual nem historico de pedidos e movimentacoes. A primeira entrega precisa gerar valor com cadastro e importacao de clientes, catalogo, etiquetas e informacoes declaradas.
 
-> Comunicação com clientes e atendimento personalizado.
+## Direcao
 
-Hoje, muito do conhecimento sobre os clientes está:
+A implantacao inicial concentra o produto na Acao Comercial: escolher uma oferta, selecionar um publico, enviar uma mensagem aprovada e acompanhar o resultado.
 
-- na cabeça do Major;
-- no WhatsApp;
-- nos atendentes;
-- em conversas informais;
-- em controles dispersos.
+Cliente 360, oportunidades automaticas, inatividade, metas e indicadores permanecem como direcao de evolucao, condicionados a dados confiaveis.
 
-Quando um cliente entra em contato, nem sempre a equipe possui contexto suficiente para oferecer um atendimento diferenciado.
+## Integracoes existentes
 
-## Oportunidade
+- Identity Hub para autenticacao e tenant;
+- Notification Hub para WhatsApp e futuros canais;
+- Essence GO Industrial como possivel fonte futura, sem integracao ativa nesta fase.
 
-Centralizar informações dos clientes para permitir:
+## Comunicacao externa
 
-- atendimento mais personalizado;
-- comunicação ativa;
-- recuperação de clientes inativos;
-- relacionamento com clientes VIP;
-- campanhas segmentadas;
-- aumento de frequência;
-- aumento de ticket médio;
-- gestão comercial mais previsível.
+Em materiais externos, usar `Versao 1.0`, `implantacao inicial` ou `primeira fase de implantacao`. Nao usar o termo MVP.

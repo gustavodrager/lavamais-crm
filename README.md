@@ -1,64 +1,60 @@
-# LavaMais CRM e Relacionamento
+# LavaMais CRM
 
-Projeto de planejamento, documentação e desenvolvimento do **LavaMais CRM e Relacionamento**.
+Plataforma de relacionamento comercial inicialmente destinada a LavaMais Praia Grande e preparada para evoluir como produto multitenant.
 
-Este produto é focado em:
+O sistema transforma a base de clientes, o catalogo de produtos e servicos e os modelos de mensagem em acoes comerciais rastreaveis.
 
-- CRM de clientes;
-- relacionamento;
-- atendimento personalizado;
-- comunicação via WhatsApp;
-- notificações;
-- campanhas comerciais;
-- metas comerciais;
-- dashboard comercial;
-- relatórios;
-- usuários, permissões, auditoria e LGPD básica.
+## Implantacao inicial
 
-Este projeto **não** contempla operação completa da lavanderia.
+A primeira entrega possui um fluxo principal:
 
-Ficam fora deste escopo:
+1. cadastrar ou importar clientes;
+2. cadastrar produtos e servicos;
+3. criar uma Acao Comercial;
+4. selecionar o publico por filtros simples;
+5. revisar os destinatarios elegiveis;
+6. escolher um modelo de mensagem aprovado;
+7. enviar pelo Notification Hub;
+8. acompanhar entrega e registrar o resultado comercial.
 
-- produção;
-- lavagem;
-- triagem;
-- passadoria;
+Nao teremos historico inicial de pedidos ou movimentacoes. Por isso, as primeiras segmentacoes usam dados declarados do cliente, localizacao, etiquetas, data de cadastro, permissao de comunicacao e selecao manual.
+
+## Limites do produto
+
+O LavaMais CRM nao contempla:
+
+- producao, lavagem, triagem ou passadoria;
 - estoque;
-- financeiro completo;
-- caixa;
-- fluxo de caixa;
-- logística avançada;
-- motoristas;
-- roteirização;
-- fotos de peças;
-- assinatura digital.
+- caixa, fluxo de caixa ou financeiro completo;
+- motoristas, roteirizacao ou logistica avancada;
+- assinatura digital ou fotos de pecas.
 
-Esses módulos pertencem a um projeto futuro chamado:
+Essas capacidades pertencem ao projeto futuro LavaMais Operacao e Producao.
 
-> LavaMais Operação e Produção
+## Stack definida
 
-## Conceito central
+- Next.js, React e TypeScript no frontend/BFF;
+- ASP.NET Core com .NET 10 na API;
+- Worker em .NET 10;
+- PostgreSQL e Entity Framework Core;
+- Identity Hub para autenticacao e contexto de tenant;
+- Notification Hub para WhatsApp e futuros canais;
+- xUnit, Testcontainers, Vitest e Playwright;
+- Docker e CI/CD.
 
-O produto deve ser tratado como uma **Plataforma de Relacionamento Comercial**, não como um simples cadastro de clientes.
+A aplicacao comeca como um monolito modular em um monorepo. O crescimento do produto nao exige microsservicos antecipados.
 
-O ativo principal do sistema é o:
+## Documentacao vigente
 
-> Cliente 360°
+- [Visao do produto](docs/00-visao-geral/02-visao-produto.md)
+- [Escopo da Versao 1.0](docs/00-visao-geral/03-escopo-versao-1.md)
+- [Arquitetura tecnica](docs/07-tecnico/README.md)
+- [Decisoes arquiteturais](docs/10-decisoes/README.md)
+- [Implantacao inicial](docs/11-implantacao-inicial/README.md)
+- [Orientacoes para agentes](AGENTS.md)
 
-Toda a experiência deve girar ao redor de conhecer melhor o cliente, entender seu contexto e facilitar ações de relacionamento e venda.
+Os prototipos e documentos marcados como historicos representam uma fase anterior de descoberta e nao devem ser usados como especificacao vigente.
 
-## Estrutura de documentação
+## Estado atual
 
-```text
-00-visao-geral/
-01-descoberta-negocio/
-02-produto/
-03-prototipo/
-04-backlog/
-05-regras-negocio/
-06-lgpd-seguranca/
-07-tecnico/
-08-comercial/
-09-reunioes/
-99-referencias/
-```
+Planejamento e consolidacao arquitetural. O scaffold de codigo ainda nao foi iniciado.

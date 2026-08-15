@@ -1,46 +1,40 @@
 # Regras de WhatsApp
 
-## Canal inicial
+## Canal e provedor
 
-A Versão 1.0 usará link `wa.me`.
+- A Versao 1.0 usa o canal `Whatsapp` do Notification Hub.
+- O CRM nao armazena credenciais da Meta.
+- O navegador nunca chama o Notification Hub diretamente.
+- Comunicacao proativa usa template aprovado e parametros controlados.
 
-## Formato do link
+## Identificacao
 
-O sistema deve gerar link com:
+- `source`: identificador configurado para o LavaMais CRM.
+- `templateKey`: chave tecnica vinculada a versao do modelo comercial.
+- `idempotencyKey`: `acao:{acaoId}:destinatario:{destinatarioId}:v1`.
+- `recipientPhone`: telefone normalizado e congelado no destinatario da acao.
 
-- número do cliente;
-- mensagem codificada;
-- texto personalizado.
+## Estados
 
-## Templates iniciais
+O CRM converte os estados do hub para sua projecao de apresentacao:
 
-### Roupa pronta
+| Notification Hub | CRM |
+|---|---|
+| `Pending` | `Solicitada` |
+| `Processing` | `Solicitada` |
+| `Sent` | `Enviada` |
+| `Failed` | `Falhou` |
+| `DeliveryStatus.Delivered` | `Entregue` |
+| `DeliveryStatus.Read` | `Lida` |
+| `DeliveryStatus.Undeliverable` | `Falhou` |
 
-Oi, {nome}! Suas roupas estão prontas para retirada na LavaMais Praia Grande.
+## Confiabilidade
 
-### Indo retirar roupas
+- A outbox do CRM registra a intencao de envio na mesma transacao da mudanca de estado do destinatario.
+- O Worker pode repetir a chamada com a mesma chave.
+- O Notification Hub e responsavel por lease, retry e tentativa tecnica.
+- O Worker reconcilia periodicamente notificacoes ainda nao finalizadas.
 
-Oi, {nome}! A equipe da LavaMais já está a caminho para retirar suas roupas.
+## Limites
 
-### Indo entregar roupas
-
-Oi, {nome}! A equipe da LavaMais já está a caminho para entregar suas roupas.
-
-### Cliente inativo
-
-Oi, {nome}! Faz um tempinho que você não manda roupa pra lavar. Quer agendar uma retirada?
-
-### Promoção camisa social
-
-Oi, {nome}! Hoje temos uma condição especial para lavagem de camisa social. Quer aproveitar?
-
-## Histórico
-
-Cada envio deve gerar histórico com:
-
-- cliente;
-- usuário;
-- template;
-- mensagem;
-- data;
-- status.
+Agendamento, mensagens livres, e-mail e SMS nao aparecem na interface inicial, mesmo que o Notification Hub possua essas capacidades.

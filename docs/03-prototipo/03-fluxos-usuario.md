@@ -1,5 +1,7 @@
 # Fluxos de Usuário
 
+> Status: historico e substituido. Os fluxos dependentes de movimentacoes e Cliente 360 pertencem ao roadmap.
+
 ## Fluxo 1 — Atendimento personalizado
 
 ```text

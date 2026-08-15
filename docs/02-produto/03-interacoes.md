@@ -1,5 +1,7 @@
 # Interações
 
+> Status: roadmap. Fora do escopo da Versao 1.0. O resultado comercial inicial e registrado diretamente no destinatario da Acao Comercial.
+
 A entidade **Interação** registra relacionamento humano com o cliente.
 
 Ela representa algo que a equipe sabe, ouviu, combinou ou registrou sobre o cliente.

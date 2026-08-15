@@ -1,49 +1,45 @@
-# Épicos da Versão 1.0
+# Epicos da Versao 1.0
 
-## EP01 — Autenticação e Usuários
+## EP01 — Fundacao tecnica
 
-Controle de acesso ao sistema por usuários e perfis.
+Monorepo, ambientes, banco, observabilidade, CI/CD e estrutura do monolito modular.
 
-## EP02 — Clientes
+## EP02 — Identidade e autorizacao
 
-Cadastro, consulta e manutenção da base de clientes.
+Login pelo Identity Hub, contexto de tenant e papeis locais do CRM.
 
-## EP03 — Perfil 360°
+## EP03 — Clientes
 
-Tela central com visão completa do cliente.
+Cadastro, busca, contatos, enderecos, etiquetas e permissao de comunicacao.
 
-## EP04 — Interações
+## EP04 — Importacao de clientes
 
-Registro de relacionamento humano com clientes.
+Entrada por CSV com mapeamento, pre-visualizacao, validacao e relatorio de resultado.
 
-## EP05 — Notificações WhatsApp
+## EP05 — Catalogo
 
-Envio de mensagens via `wa.me` e histórico de comunicação.
+Cadastro de produtos e servicos usados nas acoes comerciais.
 
-## EP06 — Segmentações
+## EP06 — Modelos de mensagem
 
-Classificação automática de clientes.
+Modelos comerciais vinculados aos templates tecnicos do Notification Hub.
 
-## EP07 — Central de Relacionamento
+## EP07 — Segmentacao
 
-Lista de oportunidades de contato e ação comercial.
+Filtros simples, simulacao de audiencia e regras de elegibilidade.
 
-## EP08 — Campanhas
+## EP08 — Acoes comerciais
 
-Criação e execução de campanhas segmentadas.
+Criacao, preparacao, congelamento de destinatarios, execucao e acompanhamento.
 
-## EP09 — Dashboard Comercial
+## EP09 — Integracao com Notification Hub
 
-Indicadores comerciais e oportunidades do dia.
+Outbox, idempotencia, solicitacao de envio e reconciliacao de estados.
 
-## EP10 — Metas
+## EP10 — Resultado comercial
 
-Cadastro e acompanhamento de metas comerciais.
+Registro manual de retorno, interesse, conversao e valor opcional.
 
-## EP11 — Relatórios
+## EP11 — Seguranca e auditoria
 
-Relatórios comerciais e exportações básicas.
-
-## EP12 — Segurança, Auditoria e LGPD
-
-Permissões, logs e proteção de dados pessoais.
+Isolamento por tenant, trilha de auditoria e protecao de operacoes sensiveis.

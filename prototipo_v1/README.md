@@ -1,6 +1,8 @@
 # LavaMais CRM e Relacionamento - Protótipo Navegável
 
-Este protótipo estático valida a apresentação visual e comercial da primeira fase de implantação para a LavaMais Praia Grande. O foco é CRM, relacionamento com clientes, WhatsApp manual, campanhas, metas, relatórios comerciais e Cliente 360°.
+> Status: prototipo historico. Nao define a Versao 1.0 vigente. Consulte `../docs/11-implantacao-inicial/`.
+
+Este prototipo estatico representou uma proposta anterior de apresentacao visual e comercial, com WhatsApp manual, campanhas, metas, relatorios e Cliente 360.
 
 Não há backend, banco de dados, API ou dependência externa. Tudo funciona com HTML, CSS e JavaScript simples.
 

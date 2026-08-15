@@ -1,46 +1,39 @@
-# Perfis e Permissões
+# Perfis e Permissoes
+
+## Separacao de responsabilidades
+
+O Identity Hub autentica o usuario, valida seu vinculo com o tenant e fornece `sub`, `tenant_id` e `tenant_slug`.
+
+O Identity Hub atualmente nao fornece papeis especificos do LavaMais CRM no token. O CRM mantem autorizacao local por `sub + tenant_id`, sem armazenar senha ou duplicar a conta.
 
 ## Administrador
 
-Acesso total.
-
-Pode acessar:
-
-- clientes;
-- interações;
-- notificações;
-- campanhas;
-- metas;
-- relatórios;
-- usuários;
-- permissões;
-- auditoria;
-- configurações.
+- gerenciar papeis do CRM;
+- importar clientes;
+- manter catalogo, etiquetas e modelos;
+- criar, preparar, executar e acompanhar acoes;
+- consultar auditoria e configuracoes.
 
 ## Gerente
 
-Pode acessar:
-
-- clientes;
-- interações;
-- campanhas;
-- metas;
-- relatórios;
-- notificações;
-- Central de Relacionamento.
+- manter clientes;
+- manter catalogo e etiquetas;
+- criar, preparar, executar e acompanhar acoes;
+- registrar resultados.
 
 ## Operador
 
-Pode acessar:
+- consultar e manter clientes;
+- consultar acoes;
+- acompanhar envios;
+- registrar resultados comerciais.
 
-- cadastro de clientes;
-- Perfil 360°;
-- movimentações comerciais;
-- envio de notificações permitidas;
-- registro de interações.
+O Operador nao prepara nem inicia uma acao na configuracao inicial.
 
-## Franqueadora
+## Regras
 
-Acesso somente leitura a indicadores comerciais autorizados.
-
-Sem acesso irrestrito a dados pessoais.
+- papeis sao sempre limitados ao tenant;
+- acesso negado por padrao;
+- autorizacao e validada na API, nao somente na interface;
+- mudancas de papel sao auditadas;
+- usuario autenticado sem papel ativo nao acessa dados empresariais.

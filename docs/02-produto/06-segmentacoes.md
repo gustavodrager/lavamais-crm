@@ -1,44 +1,36 @@
-# Segmentações
+# Segmentacao Inicial
 
-Segmentações automáticas ajudam a equipe a identificar oportunidades sem precisar criar filtros complexos.
+## Restricao de dados
 
-## Segmentações iniciais
+A LavaMais nao fornecera inicialmente historico de pedidos ou movimentacoes. Consequentemente, a Versao 1.0 nao calcula inatividade, frequencia, ticket medio, queda de consumo ou recuperacao.
 
-### Cliente ativo
+## Filtros disponiveis
 
-Cliente com movimentação nos últimos 30 dias.
+- bairro;
+- cidade;
+- tipo de cliente;
+- etiquetas;
+- interesses declarados;
+- cliente cadastrado dentro de um periodo;
+- aniversario dentro de um periodo, quando informado;
+- permissao de marketing pelo canal;
+- selecao manual.
 
-### Cliente em risco
+## Regra de elegibilidade
 
-Cliente sem movimentação entre 31 e 60 dias.
+Independentemente dos filtros escolhidos, um destinatario so pode entrar na audiencia quando:
 
-### Cliente inativo
+- pertence ao tenant autenticado;
+- esta ativo;
+- possui WhatsApp valido;
+- possui permissao de comunicacao compativel;
+- nao foi excluido manualmente da acao;
+- nao aparece duplicado na audiencia.
 
-Cliente sem movimentação há mais de 60 dias.
+## Simulacao e congelamento
 
-### Cliente recuperado
+A simulacao e dinamica e pode mudar enquanto os clientes sao atualizados. Ao preparar a Acao Comercial, os destinatarios elegiveis sao congelados em um snapshot. Alteracoes posteriores no cadastro nao acrescentam novos clientes silenciosamente.
 
-Cliente que estava inativo e voltou a ter movimentação.
+## Evolucao
 
-### Cliente VIP
-
-Cliente marcado manualmente como VIP ou identificado por critérios comerciais.
-
-Critérios possíveis:
-
-- total gasto acima de determinado valor;
-- ticket médio acima de determinado valor;
-- frequência alta;
-- relacionamento estratégico.
-
-### Cliente com queda de frequência
-
-Cliente que reduziu a frequência de compra em comparação ao próprio histórico.
-
-### Cliente sem contato recente
-
-Cliente sem interação ou notificação registrada nos últimos X dias.
-
-### Aniversariante
-
-Cliente com data de nascimento igual ao dia atual ou dentro do período selecionado.
+Classificacoes como `Ativo`, `EmRisco`, `Inativo`, `Recuperado`, `AltoTicket` e `QuedaDeFrequencia` so serao implementadas depois que existir uma fonte confiavel de movimentacoes e regras aprovadas.

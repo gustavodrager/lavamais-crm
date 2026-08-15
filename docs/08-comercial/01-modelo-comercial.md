@@ -1,5 +1,7 @@
 # Modelo Comercial
 
+> Status: referencia historica. Valores, escopo contratual e propriedade intelectual precisam de nova validacao antes de qualquer proposta externa.
+
 ## Direção recomendada
 
 Preferir licenciamento da plataforma, não venda do código.

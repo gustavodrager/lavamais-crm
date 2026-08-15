@@ -1,43 +1,53 @@
-# Campanhas
+# Acoes Comerciais e Campanhas
 
-Campanhas permitem ações comerciais baseadas em segmentação.
+## Acao Comercial
 
-## Exemplos de campanha
+Na Versao 1.0, a capacidade principal se chama `AcaoComercial`.
 
-- clientes inativos;
-- clientes VIP;
-- clientes Delivery;
-- aniversariantes;
-- promoção camisa social;
-- campanhas sazonais;
-- clientes por bairro;
-- clientes corporativos.
+Ela combina:
 
-## Fluxo da campanha
+- um objetivo;
+- um produto ou servico;
+- criterios de publico;
+- um modelo de mensagem;
+- uma audiencia congelada;
+- envios e resultados por destinatario.
+
+## Fluxo inicial
 
 ```text
-Gerente cria campanha
+Criar rascunho
 ↓
-Define segmento
+Escolher item do catalogo
 ↓
-Escolhe template
+Definir e simular publico
 ↓
-Sistema lista clientes elegíveis
+Revisar destinatarios
 ↓
-Usuário envia WhatsApp individualmente
+Escolher modelo aprovado
 ↓
-Cada envio fica registrado
+Preparar e congelar audiencia
 ↓
-Usuário registra respostas
+Iniciar envio imediato
 ↓
-Sistema mede resultado
+Acompanhar entrega
+↓
+Registrar resultado comercial
 ```
 
-## Indicadores iniciais
+## Resultado comercial
 
-- clientes selecionados;
-- mensagens abertas no WhatsApp;
-- mensagens marcadas como enviadas;
-- respostas registradas;
-- clientes convertidos;
-- valor comercial gerado.
+O resultado inicial e informado manualmente por destinatario:
+
+- `NaoInformado`;
+- `SemRetorno`;
+- `Respondeu`;
+- `Interessado`;
+- `Convertido`;
+- `NaoTemInteresse`.
+
+O valor convertido pode ser registrado opcionalmente. Isso nao representa pedido, faturamento ou controle financeiro.
+
+## Campanha futura
+
+O termo `Campanha` sera usado quando existirem recorrencia, agendamento, automacao, testes de conteudo ou jornadas com mais de uma mensagem. Essa evolucao nao faz parte da Versao 1.0.

@@ -1,55 +1,73 @@
-# Visão do Produto
+# Visao do Produto
 
-O **LavaMais CRM e Relacionamento** deve ser uma plataforma de relacionamento comercial para a unidade LavaMais Praia Grande.
+## Proposito
 
-O produto não deve nascer como um CRM tradicional baseado apenas em cadastro.
+O LavaMais CRM e uma plataforma de relacionamento comercial que ajuda a equipe a transformar conhecimento sobre clientes em comunicacao relevante, oportunidades e vendas.
 
-Ele deve nascer como uma solução para:
+O produto sera implantado inicialmente na LavaMais Praia Grande, mas nasce multitenant para permitir novas unidades e clientes no futuro.
 
-- conhecer melhor os clientes;
-- registrar histórico de relacionamento;
-- identificar oportunidades de contato;
-- facilitar comunicação via WhatsApp;
-- gerar vendas por relacionamento;
-- apoiar campanhas comerciais;
-- acompanhar metas e indicadores.
+## Problema
 
-## Frase de posicionamento
+Informacoes importantes sobre os clientes estao dispersas entre pessoas, WhatsApp e sistemas operacionais. Isso dificulta selecionar quem deve receber determinado contato, personalizar a abordagem e acompanhar o resultado.
 
-> Uma plataforma para transformar o conhecimento sobre os clientes da LavaMais Praia Grande em relacionamento, vendas e atendimento personalizado.
+## Primeira proposta de valor
 
-## Conceito central
+> Escolher um produto ou servico, encontrar clientes elegiveis na base e executar uma Acao Comercial personalizada com rastreabilidade.
 
-O centro do produto é o:
+## Implantacao inicial
 
-> Cliente 360°
+O primeiro fluxo do produto sera a `AcaoComercial`:
 
-Ao abrir um cliente, a equipe deve enxergar rapidamente:
+```text
+Produto ou servico
+        +
+Publico selecionado
+        +
+Modelo de mensagem
+        ↓
+Revisao dos destinatarios
+        ↓
+Envio pelo Notification Hub
+        ↓
+Entrega e resultado comercial
+```
 
-- dados básicos;
-- histórico comercial;
-- ticket médio;
-- frequência;
-- total gasto;
-- preferências;
-- restrições;
-- reclamações;
-- elogios;
-- interações;
-- notificações;
-- campanhas;
-- oportunidades de relacionamento;
-- classificações automáticas.
+Sem historico de pedidos, o sistema nao fingira possuir inteligencia que os dados ainda nao permitem. As primeiras sugestoes e segmentacoes usam:
 
-## Direção de produto
+- tipo de cliente;
+- bairro e cidade;
+- etiquetas e interesses declarados;
+- data de cadastro;
+- data de nascimento, quando informada;
+- permissao de comunicacao;
+- selecao manual.
 
-O sistema deve ser:
+O aprendizado comercial sera construido a partir das acoes e interacoes registradas pelo proprio CRM e de integracoes futuras.
 
-- simples;
-- prático;
-- orientado a ação;
-- focado em WhatsApp;
-- fácil para atendente usar;
-- útil para o Major acompanhar;
+## Evolucao esperada
+
+Depois da implantacao inicial, o produto podera evoluir para:
+
+- Cliente 360;
+- historico de interacoes;
+- oportunidades sugeridas;
+- campanhas recorrentes e agendadas;
+- funil comercial;
+- tarefas e proximas acoes;
+- integracao com pedidos e movimentacoes;
+- indicadores, metas e relatorios;
+- automacoes e inteligencia aplicada aos dados.
+
+## Principios
+
+- simples para a equipe operar diariamente;
+- orientado a acao, e nao apenas a cadastro;
 - seguro para dados pessoais;
-- preparado para evoluir como SaaS.
+- rastreavel e auditavel;
+- multitenant desde a base;
+- preparado para crescer sem complexidade prematura;
+- integracoes externas sempre isoladas por contratos.
+
+## Fora do dominio
+
+Producao, lavagem, triagem, passadoria, estoque, caixa, financeiro completo, motoristas e roteirizacao pertencem ao futuro LavaMais Operacao e Producao.

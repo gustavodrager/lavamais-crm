@@ -1,55 +1,71 @@
-# Histórias de Usuário
+# Historias de Usuario da Versao 1.0
+
+## Acesso
+
+### HU01 — Entrar no CRM
+
+Como usuario autorizado, quero entrar pelo Identity Hub para acessar o tenant selecionado sem manter outra senha.
 
 ## Clientes
 
-### HU01 — Cadastrar cliente
+### HU02 — Cadastrar cliente
 
-Como operador, quero cadastrar um cliente com nome e WhatsApp para iniciar o relacionamento no sistema.
+Como operador, quero cadastrar nome e WhatsApp para incluir um cliente na base de relacionamento.
 
-### HU02 — Buscar cliente
+### HU03 — Buscar e editar cliente
 
-Como operador, quero buscar cliente por nome, WhatsApp ou bairro para encontrar rapidamente seu cadastro.
+Como operador, quero localizar um cliente por nome, WhatsApp ou bairro e manter seus dados atualizados.
 
-### HU03 — Abrir Perfil 360°
+### HU04 — Registrar permissao
 
-Como operador, quero abrir o Perfil 360° do cliente para consultar contexto antes de atender.
+Como operador, quero registrar a preferencia de comunicacao do cliente para evitar contatos indevidos.
 
-## Interações
+### HU05 — Importar clientes
 
-### HU04 — Registrar interação
+Como administrador, quero revisar e importar um CSV para iniciar a base sem cadastrar cada cliente manualmente.
 
-Como operador, quero registrar uma interação com o cliente para manter histórico de relacionamento.
+## Catalogo e modelos
 
-### HU05 — Registrar reclamação
+### HU06 — Manter item do catalogo
 
-Como operador, quero registrar reclamações para que a equipe tenha cuidado nos próximos atendimentos.
+Como gerente, quero cadastrar produtos e servicos para relaciona-los a uma Acao Comercial.
 
-## WhatsApp
+### HU07 — Manter modelo comercial
 
-### HU06 — Enviar mensagem via WhatsApp
+Como administrador, quero disponibilizar um modelo aprovado para que a equipe use mensagens consistentes.
 
-Como operador, quero escolher um template e abrir o WhatsApp com mensagem pronta para agilizar a comunicação.
+## Acao Comercial
 
-### HU07 — Registrar histórico de notificação
+### HU08 — Criar acao
 
-Como gerente, quero que toda mensagem preparada ou enviada fique registrada no cliente.
+Como gerente, quero informar nome, objetivo e item do catalogo para iniciar uma Acao Comercial.
 
-## Central de Relacionamento
+### HU09 — Definir publico
 
-### HU08 — Visualizar oportunidades
+Como gerente, quero filtrar ou selecionar clientes e visualizar quantos estao elegiveis.
 
-Como gerente, quero ver clientes que precisam de contato para orientar a rotina comercial.
+### HU10 — Revisar destinatarios
 
-### HU09 — Resolver oportunidade
+Como gerente, quero revisar e remover destinatarios antes de preparar a acao.
 
-Como operador, quero marcar uma oportunidade como resolvida após realizar contato.
+### HU11 — Preparar acao
 
-## Campanhas
+Como gerente, quero congelar publico e modelo para impedir mudancas silenciosas durante o envio.
 
-### HU10 — Criar campanha
+### HU12 — Executar acao
 
-Como gerente, quero criar campanhas para segmentos de clientes para aumentar vendas e recuperar clientes.
+Como gerente, quero iniciar o envio para que o Worker solicite mensagens idempotentes ao Notification Hub.
 
-### HU11 — Acompanhar campanha
+### HU13 — Acompanhar envios
 
-Como gerente, quero acompanhar status de envio e retorno para avaliar resultado.
+Como operador, quero visualizar o estado de cada destinatario para entender o andamento da acao.
+
+### HU14 — Registrar resultado
+
+Como operador, quero registrar resposta, interesse ou conversao para avaliar o resultado comercial.
+
+## Auditoria
+
+### HU15 — Consultar trilha
+
+Como administrador, quero consultar operacoes sensiveis para investigar alteracoes e envios.
