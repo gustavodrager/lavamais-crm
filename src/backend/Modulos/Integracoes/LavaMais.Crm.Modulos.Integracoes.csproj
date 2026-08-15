@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup><ProjectReference Include="../../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" /></ItemGroup>
+</Project>

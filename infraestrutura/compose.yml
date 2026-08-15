@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: lavamais_crm
+      POSTGRES_USER: lavamais
+      POSTGRES_PASSWORD: lavamais_local
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lavamais -d lavamais_crm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - lavamais_postgres:/var/lib/postgresql/data
+
+volumes:
+  lavamais_postgres:

@@ -42,7 +42,8 @@ lavamais-crm/
 │       │   ├── AcoesComerciais/
 │       │   ├── Importacoes/
 │       │   ├── Autorizacao/
-│       │   └── Auditoria/
+│       │   ├── Auditoria/
+│       │   └── Integracoes/
 │       └── BlocosDeConstrucao/
 ├── testes/
 │   ├── backend/

@@ -57,4 +57,4 @@ Os prototipos e documentos marcados como historicos representam uma fase anterio
 
 ## Estado atual
 
-Planejamento e consolidacao arquitetural. O scaffold de codigo ainda nao foi iniciado.
+A Fatia 0 da implantacao inicial estabelece a fundacao do backend. Consulte as [instrucoes do backend](src/backend/README.md) para executar API, Worker, PostgreSQL e testes.

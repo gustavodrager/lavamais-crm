@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/backend/">
+    <Project Path="src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj" />
+    <Project Path="src/backend/LavaMais.Crm.Worker/LavaMais.Crm.Worker.csproj" />
+    <Project Path="src/backend/BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+  </Folder>
+  <Folder Name="/src/backend/Modulos/">
+    <Project Path="src/backend/Modulos/AcoesComerciais/LavaMais.Crm.Modulos.AcoesComerciais.csproj" />
+    <Project Path="src/backend/Modulos/Auditoria/LavaMais.Crm.Modulos.Auditoria.csproj" />
+    <Project Path="src/backend/Modulos/Autorizacao/LavaMais.Crm.Modulos.Autorizacao.csproj" />
+    <Project Path="src/backend/Modulos/Catalogo/LavaMais.Crm.Modulos.Catalogo.csproj" />
+    <Project Path="src/backend/Modulos/Clientes/LavaMais.Crm.Modulos.Clientes.csproj" />
+    <Project Path="src/backend/Modulos/Importacoes/LavaMais.Crm.Modulos.Importacoes.csproj" />
+    <Project Path="src/backend/Modulos/Integracoes/LavaMais.Crm.Modulos.Integracoes.csproj" />
+    <Project Path="src/backend/Modulos/ModelosDeMensagem/LavaMais.Crm.Modulos.ModelosDeMensagem.csproj" />
+    <Project Path="src/backend/Modulos/Segmentacao/LavaMais.Crm.Modulos.Segmentacao.csproj" />
+  </Folder>
+  <Folder Name="/testes/backend/">
+    <Project Path="testes/backend/LavaMais.Crm.Testes.Arquitetura/LavaMais.Crm.Testes.Arquitetura.csproj" />
+    <Project Path="testes/backend/LavaMais.Crm.Testes.Integracao/LavaMais.Crm.Testes.Integracao.csproj" />
+  </Folder>
+</Solution>
