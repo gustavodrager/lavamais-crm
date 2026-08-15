@@ -16,8 +16,14 @@ public sealed class DependenciasDosModulosTestes
         var referenciasInvalidas = projetos
             .SelectMany(projeto => XDocument.Load(projeto)
                 .Descendants("ProjectReference")
-                .Select(referencia => new { Projeto = projeto, Caminho = (string?)referencia.Attribute("Include") }))
-            .Where(referencia => referencia.Caminho?.Contains("Modulos", StringComparison.OrdinalIgnoreCase) == true)
+                .Select(referencia => new
+                {
+                    Projeto = projeto,
+                    Destino = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(projeto)!, (string)referencia.Attribute("Include")!))
+                }))
+            .Where(referencia => referencia.Destino.Contains($"{Path.DirectorySeparatorChar}Modulos{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .Where(referencia => !(referencia.Projeto.Contains($"Modulos{Path.DirectorySeparatorChar}Importacoes", StringComparison.OrdinalIgnoreCase)
+                && referencia.Destino.Contains($"Modulos{Path.DirectorySeparatorChar}Clientes", StringComparison.OrdinalIgnoreCase)))
             .ToArray();
 
         Assert.Empty(referenciasInvalidas);

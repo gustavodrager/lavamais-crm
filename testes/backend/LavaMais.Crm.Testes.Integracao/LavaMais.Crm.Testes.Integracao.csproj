@@ -3,6 +3,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Npgsql" />
@@ -15,5 +16,6 @@
     <ProjectReference Include="../../../src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Autorizacao/LavaMais.Crm.Modulos.Autorizacao.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Clientes/LavaMais.Crm.Modulos.Clientes.csproj" />
+    <ProjectReference Include="../../../src/backend/Modulos/Importacoes/LavaMais.Crm.Modulos.Importacoes.csproj" />
   </ItemGroup>
 </Project>
