@@ -57,4 +57,4 @@ Os prototipos e documentos marcados como historicos representam uma fase anterio
 
 ## Estado atual
 
-A Fatia 0 da implantacao inicial estabelece a fundacao do backend. Consulte as [instrucoes do backend](src/backend/README.md) para executar API, Worker, PostgreSQL e testes.
+O backend possui as Fatias 0 a 4 da implantacao inicial: fundacao, identidade e tenant, clientes, importacao CSV, catalogo e modelos de mensagem. Consulte as [instrucoes do backend](src/backend/README.md) para executar API, Worker, PostgreSQL e testes.

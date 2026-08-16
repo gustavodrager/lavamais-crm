@@ -39,13 +39,16 @@ public sealed class ApiDaFundacaoTestes
         Assert.Equal("application/json", resposta.Content.Headers.ContentType?.MediaType);
     }
 
-    [Fact]
-    public async Task Deve_exigir_autenticacao_nos_endpoints_empresariais()
+    [Theory]
+    [InlineData("/api/v1/usuarios-crm")]
+    [InlineData("/api/v1/itens-de-catalogo")]
+    [InlineData("/api/v1/modelos-de-mensagem")]
+    public async Task Deve_exigir_autenticacao_nos_endpoints_empresariais(string rota)
     {
         await using var fabrica = CriarFabrica();
         using var cliente = fabrica.CreateClient();
 
-        using var resposta = await cliente.GetAsync("/api/v1/usuarios-crm", TestContext.Current.CancellationToken);
+        using var resposta = await cliente.GetAsync(rota, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
     }
