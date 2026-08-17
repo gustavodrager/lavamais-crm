@@ -29,6 +29,8 @@ public static class ExtensoesDoModuloAutorizacao
                 politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(null)));
             opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica =>
                 politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador)));
+            opcoes.AddPolicy(PoliticasDeAutorizacao.Gestor, politica =>
+                politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador, PapelDoCrm.Gerente)));
         });
         return servicos;
     }

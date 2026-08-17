@@ -17,7 +17,7 @@ public static class ExtensoesDoModuloClientes
     public static IServiceCollection AdicionarModuloClientes(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeClientes>(configuracao, ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema);
-        servicos.AddScoped<GerenciadorDeClientes>(); return servicos;
+        servicos.AddScoped<GerenciadorDeClientes>(); servicos.AddScoped<ConsultaDeClientesParaSegmentacao>(); return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloClientes(this IEndpointRouteBuilder endpoints)

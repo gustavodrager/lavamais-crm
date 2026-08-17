@@ -2,27 +2,19 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Autorizacao.Dominio;
 using LavaMais.Crm.Modulos.Autorizacao.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 
 namespace LavaMais.Crm.Testes.Integracao;
 
-public sealed class IsolamentoDeAutorizacaoTestes
+public sealed class IsolamentoDeAutorizacaoTestes(PostgresCompartilhado postgres)
 {
     [Fact]
     [Trait("Categoria", "RequerDocker")]
     public async Task Deve_isolar_usuarios_por_tenant()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        await using var postgres = new PostgreSqlBuilder("postgres:17-alpine")
-            .WithDatabase("lavamais_crm_autorizacao")
-            .WithUsername("lavamais")
-            .WithPassword("senha_de_teste")
-            .Build();
-        await postgres.StartAsync(cancellationToken);
-
         var tenantA = Guid.NewGuid();
         var tenantB = Guid.NewGuid();
-        var opcoes = CriarOpcoes(postgres.GetConnectionString());
+        var opcoes = CriarOpcoes(postgres.Conexao);
 
         await using (var bancoTenantA = new ContextoDeAutorizacao(opcoes, new ContextoDeTeste(tenantA, "usuario-a")))
         {

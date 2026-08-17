@@ -2,20 +2,17 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Clientes.Dominio;
 using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 
 namespace LavaMais.Crm.Testes.Integracao;
 
-public sealed class ClientesPersistenciaTestes
+public sealed class ClientesPersistenciaTestes(PostgresCompartilhado postgres)
 {
     [Fact]
     [Trait("Categoria", "RequerDocker")]
     public async Task Deve_isolar_clientes_e_permitir_mesmo_whatsapp_em_tenants_diferentes()
     {
         var ct = TestContext.Current.CancellationToken;
-        await using var postgres = new PostgreSqlBuilder("postgres:17-alpine").WithDatabase("clientes_testes").WithUsername("lavamais").WithPassword("senha_de_teste").Build();
-        await postgres.StartAsync(ct);
-        var opcoes = CriarOpcoes(postgres.GetConnectionString());
+        var opcoes = CriarOpcoes(postgres.Conexao);
         var tenantA = Guid.NewGuid(); var tenantB = Guid.NewGuid();
 
         await using (var banco = new ContextoDeClientes(opcoes, new Contexto(tenantA)))
@@ -37,9 +34,7 @@ public sealed class ClientesPersistenciaTestes
     public async Task Deve_liberar_whatsapp_apos_inativacao()
     {
         var ct = TestContext.Current.CancellationToken;
-        await using var postgres = new PostgreSqlBuilder("postgres:17-alpine").WithDatabase("clientes_inativacao").WithUsername("lavamais").WithPassword("senha_de_teste").Build();
-        await postgres.StartAsync(ct);
-        var tenant = Guid.NewGuid(); var opcoes = CriarOpcoes(postgres.GetConnectionString());
+        var tenant = Guid.NewGuid(); var opcoes = CriarOpcoes(postgres.Conexao);
         await using var banco = new ContextoDeClientes(opcoes, new Contexto(tenant)); await banco.Database.MigrateAsync(ct);
         var anterior = CriarCliente(tenant, "Anterior"); banco.Add(anterior); await banco.SaveChangesAsync(ct);
         anterior.Inativar(DateTimeOffset.UtcNow); await banco.SaveChangesAsync(ct);

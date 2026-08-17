@@ -5,22 +5,19 @@ using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
 using LavaMais.Crm.Modulos.Importacoes.Aplicacao;
 using LavaMais.Crm.Modulos.Importacoes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
-using Testcontainers.PostgreSql;
 
 namespace LavaMais.Crm.Testes.Integracao;
 
-public sealed class ImportacaoCsvTestes
+public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
 {
     [Fact]
     [Trait("Categoria", "RequerDocker")]
     public async Task Deve_pre_visualizar_confirmar_e_relatar_linhas_invalidas()
     {
         var ct = TestContext.Current.CancellationToken;
-        await using var postgres = new PostgreSqlBuilder("postgres:17-alpine").WithDatabase("importacoes_testes").WithUsername("lavamais").WithPassword("senha_de_teste").Build();
-        await postgres.StartAsync(ct);
         var contexto = new Contexto(Guid.NewGuid());
-        var opcoesClientes = new DbContextOptionsBuilder<ContextoDeClientes>().UseNpgsql(postgres.GetConnectionString(), p => p.MigrationsHistoryTable(ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema)).Options;
-        var opcoesImportacoes = new DbContextOptionsBuilder<ContextoDeImportacoes>().UseNpgsql(postgres.GetConnectionString(), p => p.MigrationsHistoryTable(ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema)).Options;
+        var opcoesClientes = new DbContextOptionsBuilder<ContextoDeClientes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema)).Options;
+        var opcoesImportacoes = new DbContextOptionsBuilder<ContextoDeImportacoes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema)).Options;
         await using var bancoClientes = new ContextoDeClientes(opcoesClientes, contexto); await bancoClientes.Database.MigrateAsync(ct);
         await using var bancoImportacoes = new ContextoDeImportacoes(opcoesImportacoes, contexto); await bancoImportacoes.Database.MigrateAsync(ct);
         var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);

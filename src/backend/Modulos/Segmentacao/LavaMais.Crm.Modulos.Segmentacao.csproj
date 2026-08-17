@@ -1,3 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><ProjectReference Include="../../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" /></ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+    <ProjectReference Include="../Clientes/LavaMais.Crm.Modulos.Clientes.csproj" />
+  </ItemGroup>
 </Project>

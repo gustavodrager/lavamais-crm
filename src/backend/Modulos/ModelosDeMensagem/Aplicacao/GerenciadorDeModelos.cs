@@ -26,3 +26,13 @@ public sealed class GerenciadorDeModelos(ContextoDeModelos banco, IContextoDoUsu
 }
 
 public sealed record DadosDaPublicacao(string ConteudoPreVisualizacao, IReadOnlyCollection<string>? Variaveis, string ChaveTemplateNotificacao);
+
+public sealed class ConsultaDeModelos(ContextoDeModelos banco)
+{
+    public async Task<VersaoPublicadaDisponivel?> ObterVersaoPublicada(Guid id, CancellationToken ct) => await banco.Modelos.AsNoTracking()
+        .Where(x => x.Situacao == SituacaoDoModelo.Publicado)
+        .SelectMany(x => x.Versoes.Where(v => v.Id == id), (modelo, versao) => new VersaoPublicadaDisponivel(versao.Id, modelo.Nome, versao.Numero))
+        .SingleOrDefaultAsync(ct);
+}
+
+public sealed record VersaoPublicadaDisponivel(Guid Id, string NomeModelo, int Numero);

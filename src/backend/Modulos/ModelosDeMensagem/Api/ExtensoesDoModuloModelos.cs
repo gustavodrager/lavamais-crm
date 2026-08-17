@@ -16,7 +16,7 @@ public static class ExtensoesDoModuloModelos
     public static IServiceCollection AdicionarModuloModelos(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeModelos>(configuracao, ContextoDeModelos.Historico, ContextoDeModelos.Schema);
-        servicos.AddScoped<GerenciadorDeModelos>(); return servicos;
+        servicos.AddScoped<GerenciadorDeModelos>(); servicos.AddScoped<ConsultaDeModelos>(); return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloModelos(this IEndpointRouteBuilder endpoints)

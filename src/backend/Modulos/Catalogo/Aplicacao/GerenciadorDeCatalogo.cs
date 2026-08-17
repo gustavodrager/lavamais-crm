@@ -38,3 +38,12 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
 }
 
 public sealed record DadosDoItemDeCatalogo(TipoDeItemDeCatalogo Tipo, string Nome, string? Descricao, string? Categoria, decimal? ValorReferencia, SituacaoDoItemDeCatalogo Situacao = SituacaoDoItemDeCatalogo.Ativo);
+
+public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco)
+{
+    public async Task<ItemDeCatalogoDisponivel?> ObterAtivo(Guid id, CancellationToken ct) => await banco.Itens.AsNoTracking()
+        .Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo)
+        .Select(x => new ItemDeCatalogoDisponivel(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
+}
+
+public sealed record ItemDeCatalogoDisponivel(Guid Id, string Nome);

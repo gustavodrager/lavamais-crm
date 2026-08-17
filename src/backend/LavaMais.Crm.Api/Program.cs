@@ -1,11 +1,13 @@
 using LavaMais.Crm.BlocosDeConstrucao.Api;
 using LavaMais.Crm.BlocosDeConstrucao.Api.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.Modulos.AcoesComerciais.Api;
 using LavaMais.Crm.Modulos.Autorizacao.Api;
 using LavaMais.Crm.Modulos.Catalogo.Api;
 using LavaMais.Crm.Modulos.Clientes.Api;
 using LavaMais.Crm.Modulos.Importacoes.Api;
 using LavaMais.Crm.Modulos.ModelosDeMensagem.Api;
+using LavaMais.Crm.Modulos.Segmentacao.Api;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
@@ -22,6 +24,8 @@ construtor.Services.AdicionarModuloCatalogo(construtor.Configuration);
 construtor.Services.AdicionarModuloClientes(construtor.Configuration);
 construtor.Services.AdicionarModuloImportacoes(construtor.Configuration);
 construtor.Services.AdicionarModuloModelos(construtor.Configuration);
+construtor.Services.AdicionarModuloSegmentacao();
+construtor.Services.AdicionarModuloAcoesComerciais(construtor.Configuration);
 construtor.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(opcoes =>
 {
     var secao = construtor.Configuration.GetRequiredSection("Autenticacao");
@@ -62,6 +66,7 @@ aplicacao.MapearModuloCatalogo();
 aplicacao.MapearModuloClientes();
 aplicacao.MapearModuloImportacoes();
 aplicacao.MapearModuloModelos();
+aplicacao.MapearModuloAcoesComerciais();
 
 await aplicacao.RunAsync();
 

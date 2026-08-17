@@ -18,7 +18,7 @@ public sealed class TratadorDePapelDoCrm(ContextoDeAutorizacao banco, IContextoD
         var usuario = await banco.UsuariosCrm.AsNoTracking().SingleOrDefaultAsync(
             item => item.UsuarioIdentidadeId == usuarioAtual.UsuarioIdentidadeId && item.Situacao == SituacaoDoUsuarioCrm.Ativo);
 
-        if (usuario is not null && (requirement.Papel is null || usuario.Papel == requirement.Papel))
+        if (usuario is not null && (requirement.Papel is null || usuario.Papel == requirement.Papel || usuario.Papel == requirement.PapelAlternativo))
             context.Succeed(requirement);
     }
 }

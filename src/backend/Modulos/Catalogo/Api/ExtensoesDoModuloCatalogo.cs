@@ -16,7 +16,7 @@ public static class ExtensoesDoModuloCatalogo
     public static IServiceCollection AdicionarModuloCatalogo(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeCatalogo>(configuracao, ContextoDeCatalogo.Historico, ContextoDeCatalogo.Schema);
-        servicos.AddScoped<GerenciadorDeCatalogo>(); return servicos;
+        servicos.AddScoped<GerenciadorDeCatalogo>(); servicos.AddScoped<ConsultaDeCatalogo>(); return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloCatalogo(this IEndpointRouteBuilder endpoints)

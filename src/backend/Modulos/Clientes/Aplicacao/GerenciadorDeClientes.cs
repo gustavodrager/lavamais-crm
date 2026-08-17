@@ -74,3 +74,27 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
 
 public sealed record DadosDoCliente(string Nome, string Whatsapp, string? NomeFantasia, string? Tipo, string? Email, DateOnly? DataNascimento, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds);
 public sealed record DadosDoEndereco(string? Logradouro, string? Numero, string? Complemento, string? Bairro, string? Cidade, string? Estado, string? Cep);
+
+public sealed class ConsultaDeClientesParaSegmentacao(ContextoDeClientes banco)
+{
+    public Task<List<ClienteParaSegmentacao>> Consultar(FiltroDeClientesParaSegmentacao filtro, CancellationToken ct)
+    {
+        var consulta = banco.Clientes.AsNoTracking().AsQueryable();
+        if (filtro.ClienteIds.Count > 0) consulta = consulta.Where(x => filtro.ClienteIds.Contains(x.Id));
+        if (!string.IsNullOrWhiteSpace(filtro.Tipo)) consulta = consulta.Where(x => x.Tipo == filtro.Tipo);
+        if (filtro.Cidades.Count > 0) consulta = consulta.Where(x => x.Endereco != null && filtro.Cidades.Contains(x.Endereco.Cidade!));
+        if (filtro.Bairros.Count > 0) consulta = consulta.Where(x => x.Endereco != null && filtro.Bairros.Contains(x.Endereco.Bairro!));
+        foreach (var etiquetaId in filtro.EtiquetaIds) consulta = consulta.Where(x => x.Etiquetas.Any(e => e.EtiquetaId == etiquetaId));
+        if (filtro.CadastradoApartirDe is not null) consulta = consulta.Where(x => x.DataCriacao >= filtro.CadastradoApartirDe);
+        if (filtro.DataNascimentoDe is not null) consulta = consulta.Where(x => x.DataNascimento >= filtro.DataNascimentoDe);
+        if (filtro.DataNascimentoAte is not null) consulta = consulta.Where(x => x.DataNascimento <= filtro.DataNascimentoAte);
+        return consulta.OrderBy(x => x.Nome).Select(x => new ClienteParaSegmentacao(
+            x.Id, x.Nome, x.Situacao == SituacaoDoCliente.Ativo, x.DataCriacao,
+            x.Contatos.Where(c => c.Tipo == TipoDeContato.Whatsapp).Select(c => c.ValorNormalizado).FirstOrDefault(),
+            x.Contatos.Any(c => c.Tipo == TipoDeContato.Whatsapp && c.Situacao == SituacaoDoContato.Ativo),
+            x.Permissoes.Any(p => p.Canal == TipoDeContato.Whatsapp && p.Finalidade == "Marketing" && p.Permitida))).ToListAsync(ct);
+    }
+}
+
+public sealed record FiltroDeClientesParaSegmentacao(IReadOnlyCollection<Guid> ClienteIds, string? Tipo, IReadOnlyCollection<string> Cidades, IReadOnlyCollection<string> Bairros, IReadOnlyCollection<Guid> EtiquetaIds, DateTimeOffset? CadastradoApartirDe, DateOnly? DataNascimentoDe, DateOnly? DataNascimentoAte);
+public sealed record ClienteParaSegmentacao(Guid Id, string Nome, bool Ativo, DateTimeOffset DataCriacao, string? Whatsapp, bool ContatoWhatsappAtivo, bool PermiteMarketingWhatsapp);
