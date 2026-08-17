@@ -1,6 +1,7 @@
 using LavaMais.Crm.Modulos.Integracoes.Aplicacao;
 
 namespace LavaMais.Crm.Worker;
+
 public sealed class WorkerDeIntegracoes(IServiceScopeFactory escopos, ILogger<WorkerDeIntegracoes> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

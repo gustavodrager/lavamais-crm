@@ -5,6 +5,7 @@ using LavaMais.Crm.Modulos.Integracoes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
 
 namespace LavaMais.Crm.Modulos.Integracoes.Aplicacao;
+
 public sealed class PublicadorDeOutbox(ContextoDeIntegracoes banco) : IPublicadorDeOutbox
 {
     public async Task Publicar(IReadOnlyCollection<MensagemDeOutboxSolicitada> mensagens, DbTransaction transacao, CancellationToken ct)

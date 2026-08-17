@@ -24,18 +24,37 @@ public static class ExtensoesDoModuloAcoesComerciais
     {
         var grupo = endpoints.MapGroup("/api/v1/acoes-comerciais").RequireAuthorization(PoliticasDeAutorizacao.Gestor).WithTags("Acoes comerciais");
         grupo.MapGet("/", async (GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.Listar(ct)).Select(Resposta.Criar));
-        grupo.MapGet("/{id:guid}", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Resposta.Criar(await g.Obter(id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.")));
+        grupo.MapGet("/{id:guid}", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => DetalheResposta.Criar(await g.ObterDetalhe(id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.")));
         grupo.MapPost("/", async (DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { var acao = await g.Criar(dados, ct); return Results.Created($"/api/v1/acoes-comerciais/{acao.Id}", Resposta.Criar(acao)); });
         grupo.MapPut("/{id:guid}", async (Guid id, DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); });
         grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct)));
         grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); });
         grupo.MapPost("/{id:guid}/iniciar", async (Guid id, IniciarAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Iniciar(id, dados.Versao, ct); return Results.NoContent(); });
-        grupo.MapGet("/{id:guid}/destinatarios", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.ListarDestinatarios(id, ct)).Select(x => new { x.Id, x.ClienteId, x.NomeClienteSnapshot, x.DestinoSnapshot, x.ConteudoPreVisualizacaoSnapshot, x.SituacaoEnvio }));
+        grupo.MapGet("/{id:guid}/destinatarios", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.ListarDestinatarios(id, ct)).Select(DestinatarioResposta.Criar));
+
+        endpoints.MapPut("/api/v1/acoes-comerciais/{id:guid}/destinatarios/{destinatarioId:guid}/resultado", async (Guid id, Guid destinatarioId, RegistrarResultado dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
+        { await g.RegistrarResultado(id, destinatarioId, dados.Resultado, dados.ValorConvertido, dados.Versao, ct); return Results.NoContent(); })
+            .RequireAuthorization(PoliticasDeAutorizacao.UsuarioAtivo).WithTags("Acoes comerciais");
         return endpoints;
     }
 
     public sealed record PrepararAcao(uint Versao);
     public sealed record IniciarAcao(uint Versao);
+    public sealed record RegistrarResultado(ResultadoComercial Resultado, decimal? ValorConvertido, uint Versao);
+
+    public sealed record DestinatarioResposta(Guid Id, Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao, SituacaoDoEnvio SituacaoEnvio, ResultadoComercial ResultadoComercial, decimal? ValorConvertido, DateTimeOffset? DataResultadoComercial, string? CodigoFalha, uint Versao)
+    { public static DestinatarioResposta Criar(DestinatarioDaAcao d) => new(d.Id, d.ClienteId, d.NomeClienteSnapshot, d.DestinoSnapshot, d.ConteudoPreVisualizacaoSnapshot, d.SituacaoEnvio, d.ResultadoComercial, d.ValorConvertido, d.DataResultadoComercial, d.CodigoFalha, d.Versao); }
+
+    public sealed record TotaisDaAcao(int Destinatarios, int Pendentes, int Solicitados, int Enviados, int Entregues, int Lidos, int Falhos, int NaoInformados, int SemRetorno, int Responderam, int Interessados, int Convertidos, int SemInteresse, decimal ValorConvertido);
+    public sealed record DetalheResposta(Resposta Acao, TotaisDaAcao Totais, IReadOnlyCollection<DestinatarioResposta> Destinatarios)
+    {
+        public static DetalheResposta Criar(AcaoComercial acao)
+        {
+            var d = acao.Destinatarios;
+            var totais = new TotaisDaAcao(d.Count, d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Pendente), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Solicitado), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Enviado), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Entregue), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Lido), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Falhou), d.Count(x => x.ResultadoComercial == ResultadoComercial.NaoInformado), d.Count(x => x.ResultadoComercial == ResultadoComercial.SemRetorno), d.Count(x => x.ResultadoComercial == ResultadoComercial.Respondeu), d.Count(x => x.ResultadoComercial == ResultadoComercial.Interessado), d.Count(x => x.ResultadoComercial == ResultadoComercial.Convertido), d.Count(x => x.ResultadoComercial == ResultadoComercial.NaoTemInteresse), d.Sum(x => x.ValorConvertido ?? 0));
+            return new(Resposta.Criar(acao), totais, d.OrderBy(x => x.NomeClienteSnapshot).Select(DestinatarioResposta.Criar).ToArray());
+        }
+    }
 
     public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao, uint Versao)
     {

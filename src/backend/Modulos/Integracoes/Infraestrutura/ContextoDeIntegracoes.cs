@@ -4,6 +4,7 @@ using LavaMais.Crm.Modulos.Integracoes.Dominio;
 using Microsoft.EntityFrameworkCore;
 
 namespace LavaMais.Crm.Modulos.Integracoes.Infraestrutura;
+
 public sealed class ContextoDeIntegracoes(DbContextOptions<ContextoDeIntegracoes> opcoes, IContextoDoUsuario usuario) : ContextoDeModulo(opcoes)
 {
     public const string Schema = "integracoes"; public const string Historico = "__historico_migrations"; public DbSet<MensagemDaOutbox> Mensagens => Set<MensagemDaOutbox>();

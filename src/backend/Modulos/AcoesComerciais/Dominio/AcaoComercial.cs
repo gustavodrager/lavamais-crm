@@ -4,6 +4,7 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
 public enum SituacaoDaAcaoComercial { Rascunho = 1, Preparada = 2, EmProcessamento = 3, Concluida = 4, ConcluidaComFalhas = 5, Cancelada = 6 }
 public enum SituacaoDoEnvio { Pendente = 1, Solicitado = 2, Enviado = 3, Entregue = 4, Lido = 5, Falhou = 6 }
+public enum ResultadoComercial { NaoInformado = 1, SemRetorno = 2, Respondeu = 3, Interessado = 4, Convertido = 5, NaoTemInteresse = 6 }
 
 public sealed class AcaoComercial
 {
@@ -56,6 +57,14 @@ public sealed class AcaoComercial
 
     public void Iniciar(DateTimeOffset agora)
     { if (Situacao != SituacaoDaAcaoComercial.Preparada) throw new ExcecaoDeConflito("acao_nao_preparada", "Somente uma acao preparada pode ser iniciada."); Situacao = SituacaoDaAcaoComercial.EmProcessamento; DataInicioProcessamento = agora; DataAtualizacao = agora; foreach (var d in Destinatarios) d.DefinirChaveIdempotencia($"acao:{Id}:destinatario:{d.Id}:v1"); }
+
+    public void RecalcularConclusao(DateTimeOffset agora)
+    {
+        if (Situacao != SituacaoDaAcaoComercial.EmProcessamento || Destinatarios.Count == 0) return;
+        if (Destinatarios.Any(x => x.SituacaoEnvio is not (SituacaoDoEnvio.Entregue or SituacaoDoEnvio.Lido or SituacaoDoEnvio.Falhou))) return;
+        Situacao = Destinatarios.Any(x => x.SituacaoEnvio == SituacaoDoEnvio.Falhou) ? SituacaoDaAcaoComercial.ConcluidaComFalhas : SituacaoDaAcaoComercial.Concluida;
+        DataAtualizacao = agora;
+    }
 }
 
 public sealed record DestinatarioPreparado(Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao, string ChaveTemplate, string PayloadJson);
@@ -79,8 +88,19 @@ public sealed class DestinatarioDaAcao
     public string? NotificacaoExternaId { get; private set; }
     public DateTimeOffset? DataUltimaReconciliacao { get; private set; }
     public string? CodigoFalha { get; private set; }
+    public ResultadoComercial ResultadoComercial { get; private set; } = ResultadoComercial.NaoInformado;
+    public decimal? ValorConvertido { get; private set; }
+    public DateTimeOffset? DataResultadoComercial { get; private set; }
+    public string? UsuarioResultadoId { get; private set; }
     public uint Versao { get; private set; }
     internal void DefinirChaveIdempotencia(string chave) => ChaveIdempotencia = chave;
     public void RegistrarSolicitacao(string id) { NotificacaoExternaId = id; SituacaoEnvio = SituacaoDoEnvio.Solicitado; }
     public void AtualizarEstado(SituacaoDoEnvio estado, string? codigo, DateTimeOffset agora) { SituacaoEnvio = estado; CodigoFalha = codigo; DataUltimaReconciliacao = agora; }
+    public void RegistrarResultado(ResultadoComercial resultado, decimal? valorConvertido, string usuarioId, DateTimeOffset agora)
+    {
+        if (resultado == ResultadoComercial.NaoInformado) throw new ExcecaoDeRegraDeNegocio("resultado_invalido", "Informe um resultado comercial.");
+        if (resultado != ResultadoComercial.Convertido && valorConvertido is not null) throw new ExcecaoDeRegraDeNegocio("valor_invalido", "O valor somente pode ser informado para resultado convertido.");
+        if (valorConvertido < 0) throw new ExcecaoDeRegraDeNegocio("valor_invalido", "O valor convertido nao pode ser negativo.");
+        ResultadoComercial = resultado; ValorConvertido = valorConvertido; UsuarioResultadoId = usuarioId; DataResultadoComercial = agora;
+    }
 }

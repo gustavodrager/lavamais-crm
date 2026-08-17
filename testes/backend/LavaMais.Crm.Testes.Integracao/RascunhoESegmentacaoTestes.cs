@@ -1,6 +1,7 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
+using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 using LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura;
 using LavaMais.Crm.Modulos.Auditoria.Aplicacao;
 using LavaMais.Crm.Modulos.Auditoria.Infraestrutura;
@@ -74,7 +75,14 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         var processador = new ProcessadorDeOutbox(bancoIntegracoes, clienteHub, gerenciadorAcoes, TimeProvider.System);
         Assert.True(await processador.ProcessarProxima(ct)); await processador.Reconciliar(ct);
         await using var verificacaoEnvio = new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Schema, ContextoDeAcoesComerciais.Historico), contexto);
-        Assert.Equal(LavaMais.Crm.Modulos.AcoesComerciais.Dominio.SituacaoDoEnvio.Entregue, (await verificacaoEnvio.Set<LavaMais.Crm.Modulos.AcoesComerciais.Dominio.DestinatarioDaAcao>().AsNoTracking().SingleAsync(ct)).SituacaoEnvio);
+        var destinatarioEnviado = await verificacaoEnvio.Set<DestinatarioDaAcao>().AsNoTracking().SingleAsync(ct);
+        Assert.Equal(SituacaoDoEnvio.Entregue, destinatarioEnviado.SituacaoEnvio);
+        Assert.Equal(SituacaoDaAcaoComercial.Concluida, (await verificacaoEnvio.Acoes.AsNoTracking().SingleAsync(ct)).Situacao);
+        await gerenciadorAcoes.RegistrarResultado(acao.Id, destinatarioEnviado.Id, ResultadoComercial.Convertido, 75.50m, destinatarioEnviado.Versao, ct);
+        verificacaoEnvio.ChangeTracker.Clear();
+        var resultadoComercial = await verificacaoEnvio.Set<DestinatarioDaAcao>().AsNoTracking().SingleAsync(ct);
+        Assert.Equal(ResultadoComercial.Convertido, resultadoComercial.ResultadoComercial); Assert.Equal(75.50m, resultadoComercial.ValorConvertido);
+        Assert.Equal(3, await verificacaoAuditoria.Registros.AsNoTracking().CountAsync(x => x.RecursoId == acao.Id || x.RecursoId == destinatarioEnviado.Id, ct));
         await using var outroTenant = new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Schema, ContextoDeAcoesComerciais.Historico), new Contexto(Guid.NewGuid()));
         Assert.Empty(await outroTenant.Acoes.AsNoTracking().ToListAsync(ct));
     }

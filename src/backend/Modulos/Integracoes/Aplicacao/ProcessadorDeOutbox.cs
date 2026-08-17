@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LavaMais.Crm.Modulos.Integracoes.Aplicacao;
+
 public sealed class ProcessadorDeOutbox(ContextoDeIntegracoes banco, ClienteDoNotificationHub cliente, IProjecaoDeEnvios projecao, TimeProvider relogio)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);

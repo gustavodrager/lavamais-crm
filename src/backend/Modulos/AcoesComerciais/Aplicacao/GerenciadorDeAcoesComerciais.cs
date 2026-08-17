@@ -20,6 +20,7 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
     private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     public Task<List<AcaoComercial>> Listar(CancellationToken ct) => banco.Acoes.AsNoTracking().OrderByDescending(x => x.DataCriacao).ToListAsync(ct);
     public Task<AcaoComercial?> Obter(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
+    public Task<AcaoComercial?> ObterDetalhe(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Include(x => x.Destinatarios).SingleOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<AcaoComercial> Criar(DadosDoRascunho dados, CancellationToken ct)
     {
@@ -77,7 +78,18 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
     { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); d.RegistrarSolicitacao(notificacaoId); await banco.SaveChangesAsync(ct); }
     public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) => await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().AsNoTracking().Where(x => x.NotificacaoExternaId != null && x.SituacaoEnvio != SituacaoDoEnvio.Entregue && x.SituacaoEnvio != SituacaoDoEnvio.Lido && x.SituacaoEnvio != SituacaoDoEnvio.Falhou).Take(limite).Select(x => new NotificacaoPendente(x.TenantId, x.Id, x.NotificacaoExternaId!)).ToListAsync(ct);
     public async Task AtualizarEstado(Guid tenantId, Guid destinatarioId, string estadoExterno, string? codigoFalha, CancellationToken ct)
-    { var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); var estado = estadoExterno.ToUpperInvariant() switch { "PENDING" or "PROCESSING" => SituacaoDoEnvio.Solicitado, "SENT" => SituacaoDoEnvio.Enviado, "DELIVERED" => SituacaoDoEnvio.Entregue, "READ" => SituacaoDoEnvio.Lido, "FAILED" or "UNDELIVERABLE" => SituacaoDoEnvio.Falhou, _ => d.SituacaoEnvio }; d.AtualizarEstado(estado, codigoFalha, relogio.GetUtcNow()); await banco.SaveChangesAsync(ct); }
+    { var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); var estado = estadoExterno.ToUpperInvariant() switch { "PENDING" or "PROCESSING" => SituacaoDoEnvio.Solicitado, "SENT" => SituacaoDoEnvio.Enviado, "DELIVERED" => SituacaoDoEnvio.Entregue, "READ" => SituacaoDoEnvio.Lido, "FAILED" or "UNDELIVERABLE" => SituacaoDoEnvio.Falhou, _ => d.SituacaoEnvio }; var agora = relogio.GetUtcNow(); d.AtualizarEstado(estado, codigoFalha, agora); var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == d.AcaoComercialId, ct); acao.RecalcularConclusao(agora); await banco.SaveChangesAsync(ct); }
+
+    public async Task RegistrarResultado(Guid acaoId, Guid destinatarioId, ResultadoComercial resultado, decimal? valorConvertido, uint versaoEsperada, CancellationToken ct)
+    {
+        await using var tx = await banco.Database.BeginTransactionAsync(ct);
+        var destinatario = await banco.Set<DestinatarioDaAcao>().SingleOrDefaultAsync(x => x.AcaoComercialId == acaoId && x.Id == destinatarioId, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Destinatario da acao nao encontrado.");
+        if (destinatario.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario.");
+        var agora = relogio.GetUtcNow(); destinatario.RegistrarResultado(resultado, valorConvertido, usuario.UsuarioIdentidadeId, agora);
+        try { await banco.SaveChangesAsync(ct); } catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario."); }
+        await auditoria.Registrar(new("ResultadoComercialAlterado", "DestinatarioDaAcao", destinatario.Id, JsonSerializer.Serialize(new { acaoId, resultado, valorConvertido }, OpcoesJson), agora), tx.GetDbTransaction(), ct);
+        await tx.CommitAsync(ct);
+    }
 
     private static string Renderizar(string conteudo, string nomeCliente, string itemCatalogo) => conteudo.Replace("{{nomeCliente}}", nomeCliente, StringComparison.Ordinal).Replace("{{itemCatalogo}}", itemCatalogo, StringComparison.Ordinal);
 
