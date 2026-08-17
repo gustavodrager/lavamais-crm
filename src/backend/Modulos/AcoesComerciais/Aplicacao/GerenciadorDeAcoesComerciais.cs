@@ -3,6 +3,7 @@ using System.Data;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 using LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura;
 using LavaMais.Crm.Modulos.Catalogo.Aplicacao;
@@ -14,7 +15,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
 
-public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco, ConsultaDeCatalogo catalogo, ConsultaDeModelos modelos, SimuladorDePublico simulador, IRegistradorDeAuditoria auditoria, IContextoDoUsuario usuario, TimeProvider relogio)
+public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco, ConsultaDeCatalogo catalogo, ConsultaDeModelos modelos, SimuladorDePublico simulador, IRegistradorDeAuditoria auditoria, IPublicadorDeOutbox outbox, IContextoDoUsuario usuario, TimeProvider relogio) : IProjecaoDeEnvios
 {
     private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     public Task<List<AcaoComercial>> Listar(CancellationToken ct) => banco.Acoes.AsNoTracking().OrderByDescending(x => x.DataCriacao).ToListAsync(ct);
@@ -53,7 +54,8 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         var primeira = await simulador.Simular(criterios, 1, 100, ct, transacaoBanco); var elegiveis = primeira.Clientes.Where(x => x.Elegivel).ToList();
         var totalPaginas = (int)Math.Ceiling(primeira.QuantidadeEncontrada / 100m);
         for (var pagina = 2; pagina <= totalPaginas; pagina++) elegiveis.AddRange((await simulador.Simular(criterios, pagina, 100, ct, transacaoBanco)).Clientes.Where(x => x.Elegivel));
-        var destinatarios = elegiveis.Select(x => new DestinatarioPreparado(x.ClienteId, x.Nome, x.Whatsapp!, Renderizar(modelo.ConteudoPreVisualizacao, x.Nome, item.Nome))).ToArray();
+        var destinatarios = elegiveis.Select(x => new DestinatarioPreparado(x.ClienteId, x.Nome, x.Whatsapp!, Renderizar(modelo.ConteudoPreVisualizacao, x.Nome, item.Nome), modelo.ChaveTemplateNotificacao,
+            JsonSerializer.Serialize(modelo.Variaveis.ToDictionary(v => v, v => v == "nomeCliente" ? x.Nome : item.Nome), OpcoesJson))).ToArray();
         var agora = relogio.GetUtcNow(); acao.Preparar(item.Nome, destinatarios, agora); banco.AddRange(acao.Destinatarios);
         try { await banco.SaveChangesAsync(ct); }
         catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario."); }
@@ -62,6 +64,20 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
     }
 
     public Task<List<DestinatarioDaAcao>> ListarDestinatarios(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Where(x => x.Id == id).SelectMany(x => x.Destinatarios).OrderBy(x => x.NomeClienteSnapshot).ToListAsync(ct);
+
+    public async Task Iniciar(Guid id, uint versaoEsperada, CancellationToken ct)
+    {
+        await using var tx = await banco.Database.BeginTransactionAsync(ct); var acao = await banco.Acoes.Include(x => x.Destinatarios).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
+        if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario."); var agora = relogio.GetUtcNow(); acao.Iniciar(agora); await banco.SaveChangesAsync(ct);
+        var mensagens = acao.Destinatarios.Select(d => { var solicitacao = new SolicitacaoNotificationHub("lavamais-crm", "Whatsapp", d.ChaveTemplateNotificacaoSnapshot, d.ChaveIdempotencia!, d.NomeClienteSnapshot, d.DestinoSnapshot, JsonSerializer.Deserialize<Dictionary<string, string>>(d.PayloadNotificacaoJson, OpcoesJson)!); return new MensagemDeOutboxSolicitada(acao.TenantId, "SolicitarNotificacao", d.ChaveIdempotencia!, JsonSerializer.Serialize(new MensagemDeEnvioOutbox(acao.TenantId, d.Id, solicitacao), OpcoesJson), agora); }).ToArray();
+        var dbtx = tx.GetDbTransaction(); await outbox.Publicar(mensagens, dbtx, ct); await auditoria.Registrar(new("AcaoComercialIniciada", "AcaoComercial", acao.Id, JsonSerializer.Serialize(new { quantidade = mensagens.Length }, OpcoesJson), agora), dbtx, ct); await tx.CommitAsync(ct);
+    }
+
+    public async Task RegistrarSolicitacao(Guid tenantId, Guid destinatarioId, string notificacaoId, System.Data.Common.DbTransaction transacao, CancellationToken ct)
+    { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); d.RegistrarSolicitacao(notificacaoId); await banco.SaveChangesAsync(ct); }
+    public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) => await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().AsNoTracking().Where(x => x.NotificacaoExternaId != null && x.SituacaoEnvio != SituacaoDoEnvio.Entregue && x.SituacaoEnvio != SituacaoDoEnvio.Lido && x.SituacaoEnvio != SituacaoDoEnvio.Falhou).Take(limite).Select(x => new NotificacaoPendente(x.TenantId, x.Id, x.NotificacaoExternaId!)).ToListAsync(ct);
+    public async Task AtualizarEstado(Guid tenantId, Guid destinatarioId, string estadoExterno, string? codigoFalha, CancellationToken ct)
+    { var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); var estado = estadoExterno.ToUpperInvariant() switch { "PENDING" or "PROCESSING" => SituacaoDoEnvio.Solicitado, "SENT" => SituacaoDoEnvio.Enviado, "DELIVERED" => SituacaoDoEnvio.Entregue, "READ" => SituacaoDoEnvio.Lido, "FAILED" or "UNDELIVERABLE" => SituacaoDoEnvio.Falhou, _ => d.SituacaoEnvio }; d.AtualizarEstado(estado, codigoFalha, relogio.GetUtcNow()); await banco.SaveChangesAsync(ct); }
 
     private static string Renderizar(string conteudo, string nomeCliente, string itemCatalogo) => conteudo.Replace("{{nomeCliente}}", nomeCliente, StringComparison.Ordinal).Replace("{{itemCatalogo}}", itemCatalogo, StringComparison.Ordinal);
 

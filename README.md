@@ -57,4 +57,4 @@ Os prototipos e documentos marcados como historicos representam uma fase anterio
 
 ## Estado atual
 
-O backend possui as Fatias 0 a 6 da implantacao inicial: fundacao, identidade e tenant, clientes, importacao CSV, catalogo, modelos, rascunhos, segmentacao e preparacao transacional da audiencia. Consulte as [instrucoes do backend](src/backend/README.md) para executar API, Worker, PostgreSQL e testes.
+O backend possui as Fatias 0 a 7 da implantacao inicial: fundacao, identidade e tenant, clientes, importacao CSV, catalogo, modelos, rascunhos, segmentacao, preparacao transacional da audiencia e envio pelo Notification Hub com outbox e reconciliacao. Consulte as [instrucoes do backend](src/backend/README.md) para executar API, Worker, PostgreSQL e testes.

@@ -24,6 +24,7 @@ public sealed class AcaoComercial
     public DateTimeOffset DataCriacao { get; private set; }
     public DateTimeOffset DataAtualizacao { get; private set; }
     public DateTimeOffset? DataPreparacao { get; private set; }
+    public DateTimeOffset? DataInicioProcessamento { get; private set; }
     public int QuantidadeDestinatarios { get; private set; }
     public uint Versao { get; private set; }
     public ICollection<DestinatarioDaAcao> Destinatarios { get; private set; } = new List<DestinatarioDaAcao>();
@@ -49,18 +50,21 @@ public sealed class AcaoComercial
         if (VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Uma versao publicada de modelo e obrigatoria para preparar.");
         if (destinatarios.Count == 0) throw new ExcecaoDeRegraDeNegocio("publico_vazio", "A acao nao possui clientes elegiveis.");
         foreach (var destinatario in destinatarios.DistinctBy(x => x.ClienteId))
-            Destinatarios.Add(new DestinatarioDaAcao(TenantId, Id, destinatario.ClienteId, destinatario.NomeCliente, destinatario.Destino, destinatario.ConteudoPreVisualizacao));
+            Destinatarios.Add(new DestinatarioDaAcao(TenantId, Id, destinatario.ClienteId, destinatario.NomeCliente, destinatario.Destino, destinatario.ConteudoPreVisualizacao, destinatario.ChaveTemplate, destinatario.PayloadJson));
         NomeItemSnapshot = nomeItem; QuantidadeDestinatarios = Destinatarios.Count; Situacao = SituacaoDaAcaoComercial.Preparada; DataPreparacao = agora; DataAtualizacao = agora;
     }
+
+    public void Iniciar(DateTimeOffset agora)
+    { if (Situacao != SituacaoDaAcaoComercial.Preparada) throw new ExcecaoDeConflito("acao_nao_preparada", "Somente uma acao preparada pode ser iniciada."); Situacao = SituacaoDaAcaoComercial.EmProcessamento; DataInicioProcessamento = agora; DataAtualizacao = agora; foreach (var d in Destinatarios) d.DefinirChaveIdempotencia($"acao:{Id}:destinatario:{d.Id}:v1"); }
 }
 
-public sealed record DestinatarioPreparado(Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao);
+public sealed record DestinatarioPreparado(Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao, string ChaveTemplate, string PayloadJson);
 
 public sealed class DestinatarioDaAcao
 {
     private DestinatarioDaAcao() { }
-    internal DestinatarioDaAcao(Guid tenantId, Guid acaoId, Guid clienteId, string nome, string destino, string conteudo)
-    { Id = Guid.NewGuid(); TenantId = tenantId; AcaoComercialId = acaoId; ClienteId = clienteId; NomeClienteSnapshot = nome; DestinoSnapshot = destino; ConteudoPreVisualizacaoSnapshot = conteudo; SituacaoEnvio = SituacaoDoEnvio.Pendente; }
+    internal DestinatarioDaAcao(Guid tenantId, Guid acaoId, Guid clienteId, string nome, string destino, string conteudo, string chaveTemplate, string payloadJson)
+    { Id = Guid.NewGuid(); TenantId = tenantId; AcaoComercialId = acaoId; ClienteId = clienteId; NomeClienteSnapshot = nome; DestinoSnapshot = destino; ConteudoPreVisualizacaoSnapshot = conteudo; ChaveTemplateNotificacaoSnapshot = chaveTemplate; PayloadNotificacaoJson = payloadJson; SituacaoEnvio = SituacaoDoEnvio.Pendente; }
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
     public Guid AcaoComercialId { get; private set; }
@@ -69,5 +73,14 @@ public sealed class DestinatarioDaAcao
     public string DestinoSnapshot { get; private set; } = string.Empty;
     public string ConteudoPreVisualizacaoSnapshot { get; private set; } = string.Empty;
     public SituacaoDoEnvio SituacaoEnvio { get; private set; }
+    public string ChaveTemplateNotificacaoSnapshot { get; private set; } = string.Empty;
+    public string PayloadNotificacaoJson { get; private set; } = string.Empty;
+    public string? ChaveIdempotencia { get; private set; }
+    public string? NotificacaoExternaId { get; private set; }
+    public DateTimeOffset? DataUltimaReconciliacao { get; private set; }
+    public string? CodigoFalha { get; private set; }
     public uint Versao { get; private set; }
+    internal void DefinirChaveIdempotencia(string chave) => ChaveIdempotencia = chave;
+    public void RegistrarSolicitacao(string id) { NotificacaoExternaId = id; SituacaoEnvio = SituacaoDoEnvio.Solicitado; }
+    public void AtualizarEstado(SituacaoDoEnvio estado, string? codigo, DateTimeOffset agora) { SituacaoEnvio = estado; CodigoFalha = codigo; DataUltimaReconciliacao = agora; }
 }

@@ -23,7 +23,7 @@ A API publica:
 - verificacao de vida em `/saude/vivo`;
 - verificacao de prontidao, incluindo PostgreSQL, em `/saude/pronto`.
 
-Para iniciar o processo do Worker:
+Para iniciar o Worker que processa a outbox e reconcilia o estado das notificacoes:
 
 ```bash
 dotnet run --project src/backend/LavaMais.Crm.Worker
@@ -31,7 +31,9 @@ dotnet run --project src/backend/LavaMais.Crm.Worker
 
 ## Configuracao
 
-A conexao usa `ConnectionStrings__Crm`. O valor de `appsettings.json` e exclusivo para o ambiente local. Ambientes compartilhados devem fornecer a conexao por configuracao externa e nunca versionar segredos.
+A conexao usa `ConnectionStrings__Crm`. O Notification Hub usa `NotificationHub__BaseUrl`, `NotificationHub__ApiKey` e o `source` exclusivo `lavamais-crm`. O valor de `appsettings.json` e exclusivo para o ambiente local; a chave de API permanece vazia no repositorio. Ambientes compartilhados devem fornecer conexoes e credenciais por configuracao externa e nunca versionar segredos.
+
+Cada destinatario gera uma mensagem de outbox na mesma transacao que inicia a Acao Comercial. O Worker reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` em novas tentativas, recupera leases interrompidos e apenas consulta o estado tecnico no Notification Hub. Retentativas de provedor e webhooks permanecem sob responsabilidade do Hub.
 
 ## Build e testes
 
@@ -45,7 +47,7 @@ Os testes de integracao usam PostgreSQL real por Testcontainers e, portanto, exi
 
 ## Migrations
 
-Cada modulo possui seu proprio `DbContext`, schema e historico de migrations. O bloco `AdicionarContextoDoModulo` centraliza a configuracao do provedor sem criar um contexto compartilhado. A primeira migration pertence ao modulo `Autorizacao`; os demais modulos permanecem sem tabelas ate suas respectivas fatias.
+Cada modulo possui seu proprio `DbContext`, schema e historico de migrations. O bloco `AdicionarContextoDoModulo` centraliza a configuracao do provedor sem criar um contexto compartilhado. API e Worker nao aplicam migrations automaticamente durante a inicializacao; a implantacao deve executa-las como etapa controlada.
 
 ## Provisionar o primeiro administrador
 
