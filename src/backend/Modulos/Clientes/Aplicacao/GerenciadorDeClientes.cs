@@ -3,6 +3,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Clientes.Dominio;
 using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace LavaMais.Crm.Modulos.Clientes.Aplicacao;
 
@@ -77,8 +78,9 @@ public sealed record DadosDoEndereco(string? Logradouro, string? Numero, string?
 
 public sealed class ConsultaDeClientesParaSegmentacao(ContextoDeClientes banco)
 {
-    public Task<List<ClienteParaSegmentacao>> Consultar(FiltroDeClientesParaSegmentacao filtro, CancellationToken ct)
+    public async Task<List<ClienteParaSegmentacao>> Consultar(FiltroDeClientesParaSegmentacao filtro, CancellationToken ct, DbTransaction? transacao = null)
     {
+        if (transacao is not null) { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); }
         var consulta = banco.Clientes.AsNoTracking().AsQueryable();
         if (filtro.ClienteIds.Count > 0) consulta = consulta.Where(x => filtro.ClienteIds.Contains(x.Id));
         if (!string.IsNullOrWhiteSpace(filtro.Tipo)) consulta = consulta.Where(x => x.Tipo == filtro.Tipo);
@@ -88,7 +90,7 @@ public sealed class ConsultaDeClientesParaSegmentacao(ContextoDeClientes banco)
         if (filtro.CadastradoApartirDe is not null) consulta = consulta.Where(x => x.DataCriacao >= filtro.CadastradoApartirDe);
         if (filtro.DataNascimentoDe is not null) consulta = consulta.Where(x => x.DataNascimento >= filtro.DataNascimentoDe);
         if (filtro.DataNascimentoAte is not null) consulta = consulta.Where(x => x.DataNascimento <= filtro.DataNascimentoAte);
-        return consulta.OrderBy(x => x.Nome).Select(x => new ClienteParaSegmentacao(
+        return await consulta.OrderBy(x => x.Nome).Select(x => new ClienteParaSegmentacao(
             x.Id, x.Nome, x.Situacao == SituacaoDoCliente.Ativo, x.DataCriacao,
             x.Contatos.Where(c => c.Tipo == TipoDeContato.Whatsapp).Select(c => c.ValorNormalizado).FirstOrDefault(),
             x.Contatos.Any(c => c.Tipo == TipoDeContato.Whatsapp && c.Situacao == SituacaoDoContato.Ativo),

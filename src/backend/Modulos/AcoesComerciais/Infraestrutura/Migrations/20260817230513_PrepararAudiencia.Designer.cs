@@ -3,6 +3,7 @@ using System;
 using LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
 {
     [DbContext(typeof(ContextoDeAcoesComerciais))]
-    partial class ContextoDeAcoesComerciaisModelSnapshot : ModelSnapshot
+    [Migration("20260817230513_PrepararAudiencia")]
+    partial class PrepararAudiencia
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

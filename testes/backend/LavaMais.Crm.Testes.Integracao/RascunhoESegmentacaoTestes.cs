@@ -2,6 +2,8 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
 using LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura;
+using LavaMais.Crm.Modulos.Auditoria.Aplicacao;
+using LavaMais.Crm.Modulos.Auditoria.Infraestrutura;
 using LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
 using LavaMais.Crm.Modulos.Catalogo.Infraestrutura;
@@ -27,6 +29,8 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         await using var bancoCatalogo = new ContextoDeCatalogo(Opcoes<ContextoDeCatalogo>(conexao, ContextoDeCatalogo.Schema, ContextoDeCatalogo.Historico), contexto); await bancoCatalogo.Database.MigrateAsync(ct);
         await using var bancoModelos = new ContextoDeModelos(Opcoes<ContextoDeModelos>(conexao, ContextoDeModelos.Schema, ContextoDeModelos.Historico), contexto); await bancoModelos.Database.MigrateAsync(ct);
         await using var bancoAcoes = new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Schema, ContextoDeAcoesComerciais.Historico), contexto); await bancoAcoes.Database.MigrateAsync(ct);
+        var opcoesAuditoria = Opcoes<ContextoDeAuditoria>(conexao, ContextoDeAuditoria.Schema, ContextoDeAuditoria.Historico);
+        await using var bancoAuditoria = new ContextoDeAuditoria(opcoesAuditoria, contexto); await bancoAuditoria.Database.MigrateAsync(ct);
         var clientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
         var endereco = new DadosDoEndereco(null, null, null, "Centro", "Praia Grande", "SP", null);
         await clientes.Criar(new("Cliente elegivel", "13997776651", null, "Residencial", null, null, true, endereco, []), ct);
@@ -37,7 +41,7 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         var gerenciadorModelos = new GerenciadorDeModelos(bancoModelos, contexto, TimeProvider.System);
         var modelo = await gerenciadorModelos.Criar("Oferta", ct); var versao = await gerenciadorModelos.Publicar(modelo.Id, new("Ola {{nomeCliente}}", ["nomeCliente"], "crm_oferta"), ct);
         var simulador = new SimuladorDePublico(new ConsultaDeClientesParaSegmentacao(bancoClientes));
-        var gerenciadorAcoes = new GerenciadorDeAcoesComerciais(bancoAcoes, new ConsultaDeCatalogo(bancoCatalogo), new ConsultaDeModelos(bancoModelos), simulador, contexto, TimeProvider.System);
+        var gerenciadorAcoes = new GerenciadorDeAcoesComerciais(bancoAcoes, new ConsultaDeCatalogo(bancoCatalogo), new ConsultaDeModelos(bancoModelos), simulador, new RegistradorDeAuditoria(bancoAuditoria, contexto), contexto, TimeProvider.System);
         var criterios = new CriteriosDeSegmentacao(1, ModoDeSelecao.Filtros, "Residencial", ["Praia Grande"], null, null, null, null, null, null);
 
         var acao = await gerenciadorAcoes.Criar(new("Acao de inverno", "Ofertar lavagem", item.Id, versao.Id, criterios), ct);
@@ -46,6 +50,14 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         Assert.Equal(3, resultado.QuantidadeEncontrada); Assert.Equal(1, resultado.QuantidadeElegivel);
         Assert.Contains(resultado.Clientes, x => x.MotivoExclusao == MotivoDeExclusao.SemPermissao);
         Assert.Contains(resultado.Clientes, x => x.MotivoExclusao == MotivoDeExclusao.ClienteInativo);
+        await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorAcoes.Preparar(acao.Id, acao.Versao + 1, ct));
+        await gerenciadorAcoes.Preparar(acao.Id, acao.Versao, ct);
+        var preparada = await bancoAcoes.Acoes.AsNoTracking().Include(x => x.Destinatarios).SingleAsync(x => x.Id == acao.Id, ct);
+        Assert.Equal(LavaMais.Crm.Modulos.AcoesComerciais.Dominio.SituacaoDaAcaoComercial.Preparada, preparada.Situacao);
+        Assert.Single(preparada.Destinatarios); Assert.Contains("Cliente elegivel", preparada.Destinatarios.Single().ConteudoPreVisualizacaoSnapshot);
+        await using var verificacaoAuditoria = new ContextoDeAuditoria(opcoesAuditoria, contexto);
+        Assert.Single(await verificacaoAuditoria.Registros.AsNoTracking().Where(x => x.RecursoId == acao.Id).ToListAsync(ct));
+        await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorAcoes.Atualizar(acao.Id, new("Alterada", null, item.Id, versao.Id, criterios), ct));
         await using var outroTenant = new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Schema, ContextoDeAcoesComerciais.Historico), new Contexto(Guid.NewGuid()));
         Assert.Empty(await outroTenant.Acoes.AsNoTracking().ToListAsync(ct));
     }

@@ -27,13 +27,17 @@ public static class ExtensoesDoModuloAcoesComerciais
         grupo.MapPost("/", async (DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { var acao = await g.Criar(dados, ct); return Results.Created($"/api/v1/acoes-comerciais/{acao.Id}", Resposta.Criar(acao)); });
         grupo.MapPut("/{id:guid}", async (Guid id, DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); });
         grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct)));
+        grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); });
+        grupo.MapGet("/{id:guid}/destinatarios", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.ListarDestinatarios(id, ct)).Select(x => new { x.Id, x.ClienteId, x.NomeClienteSnapshot, x.DestinoSnapshot, x.ConteudoPreVisualizacaoSnapshot, x.SituacaoEnvio }));
         return endpoints;
     }
 
-    public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao)
+    public sealed record PrepararAcao(uint Versao);
+
+    public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao, uint Versao)
     {
         private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
         public static Resposta Criar(AcaoComercial acao) => new(acao.Id, acao.Nome, acao.Objetivo, acao.ItemDeCatalogoId, acao.VersaoModeloId,
-            JsonSerializer.Deserialize<CriteriosDeSegmentacao>(acao.CriteriosSegmentacaoJson, OpcoesJson)!, acao.Situacao, acao.DataAtualizacao);
+            JsonSerializer.Deserialize<CriteriosDeSegmentacao>(acao.CriteriosSegmentacaoJson, OpcoesJson)!, acao.Situacao, acao.DataAtualizacao, acao.Versao);
     }
 }

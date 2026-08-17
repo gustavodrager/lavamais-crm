@@ -3,6 +3,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
 public enum SituacaoDaAcaoComercial { Rascunho = 1, Preparada = 2, EmProcessamento = 3, Concluida = 4, ConcluidaComFalhas = 5, Cancelada = 6 }
+public enum SituacaoDoEnvio { Pendente = 1, Solicitado = 2, Enviado = 3, Entregue = 4, Lido = 5, Falhou = 6 }
 
 public sealed class AcaoComercial
 {
@@ -15,13 +16,17 @@ public sealed class AcaoComercial
     public string Nome { get; private set; } = string.Empty;
     public string? Objetivo { get; private set; }
     public Guid ItemDeCatalogoId { get; private set; }
+    public string? NomeItemSnapshot { get; private set; }
     public Guid? VersaoModeloId { get; private set; }
     public string CriteriosSegmentacaoJson { get; private set; } = string.Empty;
     public SituacaoDaAcaoComercial Situacao { get; private set; }
     public string UsuarioCriacaoId { get; private set; } = string.Empty;
     public DateTimeOffset DataCriacao { get; private set; }
     public DateTimeOffset DataAtualizacao { get; private set; }
+    public DateTimeOffset? DataPreparacao { get; private set; }
+    public int QuantidadeDestinatarios { get; private set; }
     public uint Versao { get; private set; }
+    public ICollection<DestinatarioDaAcao> Destinatarios { get; private set; } = new List<DestinatarioDaAcao>();
 
     public static AcaoComercial Criar(Guid tenantId, string usuarioId, string nome, string? objetivo, Guid itemId, Guid? versaoModeloId, string criteriosJson, DateTimeOffset agora)
     {
@@ -37,4 +42,32 @@ public sealed class AcaoComercial
         Nome = nome.Trim(); Objetivo = string.IsNullOrWhiteSpace(objetivo) ? null : objetivo.Trim(); ItemDeCatalogoId = itemId;
         VersaoModeloId = versaoModeloId; CriteriosSegmentacaoJson = criteriosJson; DataAtualizacao = agora;
     }
+
+    public void Preparar(string nomeItem, IReadOnlyCollection<DestinatarioPreparado> destinatarios, DateTimeOffset agora)
+    {
+        if (Situacao != SituacaoDaAcaoComercial.Rascunho) throw new ExcecaoDeConflito("acao_ja_preparada", "A acao comercial nao esta em rascunho.");
+        if (VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Uma versao publicada de modelo e obrigatoria para preparar.");
+        if (destinatarios.Count == 0) throw new ExcecaoDeRegraDeNegocio("publico_vazio", "A acao nao possui clientes elegiveis.");
+        foreach (var destinatario in destinatarios.DistinctBy(x => x.ClienteId))
+            Destinatarios.Add(new DestinatarioDaAcao(TenantId, Id, destinatario.ClienteId, destinatario.NomeCliente, destinatario.Destino, destinatario.ConteudoPreVisualizacao));
+        NomeItemSnapshot = nomeItem; QuantidadeDestinatarios = Destinatarios.Count; Situacao = SituacaoDaAcaoComercial.Preparada; DataPreparacao = agora; DataAtualizacao = agora;
+    }
+}
+
+public sealed record DestinatarioPreparado(Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao);
+
+public sealed class DestinatarioDaAcao
+{
+    private DestinatarioDaAcao() { }
+    internal DestinatarioDaAcao(Guid tenantId, Guid acaoId, Guid clienteId, string nome, string destino, string conteudo)
+    { Id = Guid.NewGuid(); TenantId = tenantId; AcaoComercialId = acaoId; ClienteId = clienteId; NomeClienteSnapshot = nome; DestinoSnapshot = destino; ConteudoPreVisualizacaoSnapshot = conteudo; SituacaoEnvio = SituacaoDoEnvio.Pendente; }
+    public Guid Id { get; private set; }
+    public Guid TenantId { get; private set; }
+    public Guid AcaoComercialId { get; private set; }
+    public Guid ClienteId { get; private set; }
+    public string NomeClienteSnapshot { get; private set; } = string.Empty;
+    public string DestinoSnapshot { get; private set; } = string.Empty;
+    public string ConteudoPreVisualizacaoSnapshot { get; private set; } = string.Empty;
+    public SituacaoDoEnvio SituacaoEnvio { get; private set; }
+    public uint Versao { get; private set; }
 }

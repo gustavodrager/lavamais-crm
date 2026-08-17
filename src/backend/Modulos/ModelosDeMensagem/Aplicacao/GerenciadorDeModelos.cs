@@ -3,6 +3,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.ModelosDeMensagem.Dominio;
 using LavaMais.Crm.Modulos.ModelosDeMensagem.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace LavaMais.Crm.Modulos.ModelosDeMensagem.Aplicacao;
 
@@ -29,10 +30,12 @@ public sealed record DadosDaPublicacao(string ConteudoPreVisualizacao, IReadOnly
 
 public sealed class ConsultaDeModelos(ContextoDeModelos banco)
 {
-    public async Task<VersaoPublicadaDisponivel?> ObterVersaoPublicada(Guid id, CancellationToken ct) => await banco.Modelos.AsNoTracking()
-        .Where(x => x.Situacao == SituacaoDoModelo.Publicado)
-        .SelectMany(x => x.Versoes.Where(v => v.Id == id), (modelo, versao) => new VersaoPublicadaDisponivel(versao.Id, modelo.Nome, versao.Numero))
-        .SingleOrDefaultAsync(ct);
+    public async Task<VersaoPublicadaDisponivel?> ObterVersaoPublicada(Guid id, CancellationToken ct, DbTransaction? transacao = null)
+    {
+        if (transacao is not null) { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); }
+        return await banco.Modelos.AsNoTracking().Where(x => x.Situacao == SituacaoDoModelo.Publicado)
+            .SelectMany(x => x.Versoes.Where(v => v.Id == id), (modelo, versao) => new VersaoPublicadaDisponivel(versao.Id, modelo.Nome, versao.Numero, versao.ConteudoPreVisualizacao, versao.Variaveis, versao.ChaveTemplateNotificacao)).SingleOrDefaultAsync(ct);
+    }
 }
 
-public sealed record VersaoPublicadaDisponivel(Guid Id, string NomeModelo, int Numero);
+public sealed record VersaoPublicadaDisponivel(Guid Id, string NomeModelo, int Numero, string ConteudoPreVisualizacao, IReadOnlyCollection<string> Variaveis, string ChaveTemplateNotificacao);

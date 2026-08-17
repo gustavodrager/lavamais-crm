@@ -3,6 +3,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
 using LavaMais.Crm.Modulos.Catalogo.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 
@@ -41,9 +42,11 @@ public sealed record DadosDoItemDeCatalogo(TipoDeItemDeCatalogo Tipo, string Nom
 
 public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco)
 {
-    public async Task<ItemDeCatalogoDisponivel?> ObterAtivo(Guid id, CancellationToken ct) => await banco.Itens.AsNoTracking()
-        .Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo)
-        .Select(x => new ItemDeCatalogoDisponivel(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
+    public async Task<ItemDeCatalogoDisponivel?> ObterAtivo(Guid id, CancellationToken ct, DbTransaction? transacao = null)
+    {
+        if (transacao is not null) { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); }
+        return await banco.Itens.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo).Select(x => new ItemDeCatalogoDisponivel(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
+    }
 }
 
 public sealed record ItemDeCatalogoDisponivel(Guid Id, string Nome);

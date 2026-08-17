@@ -44,6 +44,7 @@ public sealed class ApiDaFundacaoTestes
     [InlineData("/api/v1/itens-de-catalogo")]
     [InlineData("/api/v1/modelos-de-mensagem")]
     [InlineData("/api/v1/acoes-comerciais")]
+    [InlineData("/api/v1/auditoria")]
     public async Task Deve_exigir_autenticacao_nos_endpoints_empresariais(string rota)
     {
         await using var fabrica = CriarFabrica();

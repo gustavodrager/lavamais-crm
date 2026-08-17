@@ -15,6 +15,7 @@
     </PackageReference>
     <ProjectReference Include="../../../src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/AcoesComerciais/LavaMais.Crm.Modulos.AcoesComerciais.csproj" />
+    <ProjectReference Include="../../../src/backend/Modulos/Auditoria/LavaMais.Crm.Modulos.Auditoria.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Autorizacao/LavaMais.Crm.Modulos.Autorizacao.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Catalogo/LavaMais.Crm.Modulos.Catalogo.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Clientes/LavaMais.Crm.Modulos.Clientes.csproj" />
