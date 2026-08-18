@@ -17,6 +17,7 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 - criar cliente OIDC `lavamais-crm-web`;
 - definir dominios e callbacks de homologacao e producao;
 - definir armazenamento server-side e limpeza das sessoes do BFF;
+- substituir o repositorio em memoria do BFF por armazenamento compartilhado antes de homologacao e definir expiracao e limpeza operacional;
 - definir procedimento de provisionamento do primeiro administrador.
 
 ## Notification Hub
