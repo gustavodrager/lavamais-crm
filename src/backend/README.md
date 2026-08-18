@@ -23,6 +23,8 @@ A API publica:
 - verificacao de vida em `/saude/vivo`;
 - verificacao de prontidao, incluindo PostgreSQL, em `/saude/pronto`.
 
+As respostas incluem correlacao e cabecalhos defensivos. Os logs JSON registram apenas metodo, caminho sem query string, status e duracao; corpos, tokens e dados pessoais nao sao registrados.
+
 Para iniciar o Worker que processa a outbox e reconcilia o estado das notificacoes:
 
 ```bash
@@ -44,6 +46,8 @@ dotnet test LavaMais.Crm.slnx --configuration Release --no-build
 ```
 
 Os testes de integracao usam PostgreSQL real por Testcontainers e, portanto, exigem Docker em execucao.
+
+O pipeline tambem verifica formatacao e pacotes com vulnerabilidades conhecidas. O [runbook operacional](../../docs/09-operacao/README.md) descreve implantacao, alertas e os scripts validados de backup e restauracao.
 
 ## Migrations
 

@@ -1,6 +1,8 @@
 using System.Text.Json;
 using LavaMais.Crm.BlocosDeConstrucao.Api.Correlacao;
 using LavaMais.Crm.BlocosDeConstrucao.Api.Erros;
+using LavaMais.Crm.BlocosDeConstrucao.Api.Observabilidade;
+using LavaMais.Crm.BlocosDeConstrucao.Api.Seguranca;
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -26,6 +28,8 @@ public static class ExtensoesDaFundacao
     public static WebApplication UsarFundacaoDaApi(this WebApplication aplicacao)
     {
         aplicacao.UseMiddleware<TratamentoDeCorrelacao>();
+        aplicacao.UseMiddleware<TratamentoDeObservabilidade>();
+        aplicacao.UseMiddleware<TratamentoDeCabecalhosDeSeguranca>();
         aplicacao.UseExceptionHandler();
         aplicacao.MapHealthChecks("/saude/vivo", new HealthCheckOptions { Predicate = registro => registro.Tags.Contains("vivo") });
         aplicacao.MapHealthChecks("/saude/pronto", new HealthCheckOptions

@@ -5,6 +5,7 @@ on:
     paths:
       - "src/backend/**"
       - "testes/backend/**"
+      - "scripts/backend/**"
       - "Directory.*.props"
       - "global.json"
       - "LavaMais.Crm.slnx"
@@ -14,6 +15,7 @@ on:
     paths:
       - "src/backend/**"
       - "testes/backend/**"
+      - "scripts/backend/**"
       - "Directory.*.props"
       - "global.json"
       - "LavaMais.Crm.slnx"
@@ -31,6 +33,10 @@ jobs:
           cache-dependency-path: "**/*.csproj"
       - name: Restaurar dependencias
         run: dotnet restore LavaMais.Crm.slnx
+      - name: Verificar formatacao
+        run: dotnet format LavaMais.Crm.slnx --verify-no-changes --no-restore
+      - name: Auditar dependencias vulneraveis
+        run: dotnet list LavaMais.Crm.slnx package --vulnerable --include-transitive
       - name: Compilar
         run: dotnet build LavaMais.Crm.slnx --configuration Release --no-restore
       - name: Executar testes

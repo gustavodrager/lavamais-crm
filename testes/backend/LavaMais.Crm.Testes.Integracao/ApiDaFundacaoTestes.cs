@@ -25,6 +25,23 @@ public sealed class ApiDaFundacaoTestes
 
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         Assert.Equal("correlacao-do-teste", resposta.Headers.GetValues("X-Correlation-Id").Single());
+        Assert.Equal("nosniff", resposta.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.Equal("DENY", resposta.Headers.GetValues("X-Frame-Options").Single());
+        Assert.Contains("no-store", resposta.Headers.CacheControl?.ToString());
+    }
+
+    [Fact]
+    public async Task Deve_substituir_correlation_id_acima_do_limite()
+    {
+        await using var fabrica = CriarFabrica();
+        using var cliente = fabrica.CreateClient();
+        using var requisicao = new HttpRequestMessage(HttpMethod.Get, "/saude/vivo");
+        requisicao.Headers.Add("X-Correlation-Id", new string('a', 129));
+
+        using var resposta = await cliente.SendAsync(requisicao, TestContext.Current.CancellationToken);
+
+        var correlacao = resposta.Headers.GetValues("X-Correlation-Id").Single();
+        Assert.True(Guid.TryParse(correlacao, out _));
     }
 
     [Fact]
