@@ -41,6 +41,7 @@ export interface SessaoApresentacao {
   usuario: { nome: string; iniciais: string };
   tenant: { nome: string };
   papel?: "Administrador" | "Gerente" | "Operador";
+  autenticacaoDesabilitada?: boolean;
 }
 
 export interface ResultadoPaginado<T> {

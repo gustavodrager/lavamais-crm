@@ -5,6 +5,7 @@ import { z } from "zod";
 import { descobrirOidc, obterConfiguracaoOidc } from "@/infraestrutura/configuracao-oidc";
 import { sessoes, type SessaoServidor } from "@/infraestrutura/repositorio-sessoes";
 import type { PortaSessao } from "@/portas/sessao";
+import { autenticacaoEstaDesabilitada, obterAccessTokenDesenvolvimento } from "@/infraestrutura/autenticacao-desenvolvimento";
 
 export const NOME_COOKIE_SESSAO = process.env.LAVAMAIS_AMBIENTE_TESTE === "1" ? "lavamais-sessao-teste" : "__Host-lavamais-sessao";
 const renovacoes = new Map<string, Promise<SessaoServidor | null>>();
@@ -34,11 +35,15 @@ async function renovar(id: string, sessao: SessaoServidor) {
 }
 
 export async function obterAccessToken() {
+  if (autenticacaoEstaDesabilitada()) return obterAccessTokenDesenvolvimento();
   const registro = await obterRegistro(); if (!registro?.sessao) return null;
   if (registro.sessao.expiraEm > Date.now() + 30_000) return registro.sessao.accessToken;
   return (await renovar(registro.id, registro.sessao))?.accessToken ?? null;
 }
 
 export const sessaoOidc: PortaSessao = {
-  async obterSessao() { return (await obterRegistro())?.sessao?.apresentacao ?? null; },
+  async obterSessao() {
+    if (autenticacaoEstaDesabilitada()) return { usuario: { nome: "Ambiente local", iniciais: "AL" }, tenant: { nome: "Tenant derivado pela CRM API" }, papel: "Gerente", autenticacaoDesabilitada: true };
+    return (await obterRegistro())?.sessao?.apresentacao ?? null;
+  },
 };

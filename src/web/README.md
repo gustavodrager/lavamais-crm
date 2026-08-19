@@ -18,6 +18,14 @@ O callback a registrar é `/api/autenticacao/callback`. O BFF usa descoberta OID
 
 O repositório de sessão atual é uma fronteira em memória adequada somente a desenvolvimento e testes de instância única. Homologação e produção exigem armazenamento compartilhado e limpeza de sessões, registro do cliente `lavamais-crm-web` e emissão da audiência `lavamais-crm-api` pelo Identity Hub.
 
+### Desenvolvimento temporariamente sem autenticação
+
+```bash
+LAVAMAIS_CRM_API_URL=http://127.0.0.1:5000 npm run dev:sem-autenticacao
+```
+
+Esse modo existe apenas fora de produção, não implementa login local e não recebe `tenantId`. Se a CRM API real exigir bearer token, ele pode ser informado somente no servidor por `LAVAMAIS_ACCESS_TOKEN_DESENVOLVIMENTO`. A aplicação recusa a flag `LAVAMAIS_DESABILITAR_AUTENTICACAO=1` quando `NODE_ENV=production`.
+
 ## Executar e verificar
 
 ```bash

@@ -26,7 +26,7 @@ export async function LayoutAutenticado({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block"><p className="text-sm font-medium">{sessao.usuario.nome}</p><p className="text-xs text-muted-foreground">{sessao.papel ?? "Usuário autenticado"}</p></div>
             <Badge variant="secondary" className="grid size-9 place-items-center rounded-full p-0">{sessao.usuario.iniciais}</Badge>
-            <form action="/api/autenticacao/sair" method="post"><Button type="submit" variant="ghost" size="sm">Sair</Button></form>
+            {!sessao.autenticacaoDesabilitada && <form action="/api/autenticacao/sair" method="post"><Button type="submit" variant="ghost" size="sm">Sair</Button></form>}
           </div>
         </header>
         <main id="conteudo-principal" className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:sem-autenticacao": "LAVAMAIS_DESABILITAR_AUTENTICACAO=1 next dev",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
