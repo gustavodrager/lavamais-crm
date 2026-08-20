@@ -58,6 +58,7 @@ export interface DetalheAcaoComercial extends ResumoAcaoComercial {
   totais: {
     destinatarios: number;
     pendentes: number;
+    aguardandoSolicitacao: number;
     solicitados: number;
     enviados: number;
     entregues: number;
