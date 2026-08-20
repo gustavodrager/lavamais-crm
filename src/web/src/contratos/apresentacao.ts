@@ -37,6 +37,13 @@ export interface ResumoCliente {
   permiteWhatsapp: boolean;
 }
 
+export interface OpcaoItemDeCatalogo {
+  id: string;
+  nome: string;
+  tipo: "Produto" | "Servico";
+  categoria: string | null;
+}
+
 export interface SessaoApresentacao {
   usuario: { nome: string; iniciais: string };
   tenant: { nome: string };

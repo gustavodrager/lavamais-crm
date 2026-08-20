@@ -17,6 +17,13 @@ const esquemaTotais = z.object({
 }).passthrough();
 const esquemaDetalhe = z.object({ acao: esquemaAcaoApi, totais: esquemaTotais }).passthrough();
 const esquemaCliente = z.object({ id: z.string(), nome: z.string(), whatsapp: z.string(), localidade: z.string(), etiquetas: z.array(z.string()), permiteWhatsapp: z.boolean() });
+const esquemaItemDeCatalogo = z.object({
+  id: z.string().uuid(),
+  tipo: z.enum(["Produto", "Servico"]),
+  nome: z.string().min(1),
+  categoria: z.string().nullable(),
+  situacao: z.enum(["Ativo", "Inativo"]),
+});
 const esquemaPaginado = <T extends z.ZodType>(item: T) => z.object({ itens: z.array(item), pagina: z.number().int().positive(), tamanhoPagina: z.number().int().positive(), total: z.number().int().nonnegative() });
 const esquemaCriacao = z.object({ id: z.string().uuid() });
 
@@ -53,6 +60,13 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async listarClientes() {
     return esquemaPaginado(esquemaCliente).parse(await this.requisitar("/api/v1/clientes"));
+  }
+
+  async listarItensDeCatalogoAtivos() {
+    const itens = z.array(esquemaItemDeCatalogo).parse(
+      await this.requisitar("/api/v1/itens-de-catalogo?situacao=Ativo"),
+    );
+    return itens.map(({ id, nome, tipo, categoria }) => ({ id, nome, tipo, categoria }));
   }
 
   async criar(entrada: CriarAcaoComercialEntrada) {

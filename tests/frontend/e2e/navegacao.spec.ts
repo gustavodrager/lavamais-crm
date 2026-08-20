@@ -12,6 +12,18 @@ test("lista e abre uma Ação Comercial obtida da CRM API", async ({ page }) => 
   await expect(page.getByText("10 / 8")).toBeVisible();
 });
 
+test("cria um rascunho com item real do catálogo", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === "mobile", "O fluxo funcional completo é coberto uma vez no desktop");
+  await page.getByRole("link", { name: "Nova ação" }).click();
+  await page.getByLabel("Nome da ação").fill("Ação criada pelo frontend");
+  await page.getByLabel("Objetivo").fill("Validar a criação integrada do rascunho");
+  await page.getByRole("combobox", { name: "Item do catálogo" }).click();
+  await page.getByRole("option", { name: "Lavagem de edredom · Casa" }).click();
+  await page.getByRole("button", { name: "Criar e continuar" }).click();
+  await expect(page).toHaveURL(/\/acoes-comerciais\/7e4e1e75-b222-4cff-8db8-222222222222$/);
+  await expect(page.getByRole("heading", { name: "Ação criada pelo frontend" })).toBeVisible();
+});
+
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "O menu compacto possui fluxo dedicado");
   await page.goto("/acoes-comerciais");

@@ -18,6 +18,16 @@ O callback a registrar é `/api/autenticacao/callback`. O BFF usa descoberta OID
 
 O repositório de sessão atual é uma fronteira em memória adequada somente a desenvolvimento e testes de instância única. Homologação e produção exigem armazenamento compartilhado e limpeza de sessões, registro do cliente `lavamais-crm-web` e emissão da audiência `lavamais-crm-api` pelo Identity Hub.
 
+## Fluxos integrados
+
+- autenticação OIDC com PKCE e sessão server-side;
+- listagem e detalhe de Ações Comerciais;
+- criação de rascunho com item ativo do catálogo;
+- validação no navegador e novamente na Server Action;
+- redirecionamento ao detalhe após confirmação da CRM API.
+
+O rascunho inicial usa critérios de segmentação no schema 1, em modo `Filtros`, sem filtros preenchidos. A definição e a simulação do público pertencem à próxima etapa da experiência.
+
 ### Desenvolvimento temporariamente sem autenticação
 
 ```bash

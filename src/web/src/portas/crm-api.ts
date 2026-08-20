@@ -1,6 +1,7 @@
 import type {
   ResumoAcaoComercial,
   DetalheAcaoComercial,
+  OpcaoItemDeCatalogo,
   ResumoCliente,
   ResultadoPaginado,
 } from "@/contratos/apresentacao";
@@ -14,10 +15,19 @@ export interface ConsultarClientes {
   listarClientes(): Promise<ResultadoPaginado<ResumoCliente>>;
 }
 
+export interface ConsultarCatalogo {
+  listarItensDeCatalogoAtivos(): Promise<OpcaoItemDeCatalogo[]>;
+}
+
 export interface CriarAcaoComercialEntrada {
   nome: string;
   objetivo: string;
-  itemCatalogoId: string;
+  itemDeCatalogoId: string;
+  versaoModeloId: null;
+  criterios: {
+    versaoSchema: 1;
+    modo: "Filtros";
+  };
 }
 
 export interface CriarAcaoComercial {
@@ -28,4 +38,5 @@ export interface CriarAcaoComercial {
 export interface PortaCrmApi
   extends ConsultarAcoesComerciais,
     ConsultarClientes,
+    ConsultarCatalogo,
     CriarAcaoComercial {}

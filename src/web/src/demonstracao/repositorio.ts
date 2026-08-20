@@ -2,6 +2,12 @@ import { acoesDemonstracao, clientesDemonstracao } from "@/demonstracao/dados";
 import type { PortaCrmApi } from "@/portas/crm-api";
 
 export const repositorioDemonstracao: PortaCrmApi = {
+  async listarItensDeCatalogoAtivos() {
+    return [
+      { id: "6d3d0d64-a111-4cff-8db8-111111111112", nome: "Lavagem de edredom", tipo: "Servico", categoria: "Casa" },
+      { id: "9a842a55-b222-41ab-86f2-222222222223", nome: "Lavagem de terno", tipo: "Servico", categoria: "Vestuário" },
+    ];
+  },
   async listarAcoes() {
     return { itens: acoesDemonstracao, pagina: 1, tamanhoPagina: 20, total: acoesDemonstracao.length };
   },

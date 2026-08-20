@@ -1,28 +1,111 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { CheckCircle2 } from "lucide-react";
+import {
+  criarRascunho,
+  type EntradaCriarRascunho,
+  type FalhaCriarRascunho,
+} from "@/app/(autenticado)/acoes-comerciais/nova/acoes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { OpcaoItemDeCatalogo } from "@/contratos/apresentacao";
 
-const esquema = z.object({ nome: z.string().trim().min(3, "Informe um nome com pelo menos 3 caracteres."), objetivo: z.string().trim().min(10, "Descreva o objetivo em pelo menos 10 caracteres."), itemCatalogo: z.string().min(1, "Selecione um item do catálogo.") });
+const esquema = z.object({
+  nome: z.string().trim().min(3, "Informe um nome com pelo menos 3 caracteres."),
+  objetivo: z.string().trim().min(10, "Descreva o objetivo em pelo menos 10 caracteres."),
+  itemDeCatalogoId: z.string().uuid("Selecione um item do catálogo."),
+});
+
 type DadosFormulario = z.infer<typeof esquema>;
+type AcaoCriarRascunho = (entrada: EntradaCriarRascunho) => Promise<FalhaCriarRascunho>;
 
-export function FormularioNovaAcao() {
-  const [salva, setSalva] = useState(false);
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<DadosFormulario>({ resolver: zodResolver(esquema), defaultValues: { nome: "", objetivo: "", itemCatalogo: "" } });
-  const enviar = async () => { await new Promise((resolve) => setTimeout(resolve, 300)); setSalva(true); };
-  return <form onSubmit={handleSubmit(enviar)} className="space-y-6" noValidate>
-    {salva ? <Alert><CheckCircle2 aria-hidden="true" /><AlertTitle>Rascunho validado</AlertTitle><AlertDescription>Na integração real, a próxima etapa será aberta depois que a API confirmar a gravação.</AlertDescription></Alert> : null}
-    <div className="space-y-2"><Label htmlFor="nome">Nome da ação</Label><Input id="nome" placeholder="Ex.: Cuidados com edredons" aria-invalid={Boolean(errors.nome)} aria-describedby={errors.nome ? "erro-nome" : undefined} {...register("nome")} />{errors.nome && <p id="erro-nome" role="alert" className="text-sm text-destructive">{errors.nome.message}</p>}</div>
-    <div className="space-y-2"><Label htmlFor="objetivo">Objetivo</Label><Textarea id="objetivo" placeholder="O que a equipe pretende alcançar?" aria-invalid={Boolean(errors.objetivo)} aria-describedby={errors.objetivo ? "erro-objetivo" : "ajuda-objetivo"} {...register("objetivo")} /><p id="ajuda-objetivo" className="text-xs text-muted-foreground">Este texto orienta a equipe e não será enviado ao cliente.</p>{errors.objetivo && <p id="erro-objetivo" role="alert" className="text-sm text-destructive">{errors.objetivo.message}</p>}</div>
-    <div className="space-y-2"><Label htmlFor="itemCatalogo">Item do catálogo</Label><select id="itemCatalogo" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" aria-invalid={Boolean(errors.itemCatalogo)} {...register("itemCatalogo")}><option value="">Selecione um produto ou serviço</option><option value="edredom">Lavagem de edredom</option><option value="terno">Lavagem de terno</option><option value="primeira-lavagem">Primeira lavagem</option></select>{errors.itemCatalogo && <p role="alert" className="text-sm text-destructive">{errors.itemCatalogo.message}</p>}</div>
-    <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end"><Button type="button" variant="outline">Salvar e sair</Button><Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Salvando..." : "Continuar para o público"}</Button></div>
-  </form>;
+export function FormularioNovaAcao({
+  itensCatalogo,
+  aoCriar = criarRascunho,
+}: {
+  itensCatalogo: OpcaoItemDeCatalogo[];
+  aoCriar?: AcaoCriarRascunho;
+}) {
+  const [erroGeral, setErroGeral] = useState<string | null>(null);
+  const {
+    control,
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<DadosFormulario>({
+    resolver: zodResolver(esquema),
+    defaultValues: { nome: "", objetivo: "", itemDeCatalogoId: "" },
+  });
+
+  const enviar = async (dados: DadosFormulario) => {
+    setErroGeral(null);
+    const resultado = await aoCriar(dados);
+    setErroGeral(resultado.mensagem);
+    if (resultado.campos?.nome) setError("nome", { message: resultado.campos.nome });
+    if (resultado.campos?.objetivo) setError("objetivo", { message: resultado.campos.objetivo });
+    if (resultado.campos?.itemDeCatalogoId) setError("itemDeCatalogoId", { message: resultado.campos.itemDeCatalogoId });
+  };
+
+  return (
+    <form onSubmit={handleSubmit(enviar)} className="space-y-6" noValidate>
+      {erroGeral ? (
+        <Alert variant="destructive" aria-live="polite">
+          <AlertCircle aria-hidden="true" />
+          <AlertTitle>Não foi possível criar o rascunho</AlertTitle>
+          <AlertDescription>{erroGeral}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <div className="space-y-2">
+        <Label htmlFor="nome">Nome da ação</Label>
+        <Input id="nome" placeholder="Ex.: Cuidados com edredons" aria-invalid={Boolean(errors.nome)} aria-describedby={errors.nome ? "erro-nome" : undefined} {...register("nome")} />
+        {errors.nome ? <p id="erro-nome" role="alert" className="text-sm text-destructive">{errors.nome.message}</p> : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="objetivo">Objetivo</Label>
+        <Textarea id="objetivo" placeholder="O que a equipe pretende alcançar?" aria-invalid={Boolean(errors.objetivo)} aria-describedby={errors.objetivo ? "erro-objetivo" : "ajuda-objetivo"} {...register("objetivo")} />
+        <p id="ajuda-objetivo" className="text-xs text-muted-foreground">Este texto orienta a equipe e não será enviado ao cliente.</p>
+        {errors.objetivo ? <p id="erro-objetivo" role="alert" className="text-sm text-destructive">{errors.objetivo.message}</p> : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="itemDeCatalogoId">Item do catálogo</Label>
+        <Controller
+          name="itemDeCatalogoId"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value} onValueChange={field.onChange}>
+              <SelectTrigger id="itemDeCatalogoId" aria-invalid={Boolean(errors.itemDeCatalogoId)} aria-describedby={errors.itemDeCatalogoId ? "erro-item-catalogo" : undefined}>
+                <SelectValue placeholder="Selecione um produto ou serviço" />
+              </SelectTrigger>
+              <SelectContent>
+                {itensCatalogo.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.nome}{item.categoria ? ` · ${item.categoria}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.itemDeCatalogoId ? <p id="erro-item-catalogo" role="alert" className="text-sm text-destructive">{errors.itemDeCatalogoId.message}</p> : null}
+      </div>
+
+      <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Criando rascunho..." : "Criar e continuar"}
+        </Button>
+      </div>
+    </form>
+  );
 }
