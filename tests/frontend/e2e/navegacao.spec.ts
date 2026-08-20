@@ -33,13 +33,13 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await page.getByRole("button", { name: "Preparar Ação Comercial" }).click();
   await expect(page.getByText("Preparada", { exact: true })).toBeVisible();
   await expect(page.getByText("Ana Martins")).toBeVisible();
-  await page.getByRole("button", { name: "Iniciar processamento" }).click();
+  await page.getByRole("button", { name: "Conferir mensagem" }).click();
+  await expect(page.getByText("Olá, Ana Martins!")).toBeVisible();
+  await page.getByRole("button", { name: "Enviar esta mensagem" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText("Será solicitada somente esta mensagem");
+  await page.getByRole("button", { name: "Confirmar envio" }).click();
   await expect(page.getByText("Em processamento", { exact: true })).toBeVisible();
-  await page.getByRole("combobox", { name: "Resultado de Ana Martins" }).click();
-  await page.getByRole("option", { name: "Convertido" }).click();
-  await page.getByLabel("Valor convertido de Ana Martins").fill("149,90");
-  await page.getByRole("button", { name: "Salvar resultado" }).click();
-  await expect(page.getByText("Resultado salvo.")).toBeVisible();
+  await expect(page.getByText("Aguardando solicitação")).toBeVisible();
 });
 
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {

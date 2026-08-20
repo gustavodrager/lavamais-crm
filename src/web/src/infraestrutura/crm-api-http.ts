@@ -33,7 +33,7 @@ const esquemaTotais = z.object({
 }).passthrough();
 const esquemaDestinatario = z.object({
   id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), destino: z.string(), conteudoPreVisualizacao: z.string(),
-  situacaoEnvio: z.enum(["Pendente", "Solicitado", "Enviado", "Entregue", "Lido", "Falhou"]),
+  situacaoEnvio: z.enum(["Pendente", "AguardandoSolicitacao", "Solicitado", "Enviado", "Entregue", "Lido", "Falhou"]),
   resultadoComercial: z.enum(["NaoInformado", "SemRetorno", "Respondeu", "Interessado", "Convertido", "NaoTemInteresse"]),
   valorConvertido: z.number().nullable(), dataResultadoComercial: z.string().datetime({ offset: true }).nullable(), codigoFalha: z.string().nullable(), versao: z.number().int().nonnegative(),
 });
@@ -48,6 +48,7 @@ const esquemaItemDeCatalogo = z.object({
 });
 const esquemaPaginado = <T extends z.ZodType>(item: T) => z.object({ itens: z.array(item), pagina: z.number().int().positive(), tamanhoPagina: z.number().int().positive(), total: z.number().int().nonnegative() });
 const esquemaCriacao = z.object({ id: z.string().uuid() });
+const esquemaEnvioIndividual = z.object({ id: z.string().uuid(), situacaoEnvio: z.literal("AguardandoSolicitacao"), versao: z.number().int().nonnegative() });
 const esquemaSimulacao = z.object({
   quantidadeEncontrada: z.number().int().nonnegative(),
   quantidadeElegivel: z.number().int().nonnegative(),
@@ -153,8 +154,8 @@ export class CrmApiHttp implements PortaCrmApi {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/preparar`, { metodo: "POST", corpo: { versao } });
   }
 
-  async iniciar(id: string, versao: number) {
-    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/iniciar`, { metodo: "POST", corpo: { versao } });
+  async enviarDestinatario(id: string, destinatarioId: string, versao: number) {
+    return esquemaEnvioIndividual.parse(await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/destinatarios/${encodeURIComponent(destinatarioId)}/enviar`, { metodo: "POST", corpo: { versao } }));
   }
 
   async registrarResultado(id: string, destinatarioId: string, resultado: Exclude<ResultadoComercial, "NaoInformado">, valorConvertido: number | null, versao: number) {

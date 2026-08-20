@@ -22,6 +22,6 @@ export default async function DetalheAcao({ params }: { params: Promise<{ id: st
     <ResumoAcao acao={acao} />
     {acao.situacao === "Rascunho" && <DefinicaoPublico acaoId={acao.id} criterios={acao.criterios} />}
     {acao.situacao === "Rascunho" && <PreparacaoAcao acaoId={acao.id} modelos={modelos} versaoModeloAtualId={acao.versaoModeloId} />}
-    {acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada" && <ExecucaoAcao acaoId={acao.id} versao={acao.versao} situacao={acao.situacao} destinatarios={acao.destinatarios} />}
+    {acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada" && <ExecucaoAcao acaoId={acao.id} situacao={acao.situacao} destinatarios={acao.destinatarios} />}
   </>;
 }

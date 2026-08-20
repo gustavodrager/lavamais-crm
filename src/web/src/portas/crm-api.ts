@@ -47,7 +47,10 @@ export interface AtualizarESimularPublico {
 export interface PrepararAcaoComercial {
   atualizarModelo(id: string, versaoModeloId: string): Promise<void>;
   preparar(id: string, versao: number): Promise<void>;
-  iniciar(id: string, versao: number): Promise<void>;
+}
+
+export interface EnviarMensagemIndividual {
+  enviarDestinatario(id: string, destinatarioId: string, versao: number): Promise<{ id: string; situacaoEnvio: "AguardandoSolicitacao"; versao: number }>;
 }
 
 export interface RegistrarResultadoComercial {
@@ -63,4 +66,5 @@ export interface PortaCrmApi
     CriarAcaoComercial,
     AtualizarESimularPublico,
     PrepararAcaoComercial,
+    EnviarMensagemIndividual,
     RegistrarResultadoComercial {}

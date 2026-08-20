@@ -24,7 +24,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async atualizarCriterios() {},
   async atualizarModelo() {},
   async preparar() {},
-  async iniciar() {},
+  async enviarDestinatario(_id, destinatarioId, versao) { return { id: destinatarioId, situacaoEnvio: "AguardandoSolicitacao", versao: versao + 1 }; },
   async registrarResultado() {},
   async simularPublico() {
     return {

@@ -74,7 +74,7 @@ export interface DetalheAcaoComercial extends ResumoAcaoComercial {
   destinatarios: DestinatarioDaAcao[];
 }
 
-export type SituacaoEnvio = "Pendente" | "Solicitado" | "Enviado" | "Entregue" | "Lido" | "Falhou";
+export type SituacaoEnvio = "Pendente" | "AguardandoSolicitacao" | "Solicitado" | "Enviado" | "Entregue" | "Lido" | "Falhou";
 export type ResultadoComercial = "NaoInformado" | "SemRetorno" | "Respondeu" | "Interessado" | "Convertido" | "NaoTemInteresse";
 export interface DestinatarioDaAcao {
   id: string;
