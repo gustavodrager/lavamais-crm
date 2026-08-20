@@ -1,6 +1,6 @@
 # Operacao do Backend
 
-Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker e do PostgreSQL. Ele nao substitui a definicao de provedor, responsaveis, retencao, RPO e RTO antes da producao.
+Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-007. A hospedagem dos componentes da aplicacao ainda sera definida.
 
 ## Implantacao
 
@@ -11,6 +11,12 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker e do Pos
 5. executar uma acao de homologacao com destinatario autorizado e conferir idempotencia e reconciliacao.
 
 Rollback de aplicacao deve reutilizar uma versao compatível com o schema já aplicado. Migrations destrutivas exigem plano específico e backup validado; não se executa `database update` automaticamente no startup.
+
+### Conexao dos componentes no Railway
+
+Para a API e o Worker, criar em cada ambiente uma variavel de referencia `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Usar `ASPNETCORE_ENVIRONMENT=Homologacao` e `DOTNET_ENVIRONMENT=Homologacao` em homologacao; em producao, usar `Production` nos dois componentes.
+
+O backend converte a URL do Railway para o formato do Npgsql. Nao copiar a URL resolvida, usuario ou senha para arquivos, comandos, logs ou documentacao. Nao criar `DATABASE_PUBLIC_URL`: a comunicacao deve permanecer na rede privada do projeto.
 
 ## Observabilidade
 
@@ -25,6 +31,8 @@ Alertar ao menos para:
 - falhas recorrentes do ciclo do Worker.
 
 ## Backup e restauração
+
+Em 20 de agosto de 2026, as instancias PostgreSQL de `homologacao` e `production` estavam ativas, com volumes e credenciais separados e sem carga de dados do CRM. O backup continuo do Railway estava desativado. O ambiente de producao nao deve receber dados empresariais ate que a politica de backup e o ensaio de restauracao sejam aprovados.
 
 Os scripts usam as variáveis padrão do PostgreSQL (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` e, quando necessário, `PGSSLMODE`). A senha nunca deve ser passada na linha de comando.
 O `pg_dump` deve ter versão igual ou superior à do servidor. Em ambiente local conteinerizado, `LAVAMAIS_POSTGRES_CONTAINER` faz os scripts usarem `pg_dump` e `pg_restore` do próprio contêiner, evitando incompatibilidade de versão.

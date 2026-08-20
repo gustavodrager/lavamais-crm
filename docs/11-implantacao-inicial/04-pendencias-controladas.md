@@ -36,10 +36,10 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 
 ## Infraestrutura
 
-- escolher provedor de hospedagem;
-- definir ambientes;
+- PostgreSQL provisionado no projeto Railway `lavamais-crm`, com ambientes isolados `homologacao` e `production`, conforme ADR-007;
+- escolher o provedor de hospedagem da API, do Worker e do frontend;
 - definir dominio, DNS e certificados;
-- definir backup, retencao e objetivo de restauracao;
+- habilitar e testar backup, retencao, restauracao, RPO e RTO antes de inserir dados empresariais em producao;
 - configurar alertas e responsaveis operacionais.
 
 ## Sistema atual
