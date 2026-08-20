@@ -42,7 +42,18 @@ export async function criarRascunho(entrada: EntradaCriarRascunho): Promise<Falh
     const resultado = await obterPortaCrmApi().criar({
       ...validacao.data,
       versaoModeloId: null,
-      criterios: { versaoSchema: 1, modo: "Filtros" },
+      criterios: {
+        versaoSchema: 1,
+        modo: "Filtros",
+        tipoCliente: null,
+        cidades: null,
+        bairros: null,
+        etiquetaIds: null,
+        cadastradoApartirDe: null,
+        dataNascimentoDe: null,
+        dataNascimentoAte: null,
+        clienteIds: null,
+      },
     });
     id = resultado.id;
   } catch (erro) {

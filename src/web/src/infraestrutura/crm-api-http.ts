@@ -2,12 +2,27 @@ import "server-only";
 
 import { z } from "zod";
 import type { CriarAcaoComercialEntrada, PortaCrmApi } from "@/portas/crm-api";
+import type { CriteriosDeSegmentacao } from "@/contratos/apresentacao";
 
 const esquemaSituacao = z.enum(["Rascunho", "Preparada", "EmProcessamento", "Concluida", "ConcluidaComFalhas", "Cancelada"]);
+const esquemaCriterios = z.object({
+  versaoSchema: z.literal(1),
+  modo: z.enum(["Filtros", "Manual"]),
+  tipoCliente: z.string().nullable(),
+  cidades: z.array(z.string()).nullable(),
+  bairros: z.array(z.string()).nullable(),
+  etiquetaIds: z.array(z.string().uuid()).nullable(),
+  cadastradoApartirDe: z.string().datetime({ offset: true }).nullable(),
+  dataNascimentoDe: z.string().nullable(),
+  dataNascimentoAte: z.string().nullable(),
+  clienteIds: z.array(z.string().uuid()).nullable(),
+});
 const esquemaAcaoApi = z.object({
   id: z.string().uuid(), nome: z.string(), objetivo: z.string().nullable(),
-  itemDeCatalogoId: z.string().uuid(), situacao: esquemaSituacao,
+  itemDeCatalogoId: z.string().uuid(), versaoModeloId: z.string().uuid().nullable(),
+  criterios: esquemaCriterios, situacao: esquemaSituacao,
   dataAtualizacao: z.string().datetime({ offset: true }),
+  versao: z.number().int().nonnegative(),
 });
 const esquemaTotais = z.object({
   destinatarios: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
@@ -26,6 +41,19 @@ const esquemaItemDeCatalogo = z.object({
 });
 const esquemaPaginado = <T extends z.ZodType>(item: T) => z.object({ itens: z.array(item), pagina: z.number().int().positive(), tamanhoPagina: z.number().int().positive(), total: z.number().int().nonnegative() });
 const esquemaCriacao = z.object({ id: z.string().uuid() });
+const esquemaSimulacao = z.object({
+  quantidadeEncontrada: z.number().int().nonnegative(),
+  quantidadeElegivel: z.number().int().nonnegative(),
+  pagina: z.number().int().positive(),
+  tamanhoPagina: z.number().int().positive(),
+  clientes: z.array(z.object({
+    clienteId: z.string().uuid(),
+    nome: z.string(),
+    whatsapp: z.string().nullable(),
+    elegivel: z.boolean(),
+    motivoExclusao: z.enum(["ClienteInativo", "ContatoInvalido", "SemPermissao", "ContatoDuplicado"]).nullable(),
+  })),
+});
 
 interface ProblemDetails {
   title?: string;
@@ -73,7 +101,30 @@ export class CrmApiHttp implements PortaCrmApi {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/acoes-comerciais", { metodo: "POST", corpo: entrada }));
   }
 
-  private async requisitar(caminho: string, opcoes: { metodo?: "GET" | "POST"; corpo?: unknown; aceitarNaoEncontrado?: boolean } = {}) {
+  async atualizarCriterios(id: string, criterios: CriteriosDeSegmentacao) {
+    const acao = await this.obter(id);
+    if (!acao) throw new ErroCrmApi(404, "A Ação Comercial não foi encontrada.");
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}`, {
+      metodo: "PUT",
+      corpo: {
+        nome: acao.nome,
+        objetivo: acao.objetivo,
+        itemDeCatalogoId: acao.itemDeCatalogoId,
+        versaoModeloId: acao.versaoModeloId,
+        criterios,
+      },
+    });
+  }
+
+  async simularPublico(id: string, pagina = 1, tamanhoPagina = 20) {
+    const parametros = new URLSearchParams({ pagina: String(pagina), tamanhoPagina: String(tamanhoPagina) });
+    return esquemaSimulacao.parse(await this.requisitar(
+      `/api/v1/acoes-comerciais/${encodeURIComponent(id)}/simular-publico?${parametros}`,
+      { metodo: "POST" },
+    ));
+  }
+
+  private async requisitar(caminho: string, opcoes: { metodo?: "GET" | "POST" | "PUT"; corpo?: unknown; aceitarNaoEncontrado?: boolean } = {}) {
     const token = await this.obterAccessToken();
     if (!token) throw new ErroCrmApi(401, "Sessao indisponivel para acessar a CRM API.");
     let resposta: Response;
@@ -93,6 +144,7 @@ export class CrmApiHttp implements PortaCrmApi {
       const problema = await resposta.json().catch(() => ({})) as ProblemDetails;
       throw new ErroCrmApi(resposta.status, problema.detail ?? problema.title ?? "A CRM API nao concluiu a solicitacao.", problema.traceId);
     }
+    if (resposta.status === 204) return null;
     return resposta.json() as Promise<unknown>;
   }
 }

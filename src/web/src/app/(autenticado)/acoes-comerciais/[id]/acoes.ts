@@ -1,0 +1,31 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import type { SimulacaoDePublico } from "@/contratos/apresentacao";
+import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
+import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
+import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
+
+const esquema = z.object({ acaoId: z.string().uuid(), tipoCliente: z.string().trim().max(80), cidades: z.string().trim().max(500), bairros: z.string().trim().max(500), cadastradoApartirDe: z.string().date().or(z.literal("")), confirmarBaseCompleta: z.boolean() }).superRefine((dados, contexto) => {
+  if (!dados.tipoCliente && !dados.cidades && !dados.bairros && !dados.cadastradoApartirDe && !dados.confirmarBaseCompleta) contexto.addIssue({ code: "custom", path: ["confirmarBaseCompleta"], message: "Confirme o uso de toda a base ou informe ao menos um filtro." });
+});
+export type EntradaSimularPublico = z.input<typeof esquema>;
+export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
+const lista = (valor: string) => { const itens = valor.split(",").map((item) => item.trim()).filter(Boolean); return itens.length ? itens : null; };
+
+export async function salvarESimularPublico(entrada: EntradaSimularPublico): Promise<ResultadoSimularPublico> {
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${entrada.acaoId}`);
+  const validacao = esquema.safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: validacao.error.issues[0]?.message ?? "Revise os filtros informados." };
+  const dados = validacao.data;
+  try {
+    const porta = obterPortaCrmApi();
+    await porta.atualizarCriterios(dados.acaoId, { versaoSchema: 1, modo: "Filtros", tipoCliente: dados.tipoCliente || null, cidades: lista(dados.cidades), bairros: lista(dados.bairros), etiquetaIds: null, cadastradoApartirDe: dados.cadastradoApartirDe ? `${dados.cadastradoApartirDe}T00:00:00.000Z` : null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null });
+    return { sucesso: true, simulacao: await porta.simularPublico(dados.acaoId) };
+  } catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para alterar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e tente novamente." : erro.status === 422 ? erro.message : "Não foi possível simular o público agora. Tente novamente." };
+    throw erro;
+  }
+}

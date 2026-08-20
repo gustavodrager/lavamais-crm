@@ -18,6 +18,19 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async criar() {
     return { id: crypto.randomUUID() };
   },
+  async atualizarCriterios() {},
+  async simularPublico() {
+    return {
+      quantidadeEncontrada: 2,
+      quantidadeElegivel: 1,
+      pagina: 1,
+      tamanhoPagina: 20,
+      clientes: [
+        { clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+55 13 99123-4567", elegivel: true, motivoExclusao: null },
+        { clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nome: "Patricia Souza", whatsapp: null, elegivel: false, motivoExclusao: "SemPermissao" },
+      ],
+    };
+  },
   async listarClientes() {
     return { itens: clientesDemonstracao, pagina: 1, tamanhoPagina: 20, total: clientesDemonstracao.length };
   },

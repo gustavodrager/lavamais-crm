@@ -1,9 +1,22 @@
 import type { ResumoAcaoComercial, ResumoCliente } from "@/contratos/apresentacao";
 
+const criteriosVazios = {
+  versaoSchema: 1 as const,
+  modo: "Filtros" as const,
+  tipoCliente: null,
+  cidades: null,
+  bairros: null,
+  etiquetaIds: null,
+  cadastradoApartirDe: null,
+  dataNascimentoDe: null,
+  dataNascimentoAte: null,
+  clienteIds: null,
+};
+
 export const acoesDemonstracao: ResumoAcaoComercial[] = [
-  { id: "6d3d0d64-a111-4cff-8db8-111111111111", nome: "Cuidados com edredons", objetivo: null, itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", situacao: "EmProcessamento", totalDestinatarios: 84, dataAtualizacao: "2026-08-14T14:30:00Z" },
-  { id: "9a842a55-b222-41ab-86f2-222222222222", nome: "Higienizacao de ternos", objetivo: null, itemDeCatalogoId: "9a842a55-b222-41ab-86f2-222222222223", situacao: "Preparada", totalDestinatarios: 31, dataAtualizacao: "2026-08-13T17:10:00Z" },
-  { id: "bb19f233-c333-42dc-9a26-333333333333", nome: "Boas-vindas de agosto", objetivo: null, itemDeCatalogoId: "bb19f233-c333-42dc-9a26-333333333334", situacao: "Concluida", totalDestinatarios: 126, dataAtualizacao: "2026-08-08T12:00:00Z" },
+  { id: "6d3d0d64-a111-4cff-8db8-111111111111", nome: "Cuidados com edredons", objetivo: null, itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", versaoModeloId: null, criterios: criteriosVazios, situacao: "EmProcessamento", totalDestinatarios: 84, dataAtualizacao: "2026-08-14T14:30:00Z", versao: 1 },
+  { id: "9a842a55-b222-41ab-86f2-222222222222", nome: "Higienizacao de ternos", objetivo: null, itemDeCatalogoId: "9a842a55-b222-41ab-86f2-222222222223", versaoModeloId: null, criterios: criteriosVazios, situacao: "Preparada", totalDestinatarios: 31, dataAtualizacao: "2026-08-13T17:10:00Z", versao: 1 },
+  { id: "bb19f233-c333-42dc-9a26-333333333333", nome: "Boas-vindas de agosto", objetivo: null, itemDeCatalogoId: "bb19f233-c333-42dc-9a26-333333333334", versaoModeloId: null, criterios: criteriosVazios, situacao: "Concluida", totalDestinatarios: 126, dataAtualizacao: "2026-08-08T12:00:00Z", versao: 1 },
 ];
 
 export const clientesDemonstracao: ResumoCliente[] = [

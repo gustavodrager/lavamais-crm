@@ -4,6 +4,8 @@ import type {
   OpcaoItemDeCatalogo,
   ResumoCliente,
   ResultadoPaginado,
+  CriteriosDeSegmentacao,
+  SimulacaoDePublico,
 } from "@/contratos/apresentacao";
 
 export interface ConsultarAcoesComerciais {
@@ -24,14 +26,16 @@ export interface CriarAcaoComercialEntrada {
   objetivo: string;
   itemDeCatalogoId: string;
   versaoModeloId: null;
-  criterios: {
-    versaoSchema: 1;
-    modo: "Filtros";
-  };
+  criterios: CriteriosDeSegmentacao;
 }
 
 export interface CriarAcaoComercial {
   criar(entrada: CriarAcaoComercialEntrada): Promise<{ id: string }>;
+}
+
+export interface AtualizarESimularPublico {
+  atualizarCriterios(id: string, criterios: CriteriosDeSegmentacao): Promise<void>;
+  simularPublico(id: string, pagina?: number, tamanhoPagina?: number): Promise<SimulacaoDePublico>;
 }
 
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.
@@ -39,4 +43,5 @@ export interface PortaCrmApi
   extends ConsultarAcoesComerciais,
     ConsultarClientes,
     ConsultarCatalogo,
-    CriarAcaoComercial {}
+    CriarAcaoComercial,
+    AtualizarESimularPublico {}
