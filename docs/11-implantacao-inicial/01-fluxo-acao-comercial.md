@@ -44,28 +44,34 @@ Em uma operacao consistente, o sistema:
 
 Depois disso, criterios, item e modelo nao podem ser alterados.
 
-## 6. Iniciar
+## 6. Selecionar e conferir destinatario
 
-O sistema muda a acao para `EmProcessamento` e cria mensagens de outbox para os destinatarios. O Worker processa cada mensagem de forma independente.
+O usuario seleciona um destinatario congelado da acao. O CRM apresenta nome, WhatsApp e conteudo final montado. O template e seus parametros ja estao congelados e nao permitem edicao livre.
 
-## 7. Solicitar notificacao
+## 7. Solicitar envio individual
+
+Depois de uma confirmacao explicita, o sistema muda somente aquele destinatario para `AguardandoSolicitacao` e cria uma unica mensagem de outbox. A primeira solicitacao muda a acao para `EmProcessamento`. Nao existe comando de disparo coletivo na Versao 1.0.
+
+## 8. Solicitar notificacao
 
 O Worker chama o Notification Hub com origem, chave de template, telefone, payload e chave de idempotencia. O identificador retornado e salvo no destinatario.
 
 Falha de rede mantem a outbox elegivel para nova tentativa com a mesma chave.
 
-## 8. Reconciliar
+## 9. Reconciliar
 
 O Worker consulta notificacoes nao finalizadas e atualiza a projecao do CRM para `Enviado`, `Entregue`, `Lido` ou `Falhou`.
 
-## 9. Concluir
+## 10. Concluir
 
-Quando todos os destinatarios terminam:
+Quando todos os destinatarios congelados foram solicitados e terminam:
 
 - sem falhas: `Concluida`;
 - com pelo menos uma falha: `ConcluidaComFalhas`.
 
-## 10. Registrar resultado
+Enquanto existir destinatario `Pendente`, a acao permanece disponivel para novos envios individuais.
+
+## 11. Registrar resultado
 
 Operadores registram o retorno comercial independentemente do estado tecnico. Uma conversao pode receber valor opcional, sem criar pedido ou faturamento.
 
@@ -75,5 +81,7 @@ Operadores registram o retorno comercial independentemente do estado tecnico. Um
 - cliente aparece uma vez por acao;
 - acao preparada e imutavel no conteudo comercial;
 - repetir a solicitacao nao duplica notificacao;
+- cada confirmacao humana solicita no maximo um destinatario;
+- nao existe disparo coletivo na Versao 1.0;
 - falha de um destinatario nao bloqueia os demais;
 - resultado comercial nao e inferido automaticamente.

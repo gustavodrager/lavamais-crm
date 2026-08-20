@@ -28,7 +28,11 @@ Escolher modelo aprovado
 ↓
 Preparar e congelar audiencia
 ↓
-Iniciar envio imediato
+Selecionar um cliente
+↓
+Conferir a mensagem montada
+↓
+Confirmar um envio individual
 ↓
 Acompanhar entrega
 ↓
@@ -47,6 +51,10 @@ O resultado inicial e informado manualmente por destinatario:
 - `NaoTemInteresse`.
 
 O valor convertido pode ser registrado opcionalmente. Isso nao representa pedido, faturamento ou controle financeiro.
+
+## Controle de envio
+
+A Acao Comercial nao dispara varias mensagens por um unico comando. O usuario percorre a audiencia congelada, seleciona um cliente, confere o destino e a mensagem final e confirma somente aquele envio. Mensagens livres, disparo em lote e automacao permanecem fora da Versao 1.0.
 
 ## Campanha futura
 

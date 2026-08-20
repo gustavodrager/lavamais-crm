@@ -54,7 +54,7 @@ Como gerente, quero congelar publico e modelo para impedir mudancas silenciosas 
 
 ### HU12 — Executar acao
 
-Como gerente, quero iniciar o envio para que o Worker solicite mensagens idempotentes ao Notification Hub.
+Como gerente, quero selecionar um cliente da audiencia, conferir a mensagem montada e confirmar seu envio individual para manter controle sobre cada contato.
 
 ### HU13 — Acompanhar envios
 

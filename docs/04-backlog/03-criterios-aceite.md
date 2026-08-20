@@ -35,9 +35,14 @@
 
 ## Envio
 
-- Apenas acao `Preparada` pode iniciar processamento.
+- Nao existe comando de disparo coletivo na Versao 1.0.
+- A lista da acao permite selecionar um destinatario congelado por vez.
+- Antes da confirmacao, o CRM apresenta nome, destino e mensagem final montada.
+- Cada confirmacao solicita somente o destinatario selecionado.
+- Apenas destinatario `Pendente` de audiencia preparada pode ser solicitado.
+- A primeira solicitacao individual muda a acao para `EmProcessamento`.
 - Cada destinatario possui chave de idempotencia deterministica.
-- Repetir a operacao nao cria nova notificacao no Notification Hub.
+- Repetir, concorrer ou confirmar destinatario ja solicitado nao cria nova notificacao no Notification Hub.
 - Credencial do hub nunca chega ao navegador.
 - Falhas individuais nao interrompem os demais destinatarios.
 - O CRM apresenta estado consolidado de solicitacao e entrega.

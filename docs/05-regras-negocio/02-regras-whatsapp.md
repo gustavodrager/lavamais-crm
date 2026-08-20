@@ -31,6 +31,8 @@ O CRM converte os estados do hub para sua projecao de apresentacao:
 ## Confiabilidade
 
 - A outbox do CRM registra a intencao de envio na mesma transacao da mudanca de estado do destinatario.
+- Cada intencao nasce de uma confirmacao individual depois da conferencia da mensagem montada.
+- Um comando nunca cria intencoes para varios destinatarios.
 - O Worker pode repetir a chamada com a mesma chave.
 - O Notification Hub e responsavel por lease, retry e tentativa tecnica.
 - O Worker reconcilia periodicamente notificacoes ainda nao finalizadas.
