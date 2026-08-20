@@ -63,7 +63,12 @@ export interface DetalheAcaoComercial extends ResumoAcaoComercial {
     entregues: number;
     lidos: number;
     falhos: number;
+    naoInformados: number;
+    semRetorno: number;
+    responderam: number;
+    interessados: number;
     convertidos: number;
+    semInteresse: number;
     valorConvertido: number;
   };
   destinatarios: DestinatarioDaAcao[];

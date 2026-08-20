@@ -58,3 +58,5 @@ Os prototipos e documentos marcados como historicos representam uma fase anterio
 ## Estado atual
 
 O backend possui as Fatias 0 a 9 da implantacao inicial: fundacao, identidade e tenant, clientes, importacao CSV, catalogo, modelos, rascunhos, segmentacao, preparacao transacional da audiencia, envio pelo Notification Hub com outbox, acompanhamento de resultados e endurecimento operacional. Consulte as [instrucoes do backend](src/backend/README.md) e o [runbook operacional](docs/09-operacao/README.md).
+
+O frontend em `src/web` cobre o fluxo principal da Versao 1.0: criacao do rascunho, simulacao do publico, selecao de modelo publicado, preparacao da audiencia, inicio do processamento, acompanhamento dos destinatarios e registro de resultados comerciais. A integracao ocorre pelo BFF do Next.js, sem expor tokens ao JavaScript. Os testes de componentes e integracao usam Vitest; o fluxo principal usa Playwright.

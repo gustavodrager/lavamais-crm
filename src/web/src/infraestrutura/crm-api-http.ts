@@ -28,7 +28,7 @@ const esquemaAcaoApi = z.object({
 const esquemaTotais = z.object({
   destinatarios: z.number().int().nonnegative(), pendentes: z.number().int().nonnegative(), solicitados: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
   entregues: z.number().int().nonnegative(), lidos: z.number().int().nonnegative(),
-  falhos: z.number().int().nonnegative(), convertidos: z.number().int().nonnegative(),
+  falhos: z.number().int().nonnegative(), naoInformados: z.number().int().nonnegative(), semRetorno: z.number().int().nonnegative(), responderam: z.number().int().nonnegative(), interessados: z.number().int().nonnegative(), convertidos: z.number().int().nonnegative(), semInteresse: z.number().int().nonnegative(),
   valorConvertido: z.number().nonnegative(),
 }).passthrough();
 const esquemaDestinatario = z.object({

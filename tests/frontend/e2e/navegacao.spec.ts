@@ -8,8 +8,10 @@ test.beforeEach(async ({ context, page }) => {
 test("lista e abre uma Ação Comercial obtida da CRM API", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Ações Comerciais" })).toBeVisible();
   await page.getByRole("link", { name: "Ação integrada de edredons" }).click();
-  await expect(page.getByRole("heading", { name: "Ação integrada de edredons" })).toBeVisible();
-  await expect(page.getByText("10 / 8")).toBeVisible();
+  await expect(page).toHaveURL(/\/acoes-comerciais\/6d3d0d64-a111-4cff-8db8-111111111111$/, { timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Ação integrada de edredons" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("progressbar", { name: "Progresso técnico: 100%" })).toBeVisible();
+  await expect(page.getByText("R$ 150,00")).toBeVisible();
 });
 
 test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, testInfo) => {
