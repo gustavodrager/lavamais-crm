@@ -8,6 +8,9 @@ export const repositorioDemonstracao: PortaCrmApi = {
       { id: "9a842a55-b222-41ab-86f2-222222222223", nome: "Lavagem de terno", tipo: "Servico", categoria: "Vestuário" },
     ];
   },
+  async listarModelosPublicados() {
+    return [{ modeloId: "6d3d0d64-a111-4cff-8db8-111111111115", versaoId: "6d3d0d64-a111-4cff-8db8-111111111116", nome: "Oferta de serviço", numeroVersao: 1, canal: "Whatsapp", conteudoPreVisualizacao: "Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}.", variaveis: ["nomeCliente", "itemCatalogo"] }];
+  },
   async listarAcoes() {
     return { itens: acoesDemonstracao, pagina: 1, tamanhoPagina: 20, total: acoesDemonstracao.length };
   },
@@ -19,6 +22,8 @@ export const repositorioDemonstracao: PortaCrmApi = {
     return { id: crypto.randomUUID() };
   },
   async atualizarCriterios() {},
+  async atualizarModelo() {},
+  async preparar() {},
   async simularPublico() {
     return {
       quantidadeEncontrada: 2,

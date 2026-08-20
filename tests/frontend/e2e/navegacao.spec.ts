@@ -12,7 +12,7 @@ test("lista e abre uma Ação Comercial obtida da CRM API", async ({ page }) => 
   await expect(page.getByText("10 / 8")).toBeVisible();
 });
 
-test("cria um rascunho com item real do catálogo", async ({ page }, testInfo) => {
+test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "O fluxo funcional completo é coberto uma vez no desktop");
   await page.getByRole("link", { name: "Nova ação" }).click();
   await page.getByLabel("Nome da ação").fill("Ação criada pelo frontend");
@@ -22,6 +22,14 @@ test("cria um rascunho com item real do catálogo", async ({ page }, testInfo) =
   await page.getByRole("button", { name: "Criar e continuar" }).click();
   await expect(page).toHaveURL(/\/acoes-comerciais\/7e4e1e75-b222-4cff-8db8-222222222222$/);
   await expect(page.getByRole("heading", { name: "Ação criada pelo frontend" })).toBeVisible();
+  await page.getByLabel("Cidades").fill("Praia Grande");
+  await page.getByRole("button", { name: "Salvar filtros e simular público" }).click();
+  await expect(page.getByText("1 elegíveis")).toBeVisible();
+  await page.getByRole("combobox", { name: "Modelo de mensagem" }).click();
+  await page.getByRole("option", { name: "Oferta de serviço · versão 1" }).click();
+  await expect(page.getByText("Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}.")).toBeVisible();
+  await page.getByRole("button", { name: "Preparar Ação Comercial" }).click();
+  await expect(page.getByText("Preparada", { exact: true })).toBeVisible();
 });
 
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {

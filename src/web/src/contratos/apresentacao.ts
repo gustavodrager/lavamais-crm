@@ -82,6 +82,16 @@ export interface OpcaoItemDeCatalogo {
   categoria: string | null;
 }
 
+export interface OpcaoModeloDeMensagem {
+  modeloId: string;
+  versaoId: string;
+  nome: string;
+  numeroVersao: number;
+  canal: "Whatsapp";
+  conteudoPreVisualizacao: string;
+  variaveis: string[];
+}
+
 export interface SessaoApresentacao {
   usuario: { nome: string; iniciais: string };
   tenant: { nome: string };

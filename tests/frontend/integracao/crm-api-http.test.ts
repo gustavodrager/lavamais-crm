@@ -54,4 +54,14 @@ describe("CrmApiHttp", () => {
     await expect(api.simularPublico(acao.id)).resolves.toEqual(simulacao);
     expect(requisitar.mock.calls[2][0].toString()).toContain("simular-publico?pagina=1&tamanhoPagina=20");
   });
+  it("lista somente a versão atual de modelos publicados", async () => {
+    const versaoId = "6d3d0d64-a111-4cff-8db8-111111111116";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([{ id: "6d3d0d64-a111-4cff-8db8-111111111115", nome: "Oferta", canal: "Whatsapp", situacao: "Publicado", versaoAtualId: versaoId, versoes: [{ id: versaoId, numero: 2, conteudoPreVisualizacao: "Olá!", variaveis: [], chaveTemplateNotificacao: "oferta", dataPublicacao: "2026-08-19T10:00:00Z" }] }, { id: "6d3d0d64-a111-4cff-8db8-111111111117", nome: "Rascunho", canal: "Whatsapp", situacao: "Rascunho", versaoAtualId: null, versoes: [] }]), { status: 200 })));
+    await expect(new CrmApiHttp("http://crm.test", async () => "token").listarModelosPublicados()).resolves.toEqual([{ modeloId: "6d3d0d64-a111-4cff-8db8-111111111115", versaoId, nome: "Oferta", numeroVersao: 2, canal: "Whatsapp", conteudoPreVisualizacao: "Olá!", variaveis: [] }]);
+  });
+  it("envia a versão de concorrência ao preparar", async () => {
+    const requisitar = vi.fn().mockResolvedValue(new Response(null, { status: 204 })); vi.stubGlobal("fetch", requisitar);
+    await new CrmApiHttp("http://crm.test", async () => "token").preparar(acao.id, 4);
+    expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 4 });
+  });
 });

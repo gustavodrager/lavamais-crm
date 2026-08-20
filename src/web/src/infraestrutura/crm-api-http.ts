@@ -54,6 +54,17 @@ const esquemaSimulacao = z.object({
     motivoExclusao: z.enum(["ClienteInativo", "ContatoInvalido", "SemPermissao", "ContatoDuplicado"]).nullable(),
   })),
 });
+const esquemaModelo = z.object({
+  id: z.string().uuid(),
+  nome: z.string().min(1),
+  canal: z.literal("Whatsapp"),
+  situacao: z.enum(["Rascunho", "Publicado", "Inativo"]),
+  versaoAtualId: z.string().uuid().nullable(),
+  versoes: z.array(z.object({
+    id: z.string().uuid(), numero: z.number().int().positive(), conteudoPreVisualizacao: z.string(),
+    variaveis: z.array(z.string()), chaveTemplateNotificacao: z.string(), dataPublicacao: z.string().datetime({ offset: true }),
+  })),
+});
 
 interface ProblemDetails {
   title?: string;
@@ -97,6 +108,15 @@ export class CrmApiHttp implements PortaCrmApi {
     return itens.map(({ id, nome, tipo, categoria }) => ({ id, nome, tipo, categoria }));
   }
 
+  async listarModelosPublicados() {
+    const modelos = z.array(esquemaModelo).parse(await this.requisitar("/api/v1/modelos-de-mensagem"));
+    return modelos.flatMap((modelo) => {
+      if (modelo.situacao !== "Publicado" || !modelo.versaoAtualId) return [];
+      const versao = modelo.versoes.find((item) => item.id === modelo.versaoAtualId);
+      return versao ? [{ modeloId: modelo.id, versaoId: versao.id, nome: modelo.nome, numeroVersao: versao.numero, canal: modelo.canal, conteudoPreVisualizacao: versao.conteudoPreVisualizacao, variaveis: versao.variaveis }] : [];
+    });
+  }
+
   async criar(entrada: CriarAcaoComercialEntrada) {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/acoes-comerciais", { metodo: "POST", corpo: entrada }));
   }
@@ -114,6 +134,16 @@ export class CrmApiHttp implements PortaCrmApi {
         criterios,
       },
     });
+  }
+
+  async atualizarModelo(id: string, versaoModeloId: string) {
+    const acao = await this.obter(id);
+    if (!acao) throw new ErroCrmApi(404, "A Ação Comercial não foi encontrada.");
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}`, { metodo: "PUT", corpo: { nome: acao.nome, objetivo: acao.objetivo, itemDeCatalogoId: acao.itemDeCatalogoId, versaoModeloId, criterios: acao.criterios } });
+  }
+
+  async preparar(id: string, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/preparar`, { metodo: "POST", corpo: { versao } });
   }
 
   async simularPublico(id: string, pagina = 1, tamanhoPagina = 20) {
