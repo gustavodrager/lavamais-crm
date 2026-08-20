@@ -46,6 +46,7 @@ export interface AtualizarESimularPublico {
 export interface PrepararAcaoComercial {
   atualizarModelo(id: string, versaoModeloId: string): Promise<void>;
   preparar(id: string, versao: number): Promise<void>;
+  iniciar(id: string, versao: number): Promise<void>;
 }
 
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.

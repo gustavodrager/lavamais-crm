@@ -57,6 +57,8 @@ export interface SimulacaoDePublico {
 export interface DetalheAcaoComercial extends ResumoAcaoComercial {
   totais: {
     destinatarios: number;
+    pendentes: number;
+    solicitados: number;
     enviados: number;
     entregues: number;
     lidos: number;
@@ -64,6 +66,23 @@ export interface DetalheAcaoComercial extends ResumoAcaoComercial {
     convertidos: number;
     valorConvertido: number;
   };
+  destinatarios: DestinatarioDaAcao[];
+}
+
+export type SituacaoEnvio = "Pendente" | "Solicitado" | "Enviado" | "Entregue" | "Lido" | "Falhou";
+export type ResultadoComercial = "NaoInformado" | "SemRetorno" | "Respondeu" | "Interessado" | "Convertido" | "NaoTemInteresse";
+export interface DestinatarioDaAcao {
+  id: string;
+  clienteId: string;
+  nomeCliente: string;
+  destino: string;
+  conteudoPreVisualizacao: string;
+  situacaoEnvio: SituacaoEnvio;
+  resultadoComercial: ResultadoComercial;
+  valorConvertido: number | null;
+  dataResultadoComercial: string | null;
+  codigoFalha: string | null;
+  versao: number;
 }
 
 export interface ResumoCliente {

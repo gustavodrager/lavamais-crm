@@ -13,6 +13,7 @@ const esquema = z.object({ acaoId: z.string().uuid(), tipoCliente: z.string().tr
 export type EntradaSimularPublico = z.input<typeof esquema>;
 export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoPrepararAcao = { sucesso: false; mensagem: string };
+export type ResultadoIniciarAcao = { sucesso: false; mensagem: string };
 const lista = (valor: string) => { const itens = valor.split(",").map((item) => item.trim()).filter(Boolean); return itens.length ? itens : null; };
 
 export async function salvarESimularPublico(entrada: EntradaSimularPublico): Promise<ResultadoSimularPublico> {
@@ -44,6 +45,19 @@ export async function prepararAcao(entrada: { acaoId: string; versaoModeloId: st
     await porta.preparar(validacao.data.acaoId, acaoAtualizada.versao);
   } catch (erro) {
     if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para preparar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e revise os dados." : erro.status === 422 ? erro.message : "Não foi possível preparar a ação agora. Tente novamente." };
+    throw erro;
+  }
+  redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
+}
+
+export async function iniciarAcao(entrada: { acaoId: string; versao: number }): Promise<ResultadoIniciarAcao> {
+  const validacao = z.object({ acaoId: z.string().uuid(), versao: z.number().int().nonnegative() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Os dados da ação estão desatualizados. Atualize a página." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
+  try { await obterPortaCrmApi().iniciar(validacao.data.acaoId, validacao.data.versao); }
+  catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para iniciar esta ação." : erro.status === 409 ? "A ação foi alterada recentemente. Atualize a página e revise o estado atual." : erro.status === 422 ? erro.message : "Não foi possível iniciar a ação agora. Tente novamente." };
     throw erro;
   }
   redirect(`/acoes-comerciais/${validacao.data.acaoId}`);

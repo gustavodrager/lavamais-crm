@@ -16,7 +16,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   },
   async obter(id) {
     const acao = acoesDemonstracao.find((item) => item.id === id);
-    return acao ? { ...acao, totais: { destinatarios: acao.totalDestinatarios ?? 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, convertidos: 0, valorConvertido: 0 } } : null;
+    return acao ? { ...acao, totais: { destinatarios: acao.totalDestinatarios ?? 0, pendentes: 0, solicitados: 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, convertidos: 0, valorConvertido: 0 }, destinatarios: [] } : null;
   },
   async criar() {
     return { id: crypto.randomUUID() };
@@ -24,6 +24,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async atualizarCriterios() {},
   async atualizarModelo() {},
   async preparar() {},
+  async iniciar() {},
   async simularPublico() {
     return {
       quantidadeEncontrada: 2,

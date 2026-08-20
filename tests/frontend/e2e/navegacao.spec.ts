@@ -30,6 +30,9 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await expect(page.getByText("Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}.")).toBeVisible();
   await page.getByRole("button", { name: "Preparar Ação Comercial" }).click();
   await expect(page.getByText("Preparada", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ana Martins")).toBeVisible();
+  await page.getByRole("button", { name: "Iniciar processamento" }).click();
+  await expect(page.getByText("Em processamento", { exact: true })).toBeVisible();
 });
 
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {

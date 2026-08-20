@@ -43,7 +43,7 @@ describe("CrmApiHttp", () => {
   it("preserva o rascunho ao atualizar critérios e simula o público", async () => {
     const simulacao = { quantidadeEncontrada: 2, quantidadeElegivel: 1, pagina: 1, tamanhoPagina: 20, clientes: [{ clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: null, elegivel: false, motivoExclusao: "SemPermissao" }] };
     const requisitar = vi.fn()
-      .mockResolvedValueOnce(new Response(JSON.stringify({ acao, totais: { destinatarios: 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, convertidos: 0, valorConvertido: 0 } }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ acao, totais: { destinatarios: 0, pendentes: 0, solicitados: 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, convertidos: 0, valorConvertido: 0 }, destinatarios: [] }), { status: 200 }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
       .mockResolvedValueOnce(new Response(JSON.stringify(simulacao), { status: 200 }));
     vi.stubGlobal("fetch", requisitar);
@@ -63,5 +63,11 @@ describe("CrmApiHttp", () => {
     const requisitar = vi.fn().mockResolvedValue(new Response(null, { status: 204 })); vi.stubGlobal("fetch", requisitar);
     await new CrmApiHttp("http://crm.test", async () => "token").preparar(acao.id, 4);
     expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 4 });
+  });
+  it("envia a versão de concorrência ao iniciar", async () => {
+    const requisitar = vi.fn().mockResolvedValue(new Response(null, { status: 204 })); vi.stubGlobal("fetch", requisitar);
+    await new CrmApiHttp("http://crm.test", async () => "token").iniciar(acao.id, 5);
+    expect(requisitar.mock.calls[0][0].toString()).toContain("/iniciar");
+    expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 5 });
   });
 });

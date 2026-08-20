@@ -25,12 +25,18 @@ const esquemaAcaoApi = z.object({
   versao: z.number().int().nonnegative(),
 });
 const esquemaTotais = z.object({
-  destinatarios: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
+  destinatarios: z.number().int().nonnegative(), pendentes: z.number().int().nonnegative(), solicitados: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
   entregues: z.number().int().nonnegative(), lidos: z.number().int().nonnegative(),
   falhos: z.number().int().nonnegative(), convertidos: z.number().int().nonnegative(),
   valorConvertido: z.number().nonnegative(),
 }).passthrough();
-const esquemaDetalhe = z.object({ acao: esquemaAcaoApi, totais: esquemaTotais }).passthrough();
+const esquemaDestinatario = z.object({
+  id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), destino: z.string(), conteudoPreVisualizacao: z.string(),
+  situacaoEnvio: z.enum(["Pendente", "Solicitado", "Enviado", "Entregue", "Lido", "Falhou"]),
+  resultadoComercial: z.enum(["NaoInformado", "SemRetorno", "Respondeu", "Interessado", "Convertido", "NaoTemInteresse"]),
+  valorConvertido: z.number().nullable(), dataResultadoComercial: z.string().datetime({ offset: true }).nullable(), codigoFalha: z.string().nullable(), versao: z.number().int().nonnegative(),
+});
+const esquemaDetalhe = z.object({ acao: esquemaAcaoApi, totais: esquemaTotais, destinatarios: z.array(esquemaDestinatario) }).passthrough();
 const esquemaCliente = z.object({ id: z.string(), nome: z.string(), whatsapp: z.string(), localidade: z.string(), etiquetas: z.array(z.string()), permiteWhatsapp: z.boolean() });
 const esquemaItemDeCatalogo = z.object({
   id: z.string().uuid(),
@@ -94,7 +100,7 @@ export class CrmApiHttp implements PortaCrmApi {
     const resposta = await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}`, { aceitarNaoEncontrado: true });
     if (resposta === null) return null;
     const detalhe = esquemaDetalhe.parse(resposta);
-    return { ...detalhe.acao, totalDestinatarios: detalhe.totais.destinatarios, totais: detalhe.totais };
+    return { ...detalhe.acao, totalDestinatarios: detalhe.totais.destinatarios, totais: detalhe.totais, destinatarios: detalhe.destinatarios };
   }
 
   async listarClientes() {
@@ -144,6 +150,10 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async preparar(id: string, versao: number) {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/preparar`, { metodo: "POST", corpo: { versao } });
+  }
+
+  async iniciar(id: string, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/iniciar`, { metodo: "POST", corpo: { versao } });
   }
 
   async simularPublico(id: string, pagina = 1, tamanhoPagina = 20) {
