@@ -7,6 +7,7 @@ import type {
   ResultadoPaginado,
   CriteriosDeSegmentacao,
   SimulacaoDePublico,
+  ResultadoComercial,
 } from "@/contratos/apresentacao";
 
 export interface ConsultarAcoesComerciais {
@@ -49,6 +50,10 @@ export interface PrepararAcaoComercial {
   iniciar(id: string, versao: number): Promise<void>;
 }
 
+export interface RegistrarResultadoComercial {
+  registrarResultado(id: string, destinatarioId: string, resultado: Exclude<ResultadoComercial, "NaoInformado">, valorConvertido: number | null, versao: number): Promise<void>;
+}
+
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.
 export interface PortaCrmApi
   extends ConsultarAcoesComerciais,
@@ -57,4 +62,5 @@ export interface PortaCrmApi
     ConsultarModelosDeMensagem,
     CriarAcaoComercial,
     AtualizarESimularPublico,
-    PrepararAcaoComercial {}
+    PrepararAcaoComercial,
+    RegistrarResultadoComercial {}

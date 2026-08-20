@@ -70,4 +70,10 @@ describe("CrmApiHttp", () => {
     expect(requisitar.mock.calls[0][0].toString()).toContain("/iniciar");
     expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 5 });
   });
+  it("registra resultado comercial sem expor credenciais", async () => {
+    const requisitar = vi.fn().mockResolvedValue(new Response(null, { status: 204 })); vi.stubGlobal("fetch", requisitar);
+    await new CrmApiHttp("http://crm.test", async () => "token").registrarResultado(acao.id, "6d3d0d64-a111-4cff-8db8-111111111118", "Convertido", 149.9, 3);
+    expect(requisitar.mock.calls[0][0].toString()).toContain("/resultado");
+    expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ resultado: "Convertido", valorConvertido: 149.9, versao: 3 });
+  });
 });

@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import type { CriarAcaoComercialEntrada, PortaCrmApi } from "@/portas/crm-api";
 import type { CriteriosDeSegmentacao } from "@/contratos/apresentacao";
+import type { ResultadoComercial } from "@/contratos/apresentacao";
 
 const esquemaSituacao = z.enum(["Rascunho", "Preparada", "EmProcessamento", "Concluida", "ConcluidaComFalhas", "Cancelada"]);
 const esquemaCriterios = z.object({
@@ -154,6 +155,10 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async iniciar(id: string, versao: number) {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/iniciar`, { metodo: "POST", corpo: { versao } });
+  }
+
+  async registrarResultado(id: string, destinatarioId: string, resultado: Exclude<ResultadoComercial, "NaoInformado">, valorConvertido: number | null, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/destinatarios/${encodeURIComponent(destinatarioId)}/resultado`, { metodo: "PUT", corpo: { resultado, valorConvertido, versao } });
   }
 
   async simularPublico(id: string, pagina = 1, tamanhoPagina = 20) {

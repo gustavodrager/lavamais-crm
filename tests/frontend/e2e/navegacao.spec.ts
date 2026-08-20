@@ -33,6 +33,11 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await expect(page.getByText("Ana Martins")).toBeVisible();
   await page.getByRole("button", { name: "Iniciar processamento" }).click();
   await expect(page.getByText("Em processamento", { exact: true })).toBeVisible();
+  await page.getByRole("combobox", { name: "Resultado de Ana Martins" }).click();
+  await page.getByRole("option", { name: "Convertido" }).click();
+  await page.getByLabel("Valor convertido de Ana Martins").fill("149,90");
+  await page.getByRole("button", { name: "Salvar resultado" }).click();
+  await expect(page.getByText("Resultado salvo.")).toBeVisible();
 });
 
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {

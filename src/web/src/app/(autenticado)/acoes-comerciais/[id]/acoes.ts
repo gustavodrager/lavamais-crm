@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { SimulacaoDePublico } from "@/contratos/apresentacao";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
@@ -14,6 +15,7 @@ export type EntradaSimularPublico = z.input<typeof esquema>;
 export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoPrepararAcao = { sucesso: false; mensagem: string };
 export type ResultadoIniciarAcao = { sucesso: false; mensagem: string };
+export type ResultadoRegistrarResultado = { sucesso: true } | { sucesso: false; mensagem: string };
 const lista = (valor: string) => { const itens = valor.split(",").map((item) => item.trim()).filter(Boolean); return itens.length ? itens : null; };
 
 export async function salvarESimularPublico(entrada: EntradaSimularPublico): Promise<ResultadoSimularPublico> {
@@ -61,4 +63,23 @@ export async function iniciarAcao(entrada: { acaoId: string; versao: number }): 
     throw erro;
   }
   redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
+}
+
+export async function registrarResultado(entrada: { acaoId: string; destinatarioId: string; resultado: string; valorConvertido: string; versao: number }): Promise<ResultadoRegistrarResultado> {
+  const validacao = z.object({ acaoId: z.string().uuid(), destinatarioId: z.string().uuid(), resultado: z.enum(["SemRetorno", "Respondeu", "Interessado", "Convertido", "NaoTemInteresse"]), valorConvertido: z.string().trim().max(30), versao: z.number().int().nonnegative() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Selecione um resultado comercial válido." };
+  const dados = validacao.data;
+  if (dados.resultado !== "Convertido" && dados.valorConvertido) return { sucesso: false, mensagem: "O valor só pode ser informado para uma conversão." };
+  const valorNormalizado = dados.valorConvertido.replaceAll(".", "").replace(",", ".");
+  const valor = valorNormalizado ? Number(valorNormalizado) : null;
+  if (valor !== null && (!Number.isFinite(valor) || valor < 0)) return { sucesso: false, mensagem: "Informe um valor convertido válido e não negativo." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${dados.acaoId}`);
+  try { await obterPortaCrmApi().registrarResultado(dados.acaoId, dados.destinatarioId, dados.resultado, valor, dados.versao); }
+  catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para registrar resultados." : erro.status === 409 ? "Este destinatário foi alterado por outra pessoa. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível registrar o resultado agora." };
+    throw erro;
+  }
+  revalidatePath(`/acoes-comerciais/${dados.acaoId}`);
+  return { sucesso: true };
 }
