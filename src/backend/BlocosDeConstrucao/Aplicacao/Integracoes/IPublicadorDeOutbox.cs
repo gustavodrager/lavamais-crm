@@ -4,7 +4,7 @@ namespace LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 
 public interface IPublicadorDeOutbox
 {
-    Task Publicar(IReadOnlyCollection<MensagemDeOutboxSolicitada> mensagens, DbTransaction transacao, CancellationToken ct);
+    Task Publicar(MensagemDeOutboxSolicitada mensagem, DbTransaction transacao, CancellationToken ct);
 }
 
 public sealed record MensagemDeOutboxSolicitada(Guid TenantId, string Tipo, string ChaveUnica, string ConteudoJson, DateTimeOffset Data);

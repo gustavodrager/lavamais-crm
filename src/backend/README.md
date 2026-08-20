@@ -35,7 +35,7 @@ dotnet run --project src/backend/LavaMais.Crm.Worker
 
 A conexao usa `ConnectionStrings__Crm`. O Notification Hub usa `NotificationHub__BaseUrl`, `NotificationHub__ApiKey` e o `source` exclusivo `lavamais-crm`. O valor de `appsettings.json` e exclusivo para o ambiente local; a chave de API permanece vazia no repositorio. Ambientes compartilhados devem fornecer conexoes e credenciais por configuracao externa e nunca versionar segredos.
 
-Cada destinatario gera uma mensagem de outbox na mesma transacao que inicia a Acao Comercial. O Worker reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` em novas tentativas, recupera leases interrompidos e apenas consulta o estado tecnico no Notification Hub. Retentativas de provedor e webhooks permanecem sob responsabilidade do Hub.
+Cada confirmacao individual muda somente o destinatario escolhido para `AguardandoSolicitacao` e gera uma mensagem de outbox na mesma transacao. A primeira confirmacao muda a Acao Comercial para `EmProcessamento`; nao existe comando coletivo. O Worker processa uma intencao por vez, reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` em novas tentativas, recupera leases interrompidos e apenas consulta o estado tecnico no Notification Hub. Retentativas de provedor e webhooks permanecem sob responsabilidade do Hub.
 
 ## Build e testes
 

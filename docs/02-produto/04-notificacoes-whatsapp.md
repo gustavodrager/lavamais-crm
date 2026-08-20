@@ -32,11 +32,12 @@ O usuario seleciona um destinatario da audiencia, confere o telefone e a mensage
 ## Estados apresentados pelo CRM
 
 - `Pendente`;
-- `Solicitada`;
-- `Enviada`;
+- `AguardandoSolicitacao`;
+- `Solicitado`;
+- `Enviado`;
 - `Entregue`;
-- `Lida`;
+- `Lido`;
 - `Falhou`;
-- `Removida`.
+- `Removido`.
 
 Os estados tecnicos originais permanecem no Notification Hub; o CRM mantem uma projecao voltada ao usuario.

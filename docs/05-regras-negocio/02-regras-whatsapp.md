@@ -20,12 +20,12 @@ O CRM converte os estados do hub para sua projecao de apresentacao:
 
 | Notification Hub | CRM |
 |---|---|
-| `Pending` | `Solicitada` |
-| `Processing` | `Solicitada` |
-| `Sent` | `Enviada` |
+| `Pending` | `Solicitado` |
+| `Processing` | `Solicitado` |
+| `Sent` | `Enviado` |
 | `Failed` | `Falhou` |
 | `DeliveryStatus.Delivered` | `Entregue` |
-| `DeliveryStatus.Read` | `Lida` |
+| `DeliveryStatus.Read` | `Lido` |
 | `DeliveryStatus.Undeliverable` | `Falhou` |
 
 ## Confiabilidade
