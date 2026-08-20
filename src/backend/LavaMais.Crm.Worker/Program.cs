@@ -17,8 +17,7 @@ if (args.FirstOrDefault() == "provisionar-administrador")
     if (args.Length != 3 || !Guid.TryParse(args[1], out var tenantId) || string.IsNullOrWhiteSpace(args[2]))
         throw new ArgumentException("Uso: provisionar-administrador <tenant-id> <usuario-identidade-id>");
 
-    var conexao = construtor.Configuration.GetConnectionString(ConfiguracaoPostgres.NomeDaConexao)
-        ?? throw new InvalidOperationException("A conexao do CRM nao foi configurada.");
+    var conexao = ConfiguracaoPostgres.ObterStringDeConexao(construtor.Configuration);
     await ProvisionadorDeAdministrador.Provisionar(conexao, tenantId, args[2], CancellationToken.None);
     return;
 }

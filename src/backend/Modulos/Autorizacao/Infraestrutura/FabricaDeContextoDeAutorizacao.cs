@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -8,8 +9,7 @@ public sealed class FabricaDeContextoDeAutorizacao : IDesignTimeDbContextFactory
 {
     public ContextoDeAutorizacao CreateDbContext(string[] args)
     {
-        var conexao = Environment.GetEnvironmentVariable("ConnectionStrings__Crm")
-            ?? "Host=localhost;Database=lavamais_crm;Username=lavamais;Password=lavamais_local";
+        var conexao = ConfiguracaoPostgres.ObterStringDeConexaoParaFerramentas();
         var opcoes = new DbContextOptionsBuilder<ContextoDeAutorizacao>().UseNpgsql(conexao).Options;
         return new ContextoDeAutorizacao(opcoes, new ContextoDeDesign());
     }
