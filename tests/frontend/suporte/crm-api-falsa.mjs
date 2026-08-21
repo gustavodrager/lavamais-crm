@@ -13,7 +13,8 @@ let destinatarioCriado = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId
 http.createServer((req, res) => {
   res.setHeader("content-type", "application/json");
   if (req.headers.authorization !== "Bearer token-controlado-e2e") { res.statusCode = 401; return res.end(JSON.stringify({ title: "Nao autenticado" })); }
-  if (req.url === "/api/v1/itens-de-catalogo?situacao=Ativo") return res.end(JSON.stringify([{ id: itemCatalogoId, tipo: "Servico", nome: "Lavagem de edredom", descricao: null, categoria: "Casa", valorReferencia: 50, situacao: "Ativo" }]));
+  if (req.url === "/api/v1/itens-de-catalogo?situacao=Ativo" || req.url === "/api/v1/itens-de-catalogo") return res.end(JSON.stringify([{ id: itemCatalogoId, tipo: "Servico", nome: "Lavagem de edredom", descricao: null, categoria: "Casa", valorReferencia: 50, situacao: "Ativo", codigoExterno: "SRV-1" }]));
+  if (req.url === "/api/v1/etiquetas") return res.end(JSON.stringify([{ id: "3bf773d6-f28c-4165-92b5-3b1b153a2c32", nome: "Cliente recorrente" }]));
   if (req.url === "/api/v1/modelos-de-mensagem") return res.end(JSON.stringify([{ id: modeloId, nome: "Oferta de serviço", canal: "Whatsapp", situacao: "Publicado", versaoAtualId: versaoModeloId, versoes: [{ id: versaoModeloId, numero: 1, conteudoPreVisualizacao: "Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}.", variaveis: ["nomeCliente", "itemCatalogo"], chaveTemplateNotificacao: "oferta_servico", dataPublicacao: "2026-08-19T10:00:00Z" }] }]));
   if ((req.url === "/api/v1/acoes-comerciais" || req.url === "/api/v1/acoes-comerciais/") && req.method === "POST") {
     let corpo = "";
