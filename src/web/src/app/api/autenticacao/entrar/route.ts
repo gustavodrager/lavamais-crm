@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { iniciarOidc } from "@/infraestrutura/oidc";
+import { criarUrlDaAplicacao } from "@/infraestrutura/url-aplicacao";
 
 export async function GET(requisicao: NextRequest) {
   try {
@@ -7,5 +8,5 @@ export async function GET(requisicao: NextRequest) {
     const resposta = NextResponse.redirect(url);
     resposta.cookies.set("__Host-lavamais-oidc", identificador, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
     return resposta;
-  } catch { return NextResponse.redirect(new URL("/entrar?erro=configuracao", requisicao.url)); }
+  } catch { return NextResponse.redirect(criarUrlDaAplicacao("/entrar?erro=configuracao", requisicao.url)); }
 }
