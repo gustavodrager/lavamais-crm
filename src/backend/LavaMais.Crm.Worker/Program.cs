@@ -25,6 +25,7 @@ if (args.FirstOrDefault() == "provisionar-administrador")
 construtor.Logging.ClearProviders();
 construtor.Logging.AddJsonConsole(opcoes => opcoes.IncludeScopes = true);
 construtor.Services.AdicionarPostgres(construtor.Configuration);
+construtor.Services.AddSingleton(TimeProvider.System);
 construtor.Services.AddSingleton<IContextoDoUsuario, ContextoDoWorker>();
 construtor.Services.AdicionarModuloClientes(construtor.Configuration); construtor.Services.AdicionarModuloCatalogo(construtor.Configuration); construtor.Services.AdicionarModuloModelos(construtor.Configuration); construtor.Services.AdicionarModuloSegmentacao(); construtor.Services.AdicionarModuloAuditoria(construtor.Configuration); construtor.Services.AdicionarModuloIntegracoes(construtor.Configuration); construtor.Services.AdicionarModuloAcoesComerciais(construtor.Configuration);
 construtor.Services.AddHostedService<WorkerDeIntegracoes>();
