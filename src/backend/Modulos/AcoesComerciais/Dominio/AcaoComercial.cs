@@ -3,7 +3,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
 public enum SituacaoDaAcaoComercial { Rascunho = 1, Preparada = 2, EmProcessamento = 3, Concluida = 4, ConcluidaComFalhas = 5, Cancelada = 6 }
-public enum SituacaoDoEnvio { Pendente = 1, Solicitado = 2, Enviado = 3, Entregue = 4, Lido = 5, Falhou = 6 }
+public enum SituacaoDoEnvio { Pendente = 1, AguardandoSolicitacao = 2, Solicitado = 3, Enviado = 4, Entregue = 5, Lido = 6, Falhou = 7 }
 public enum ResultadoComercial { NaoInformado = 1, SemRetorno = 2, Respondeu = 3, Interessado = 4, Convertido = 5, NaoTemInteresse = 6 }
 
 public sealed class AcaoComercial
@@ -55,8 +55,24 @@ public sealed class AcaoComercial
         NomeItemSnapshot = nomeItem; QuantidadeDestinatarios = Destinatarios.Count; Situacao = SituacaoDaAcaoComercial.Preparada; DataPreparacao = agora; DataAtualizacao = agora;
     }
 
-    public void Iniciar(DateTimeOffset agora)
-    { if (Situacao != SituacaoDaAcaoComercial.Preparada) throw new ExcecaoDeConflito("acao_nao_preparada", "Somente uma acao preparada pode ser iniciada."); Situacao = SituacaoDaAcaoComercial.EmProcessamento; DataInicioProcessamento = agora; DataAtualizacao = agora; foreach (var d in Destinatarios) d.DefinirChaveIdempotencia($"acao:{Id}:destinatario:{d.Id}:v1"); }
+    public DestinatarioDaAcao SolicitarEnvio(Guid destinatarioId, DateTimeOffset agora)
+    {
+        if (Situacao is not (SituacaoDaAcaoComercial.Preparada or SituacaoDaAcaoComercial.EmProcessamento))
+            throw new ExcecaoDeConflito("acao_nao_disponivel_para_envio", "A acao comercial nao esta disponivel para envio.");
+
+        var destinatario = Destinatarios.SingleOrDefault(x => x.Id == destinatarioId)
+            ?? throw new ExcecaoDeRecursoNaoEncontrado("Destinatario da acao nao encontrado.");
+        destinatario.SolicitarEnvio($"acao:{Id}:destinatario:{destinatario.Id}:v1");
+
+        if (Situacao == SituacaoDaAcaoComercial.Preparada)
+        {
+            Situacao = SituacaoDaAcaoComercial.EmProcessamento;
+            DataInicioProcessamento = agora;
+            DataAtualizacao = agora;
+        }
+
+        return destinatario;
+    }
 
     public void RecalcularConclusao(DateTimeOffset agora)
     {
@@ -93,8 +109,20 @@ public sealed class DestinatarioDaAcao
     public DateTimeOffset? DataResultadoComercial { get; private set; }
     public string? UsuarioResultadoId { get; private set; }
     public uint Versao { get; private set; }
-    internal void DefinirChaveIdempotencia(string chave) => ChaveIdempotencia = chave;
-    public void RegistrarSolicitacao(string id) { NotificacaoExternaId = id; SituacaoEnvio = SituacaoDoEnvio.Solicitado; }
+    internal void SolicitarEnvio(string chave)
+    {
+        if (SituacaoEnvio != SituacaoDoEnvio.Pendente)
+            throw new ExcecaoDeConflito("destinatario_ja_solicitado", "O envio deste destinatario ja foi solicitado.");
+        ChaveIdempotencia = chave;
+        SituacaoEnvio = SituacaoDoEnvio.AguardandoSolicitacao;
+    }
+    public void RegistrarSolicitacao(string id)
+    {
+        if (SituacaoEnvio != SituacaoDoEnvio.AguardandoSolicitacao)
+            throw new ExcecaoDeConflito("destinatario_nao_aguarda_solicitacao", "O destinatario nao possui intencao de envio pendente.");
+        NotificacaoExternaId = id;
+        SituacaoEnvio = SituacaoDoEnvio.Solicitado;
+    }
     public void AtualizarEstado(SituacaoDoEnvio estado, string? codigo, DateTimeOffset agora) { SituacaoEnvio = estado; CodigoFalha = codigo; DataUltimaReconciliacao = agora; }
     public void RegistrarResultado(ResultadoComercial resultado, decimal? valorConvertido, string usuarioId, DateTimeOffset agora)
     {

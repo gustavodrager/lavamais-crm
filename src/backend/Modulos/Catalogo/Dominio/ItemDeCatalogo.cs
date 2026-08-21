@@ -26,6 +26,8 @@ public sealed class ItemDeCatalogo
     public string? Descricao { get; private set; }
     public string? Categoria { get; private set; }
     public decimal? ValorReferencia { get; private set; }
+    public string? CodigoExterno { get; private set; }
+    public DateTimeOffset? DataCadastroOrigem { get; private set; }
     public SituacaoDoItemDeCatalogo Situacao { get; private set; }
     public DateTimeOffset DataCriacao { get; private set; }
     public DateTimeOffset DataAtualizacao { get; private set; }
@@ -55,6 +57,12 @@ public sealed class ItemDeCatalogo
     {
         if (!Enum.IsDefined(situacao)) throw new ExcecaoDeRegraDeNegocio("situacao_invalida", "A situacao do item e invalida.");
         Situacao = situacao; DataAtualizacao = agora;
+    }
+    public void DefinirDadosDeOrigem(string? codigoExterno, DateTimeOffset? dataCadastroOrigem, DateTimeOffset agora)
+    {
+        var codigo = string.IsNullOrWhiteSpace(codigoExterno) ? null : codigoExterno.Trim();
+        if (codigo?.Length > 100) throw new ExcecaoDeRegraDeNegocio("codigo_externo_invalido", "O codigo externo deve possuir ate 100 caracteres.");
+        CodigoExterno = codigo; DataCadastroOrigem = dataCadastroOrigem?.ToUniversalTime(); DataAtualizacao = agora;
     }
     private static string? Limpar(string? valor) => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
 }

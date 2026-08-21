@@ -133,7 +133,7 @@ Restricao unica: `tenant_id + acao_comercial_id + cliente_id`.
 
 ## Importacoes
 
-- `importacoes.importacoes_de_clientes` registra arquivo, totais, usuario e estado;
+- `importacoes.importacoes_de_clientes` registra nome, conteudo pendente ate a confirmacao, totais, usuario e estado;
 - `importacoes.linhas_da_importacao` registra numero da linha, resultado, cliente e erros;
 - o arquivo original nao e mantido indefinidamente por padrao.
 

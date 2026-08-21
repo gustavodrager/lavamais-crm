@@ -20,9 +20,10 @@ public sealed class ContextoDeCatalogo(DbContextOptions<ContextoDeCatalogo> opco
             e.Property(x => x.TenantId).HasColumnName("tenant_id"); e.Property(x => x.Tipo).HasColumnName("tipo").HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.Nome).HasColumnName("nome").HasMaxLength(160); e.Property(x => x.NomeNormalizado).HasColumnName("nome_normalizado").HasMaxLength(160);
             e.Property(x => x.Descricao).HasColumnName("descricao").HasMaxLength(1000); e.Property(x => x.Categoria).HasColumnName("categoria").HasMaxLength(100);
+            e.Property(x => x.CodigoExterno).HasColumnName("codigo_externo").HasMaxLength(100); e.Property(x => x.DataCadastroOrigem).HasColumnName("data_cadastro_origem");
             e.Property(x => x.ValorReferencia).HasColumnName("valor_referencia").HasPrecision(18, 2); e.Property(x => x.Situacao).HasColumnName("situacao").HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.DataCriacao).HasColumnName("data_criacao"); e.Property(x => x.DataAtualizacao).HasColumnName("data_atualizacao"); e.Property(x => x.Versao).IsRowVersion();
-            e.HasQueryFilter(x => x.TenantId == usuario.TenantId); e.HasIndex(x => new { x.TenantId, x.NomeNormalizado }).IsUnique();
+            e.HasQueryFilter(x => x.TenantId == usuario.TenantId); e.HasIndex(x => new { x.TenantId, x.NomeNormalizado }).IsUnique(); e.HasIndex(x => new { x.TenantId, x.CodigoExterno }).IsUnique().HasFilter("codigo_externo IS NOT NULL");
         });
         base.OnModelCreating(b);
     }

@@ -30,6 +30,8 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
         await ValidarEtiquetas(dados.EtiquetaIds, ct);
         var cliente = Cliente.Criar(contexto.TenantId, dados.Nome, dados.Whatsapp, relogio.GetUtcNow());
         Aplicar(cliente, dados);
+        AplicarDadosDeOrigem(cliente, dados);
+        await ValidarCodigoExterno(cliente.CodigoExterno, null, ct);
         if (await WhatsappExiste(cliente, null, ct)) throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe cliente ativo com este WhatsApp no tenant.");
         banco.Add(cliente); await banco.SaveChangesAsync(ct); return cliente;
     }
@@ -38,8 +40,31 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
     {
         var cliente = await banco.Clientes.Include(x => x.Contatos).Include(x => x.Permissoes).Include(x => x.Etiquetas).Include(x => x.Endereco).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Cliente nao encontrado.");
         await ValidarEtiquetas(dados.EtiquetaIds, ct); Aplicar(cliente, dados);
+        AplicarDadosDeOrigem(cliente, dados);
+        await ValidarCodigoExterno(cliente.CodigoExterno, id, ct);
         if (await WhatsappExiste(cliente, id, ct)) throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe cliente ativo com este WhatsApp no tenant.");
         await banco.SaveChangesAsync(ct);
+    }
+
+    public async Task<ResultadoDaImportacaoDeCliente> ImportarOuAtualizar(DadosDoCliente dados, CancellationToken ct)
+    {
+        await ValidarEtiquetas(dados.EtiquetaIds, ct);
+        var whatsapp = NormalizadorDeWhatsapp.Normalizar(dados.Whatsapp);
+        var codigoExterno = string.IsNullOrWhiteSpace(dados.CodigoExterno) ? null : dados.CodigoExterno.Trim();
+        var candidatos = await banco.Clientes.Include(x => x.Contatos).Include(x => x.Permissoes).Include(x => x.Etiquetas).Include(x => x.Endereco)
+            .Where(x => (codigoExterno != null && x.CodigoExterno == codigoExterno) || x.Contatos.Any(c => c.Tipo == TipoDeContato.Whatsapp && c.ValorNormalizado == whatsapp))
+            .Take(2).ToListAsync(ct);
+        if (candidatos.Count > 1) throw new ExcecaoDeConflito("dados_origem_ambiguos", "O codigo externo e o WhatsApp identificam clientes diferentes.");
+        var cliente = candidatos.SingleOrDefault();
+        if (cliente is null)
+            return new(await Criar(dados, ct), false);
+
+        Aplicar(cliente, dados);
+        AplicarDadosDeOrigem(cliente, dados);
+        await ValidarCodigoExterno(cliente.CodigoExterno, cliente.Id, ct);
+        if (await WhatsappExiste(cliente, cliente.Id, ct)) throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe outro cliente ativo com este WhatsApp no tenant.");
+        await banco.SaveChangesAsync(ct);
+        return new(cliente, true);
     }
 
     public async Task Inativar(Guid id, CancellationToken ct)
@@ -60,6 +85,18 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
     private void Aplicar(Cliente cliente, DadosDoCliente d) => cliente.Atualizar(d.Nome, d.Whatsapp, d.NomeFantasia, d.Tipo, d.Email, d.DataNascimento, d.PermiteMarketingWhatsapp,
         d.Endereco is null ? null : new EnderecoDoCliente(contexto.TenantId, d.Endereco.Logradouro, d.Endereco.Numero, d.Endereco.Complemento, d.Endereco.Bairro, d.Endereco.Cidade, d.Endereco.Estado, d.Endereco.Cep), d.EtiquetaIds, relogio.GetUtcNow());
 
+    private void AplicarDadosDeOrigem(Cliente cliente, DadosDoCliente dados)
+    {
+        if (dados.CodigoExterno is not null || dados.DataCadastroOrigem is not null)
+            cliente.DefinirDadosDeOrigem(dados.CodigoExterno, dados.DataCadastroOrigem, relogio.GetUtcNow());
+    }
+
+    private async Task ValidarCodigoExterno(string? codigoExterno, Guid? ignorarId, CancellationToken ct)
+    {
+        if (codigoExterno is not null && await banco.Clientes.AnyAsync(x => x.CodigoExterno == codigoExterno && x.Id != ignorarId, ct))
+            throw new ExcecaoDeConflito("codigo_externo_duplicado", "Ja existe cliente com este codigo externo no tenant.");
+    }
+
     private async Task<bool> WhatsappExiste(Cliente cliente, Guid? ignorarId, CancellationToken ct)
     {
         var whatsapp = cliente.Contatos.Single(x => x.Tipo == TipoDeContato.Whatsapp).ValorNormalizado;
@@ -73,8 +110,9 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
     }
 }
 
-public sealed record DadosDoCliente(string Nome, string Whatsapp, string? NomeFantasia, string? Tipo, string? Email, DateOnly? DataNascimento, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds);
+public sealed record DadosDoCliente(string Nome, string Whatsapp, string? NomeFantasia, string? Tipo, string? Email, DateOnly? DataNascimento, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds, string? CodigoExterno = null, DateTimeOffset? DataCadastroOrigem = null);
 public sealed record DadosDoEndereco(string? Logradouro, string? Numero, string? Complemento, string? Bairro, string? Cidade, string? Estado, string? Cep);
+public sealed record ResultadoDaImportacaoDeCliente(Cliente Cliente, bool Atualizado);
 
 public sealed class ConsultaDeClientesParaSegmentacao(ContextoDeClientes banco)
 {

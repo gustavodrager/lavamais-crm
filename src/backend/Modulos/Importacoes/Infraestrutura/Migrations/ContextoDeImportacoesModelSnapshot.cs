@@ -30,11 +30,10 @@ namespace LavaMais.Crm.Modulos.Importacoes.Infraestrutura.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("CaminhoTemporario")
+                    b.Property<byte[]>("ConteudoArquivo")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("caminho_temporario");
+                        .HasColumnType("bytea")
+                        .HasColumnName("conteudo_arquivo");
 
                     b.Property<DateTimeOffset?>("DataConclusao")
                         .HasColumnType("timestamp with time zone")
@@ -59,6 +58,10 @@ namespace LavaMais.Crm.Modulos.Importacoes.Infraestrutura.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
+
+                    b.Property<int>("TotalAtualizadas")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_atualizadas");
 
                     b.Property<int>("TotalInseridas")
                         .HasColumnType("integer")

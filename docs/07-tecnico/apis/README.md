@@ -24,7 +24,7 @@ POST   /api/v1/importacoes/clientes
 GET    /api/v1/importacoes/clientes/{id}
 ```
 
-A confirmacao recebe uma referencia segura ao arquivo temporario e o mapeamento validado; nao confia novamente em totais enviados pelo navegador.
+A confirmacao recebe uma referencia segura ao conteudo persistido da pre-visualizacao e o mapeamento validado; nao confia novamente em arquivo ou totais enviados pelo navegador.
 
 ## Catalogo e modelos
 
@@ -46,13 +46,41 @@ GET    /api/v1/acoes-comerciais/{id}
 PUT    /api/v1/acoes-comerciais/{id}
 POST   /api/v1/acoes-comerciais/{id}/simular-publico
 POST   /api/v1/acoes-comerciais/{id}/preparar
-POST   /api/v1/acoes-comerciais/{id}/iniciar
 POST   /api/v1/acoes-comerciais/{id}/cancelar
 GET    /api/v1/acoes-comerciais/{id}/destinatarios
+POST   /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/enviar
 PUT    /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/resultado
 ```
 
 Comandos de transicao validam estado e versao do agregado. Conflitos de concorrencia retornam `409`.
+
+### Envio individual
+
+Nao existe comando de disparo coletivo na Versao 1.0. O usuario seleciona um destinatario congelado, confere `nomeCliente`, `destino` e `conteudoPreVisualizacao` retornados pela consulta e confirma uma unica mensagem.
+
+```http
+POST /api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/enviar
+Content-Type: application/json
+
+{
+  "versao": 3
+}
+```
+
+Resposta aceita:
+
+```http
+HTTP/1.1 202 Accepted
+Content-Type: application/json
+
+{
+  "id": "3f52de7f-8048-4c10-95e2-3888bd432684",
+  "situacaoEnvio": "AguardandoSolicitacao",
+  "versao": 4
+}
+```
+
+O comando exige papel `Administrador` ou `Gerente`. Destinatario fora da acao ou do tenant nao e revelado (`404`); versao desatualizada, envio concorrente ou destinatario ja solicitado retorna `409`; regra que impede o envio retorna `422`. A outbox e a mudanca de estado sao gravadas na mesma transacao.
 
 ## Autorizacao
 

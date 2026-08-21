@@ -3,35 +3,41 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 namespace LavaMais.Crm.Modulos.Importacoes.Dominio;
 
 public enum SituacaoDaImportacao { PreVisualizada = 1, Processando = 2, Concluida = 3, ConcluidaComErros = 4 }
-public enum ResultadoDaLinha { Inserida = 1, Rejeitada = 2 }
+public enum ResultadoDaLinha { Inserida = 1, Atualizada = 2, Rejeitada = 3 }
 
 public sealed class ImportacaoDeClientes
 {
     private ImportacaoDeClientes() { }
-    private ImportacaoDeClientes(Guid tenantId, string arquivo, string caminho, string usuario, DateTimeOffset agora)
-    { Id = Guid.NewGuid(); TenantId = tenantId; NomeArquivo = arquivo; CaminhoTemporario = caminho; UsuarioIdentidadeId = usuario; Situacao = SituacaoDaImportacao.PreVisualizada; DataCriacao = agora; Versao = 1; }
+    private ImportacaoDeClientes(Guid tenantId, string arquivo, byte[] conteudoArquivo, string usuario, DateTimeOffset agora)
+    { Id = Guid.NewGuid(); TenantId = tenantId; NomeArquivo = arquivo; ConteudoArquivo = conteudoArquivo; UsuarioIdentidadeId = usuario; Situacao = SituacaoDaImportacao.PreVisualizada; DataCriacao = agora; Versao = 1; }
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
     public string NomeArquivo { get; private set; } = string.Empty;
-    public string CaminhoTemporario { get; private set; } = string.Empty;
+    public byte[] ConteudoArquivo { get; private set; } = [];
     public string UsuarioIdentidadeId { get; private set; } = string.Empty;
     public SituacaoDaImportacao Situacao { get; private set; }
     public int TotalLinhas { get; private set; }
     public int TotalInseridas { get; private set; }
+    public int TotalAtualizadas { get; private set; }
     public int TotalRejeitadas { get; private set; }
     public DateTimeOffset DataCriacao { get; private set; }
     public DateTimeOffset? DataConclusao { get; private set; }
     public long Versao { get; private set; }
     public ICollection<LinhaDaImportacao> Linhas { get; private set; } = new List<LinhaDaImportacao>();
-    public static ImportacaoDeClientes Criar(Guid tenantId, string arquivo, string caminho, string usuario, DateTimeOffset agora) => new(tenantId, arquivo, caminho, usuario, agora);
+    public static ImportacaoDeClientes Criar(Guid tenantId, string arquivo, byte[] conteudoArquivo, string usuario, DateTimeOffset agora) => new(tenantId, arquivo, conteudoArquivo, usuario, agora);
     public void Iniciar()
     {
         if (Situacao != SituacaoDaImportacao.PreVisualizada) throw new ExcecaoDeConflito("importacao_ja_confirmada", "A importacao ja foi confirmada.");
         Situacao = SituacaoDaImportacao.Processando;
     }
     public void Registrar(int numero, ResultadoDaLinha resultado, Guid? clienteId, string? erro)
-    { Linhas.Add(new LinhaDaImportacao(TenantId, Id, numero, resultado, clienteId, erro)); TotalLinhas++; if (resultado == ResultadoDaLinha.Inserida) TotalInseridas++; else TotalRejeitadas++; }
-    public void Concluir(DateTimeOffset agora) { Situacao = TotalRejeitadas == 0 ? SituacaoDaImportacao.Concluida : SituacaoDaImportacao.ConcluidaComErros; DataConclusao = agora; CaminhoTemporario = string.Empty; Versao++; }
+    {
+        Linhas.Add(new LinhaDaImportacao(TenantId, Id, numero, resultado, clienteId, erro)); TotalLinhas++;
+        if (resultado == ResultadoDaLinha.Inserida) TotalInseridas++;
+        else if (resultado == ResultadoDaLinha.Atualizada) TotalAtualizadas++;
+        else TotalRejeitadas++;
+    }
+    public void Concluir(DateTimeOffset agora) { Situacao = TotalRejeitadas == 0 ? SituacaoDaImportacao.Concluida : SituacaoDaImportacao.ConcluidaComErros; DataConclusao = agora; ConteudoArquivo = []; Versao++; }
 }
 
 public sealed class LinhaDaImportacao

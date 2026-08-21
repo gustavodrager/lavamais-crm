@@ -8,6 +8,11 @@ namespace LavaMais.Crm.Modulos.Integracoes.Aplicacao;
 
 public sealed class PublicadorDeOutbox(ContextoDeIntegracoes banco) : IPublicadorDeOutbox
 {
-    public async Task Publicar(IReadOnlyCollection<MensagemDeOutboxSolicitada> mensagens, DbTransaction transacao, CancellationToken ct)
-    { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); banco.AddRange(mensagens.Select(x => new MensagemDaOutbox(x.TenantId, x.Tipo, x.ChaveUnica, x.ConteudoJson, x.Data))); await banco.SaveChangesAsync(ct); }
+    public async Task Publicar(MensagemDeOutboxSolicitada mensagem, DbTransaction transacao, CancellationToken ct)
+    {
+        banco.Database.SetDbConnection(transacao.Connection!, false);
+        await banco.Database.UseTransactionAsync(transacao, ct);
+        banco.Add(new MensagemDaOutbox(mensagem.TenantId, mensagem.Tipo, mensagem.ChaveUnica, mensagem.ConteudoJson, mensagem.Data));
+        await banco.SaveChangesAsync(ct);
+    }
 }

@@ -39,7 +39,7 @@ Validar que a LavaMais consegue selecionar um publico relevante da base de clien
 - revisao e exclusao manual de destinatarios;
 - congelamento da audiencia antes do envio;
 - escolha de modelo de mensagem de WhatsApp;
-- envio imediato pelo Notification Hub;
+- conferencia e envio imediato individual por destinatario pelo Notification Hub;
 - acompanhamento do estado de envio e entrega;
 - registro manual do resultado comercial.
 
@@ -85,6 +85,7 @@ Essas responsabilidades podem ser combinadas em menos rotas durante o desenho da
 - a equipe cria uma Acao Comercial sem apoio tecnico;
 - apenas clientes elegiveis e permitidos entram na audiencia;
 - repetir uma solicitacao nao duplica o envio;
+- nenhum comando dispara mensagens para varios destinatarios;
 - o estado de cada destinatario pode ser acompanhado;
 - a equipe registra retorno e conversao manualmente;
 - todas as operacoes respeitam tenant, autorizacao e auditoria.

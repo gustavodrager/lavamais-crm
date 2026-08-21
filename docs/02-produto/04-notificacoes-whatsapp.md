@@ -27,14 +27,17 @@ A Versao 1.0 usa WhatsApp por meio do Notification Hub e da WhatsApp Cloud API. 
 
 Acoes comerciais sao comunicacoes proativas. Portanto, usam templates aprovados no provedor e parametros ordenados. A Versao 1.0 nao permite editar livremente o corpo depois de escolher o template.
 
+O usuario seleciona um destinatario da audiencia, confere o telefone e a mensagem final renderizada e confirma um unico envio. O CRM nao oferece disparo coletivo na Versao 1.0.
+
 ## Estados apresentados pelo CRM
 
 - `Pendente`;
-- `Solicitada`;
-- `Enviada`;
+- `AguardandoSolicitacao`;
+- `Solicitado`;
+- `Enviado`;
 - `Entregue`;
-- `Lida`;
+- `Lido`;
 - `Falhou`;
-- `Removida`.
+- `Removido`.
 
 Os estados tecnicos originais permanecem no Notification Hub; o CRM mantem uma projecao voltada ao usuario.

@@ -30,7 +30,7 @@ Este documento define requisitos tecnicos iniciais. Base legal, textos de consen
 
 - arquivos devem ser autorizados pela LavaMais;
 - pre-visualizacao nao deve expor dados alem do necessario;
-- arquivo temporario possui acesso restrito;
+- conteudo pendente de importacao fica no PostgreSQL, isolado por tenant, e e removido apos a confirmacao;
 - prazo de retencao precisa ser configurado;
 - linhas rejeitadas nao devem permanecer indefinidamente sem finalidade.
 

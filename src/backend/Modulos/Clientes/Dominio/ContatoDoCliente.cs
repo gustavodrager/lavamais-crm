@@ -17,6 +17,8 @@ public sealed class ContatoDoCliente
     public SituacaoDoContato Situacao { get; private set; }
     internal static ContatoDoCliente CriarWhatsapp(Guid tenantId, Guid clienteId, string valor) => new(tenantId, clienteId, TipoDeContato.Whatsapp, valor.Trim(), NormalizadorDeWhatsapp.Normalizar(valor));
     internal static ContatoDoCliente CriarEmail(Guid tenantId, Guid clienteId, string valor) => new(tenantId, clienteId, TipoDeContato.Email, valor, valor.ToLowerInvariant());
+    internal void AtualizarWhatsapp(string valor) { Valor = valor.Trim(); ValorNormalizado = NormalizadorDeWhatsapp.Normalizar(valor); Situacao = SituacaoDoContato.Ativo; }
+    internal void AtualizarEmail(string valor) { Valor = valor; ValorNormalizado = valor.ToLowerInvariant(); Situacao = SituacaoDoContato.Ativo; }
     internal void Inativar() => Situacao = SituacaoDoContato.Inativo;
 }
 
@@ -32,4 +34,5 @@ public sealed class PermissaoDeComunicacao
     public string Finalidade { get; private set; } = string.Empty;
     public bool Permitida { get; private set; }
     public DateTimeOffset DataAtualizacao { get; private set; }
+    internal void Definir(bool permitida, DateTimeOffset agora) { Permitida = permitida; DataAtualizacao = agora; }
 }

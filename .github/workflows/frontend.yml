@@ -1,0 +1,31 @@
+name: Frontend
+
+on:
+  pull_request:
+    paths: ["src/web/**", "tests/frontend/**", ".github/workflows/frontend.yml"]
+  push:
+    branches: [main]
+    paths: ["src/web/**", "tests/frontend/**", ".github/workflows/frontend.yml"]
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run verificar-tipos
+      - run: npm run lint
+      - run: npm run testar
+      - run: npm run testar:e2e -- --project=desktop
+      - run: npm run build
+        env:
+          LAVAMAIS_CRM_API_URL: http://127.0.0.1:4310

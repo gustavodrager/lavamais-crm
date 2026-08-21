@@ -40,12 +40,13 @@ public static class ExtensoesDoModuloClientes
 
         var etiquetas = endpoints.MapGroup("/api/v1/etiquetas").RequireAuthorization(PoliticasDeAutorizacao.UsuarioAtivo).WithTags("Clientes");
         etiquetas.MapGet("/", async (GerenciadorDeClientes g, CancellationToken ct) => (await g.ListarEtiquetas(ct)).Select(x => new { x.Id, x.Nome }));
-        etiquetas.MapPost("/", async (CriarEtiqueta requisicao, GerenciadorDeClientes g, CancellationToken ct) => { var e = await g.CriarEtiqueta(requisicao.Nome, ct); return Results.Created($"/api/v1/etiquetas/{e.Id}", new { e.Id, e.Nome }); });
+        etiquetas.MapPost("/", async (CriarEtiqueta requisicao, GerenciadorDeClientes g, CancellationToken ct) => { var e = await g.CriarEtiqueta(requisicao.Nome, ct); return Results.Created($"/api/v1/etiquetas/{e.Id}", new { e.Id, e.Nome }); })
+            .RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         return endpoints;
     }
 
     public sealed record CriarEtiqueta(string Nome);
-    public sealed record RespostaDeCliente(Guid Id, string Nome, string? NomeFantasia, string? Tipo, string Whatsapp, string? Email, DateOnly? DataNascimento, SituacaoDoCliente Situacao, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds)
+    public sealed record RespostaDeCliente(Guid Id, string Nome, string? NomeFantasia, string? Tipo, string Whatsapp, string? Email, DateOnly? DataNascimento, SituacaoDoCliente Situacao, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds, string? CodigoExterno, DateTimeOffset? DataCadastroOrigem)
     {
         public static RespostaDeCliente Criar(Cliente c)
         {
@@ -53,7 +54,7 @@ public static class ExtensoesDoModuloClientes
             var email = c.Contatos.SingleOrDefault(x => x.Tipo == TipoDeContato.Email)?.ValorNormalizado;
             var permissao = c.Permissoes.SingleOrDefault(x => x.Canal == TipoDeContato.Whatsapp && x.Finalidade == "Marketing")?.Permitida ?? false;
             var endereco = c.Endereco is null ? null : new DadosDoEndereco(c.Endereco.Logradouro, c.Endereco.Numero, c.Endereco.Complemento, c.Endereco.Bairro, c.Endereco.Cidade, c.Endereco.Estado, c.Endereco.Cep);
-            return new(c.Id, c.Nome, c.NomeFantasia, c.Tipo, whatsapp, email, c.DataNascimento, c.Situacao, permissao, endereco, c.Etiquetas.Select(x => x.EtiquetaId).ToArray());
+            return new(c.Id, c.Nome, c.NomeFantasia, c.Tipo, whatsapp, email, c.DataNascimento, c.Situacao, permissao, endereco, c.Etiquetas.Select(x => x.EtiquetaId).ToArray(), c.CodigoExterno, c.DataCadastroOrigem);
         }
     }
 }

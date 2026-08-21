@@ -13,10 +13,12 @@ public sealed class SimuladorDePublico(ConsultaDeClientesParaSegmentacao cliente
             criterios.Modo == ModoDeSelecao.Manual ? (criterios.ClienteIds ?? []).Distinct().ToArray() : [],
             Limpar(criterios.TipoCliente), Limpar(criterios.Cidades), Limpar(criterios.Bairros), (criterios.EtiquetaIds ?? []).Distinct().ToArray(), criterios.CadastradoApartirDe, criterios.DataNascimentoDe, criterios.DataNascimentoAte);
         var encontrados = await clientes.Consultar(filtro, ct, transacao);
+        var excluidos = (criterios.ClienteIdsExcluidos ?? []).ToHashSet();
         var contatosElegiveis = new HashSet<string>(StringComparer.Ordinal);
         var avaliados = encontrados.Select(cliente =>
         {
-            MotivoDeExclusao? motivo = !cliente.Ativo ? MotivoDeExclusao.ClienteInativo
+            MotivoDeExclusao? motivo = excluidos.Contains(cliente.Id) ? MotivoDeExclusao.ExcluidoManualmente
+                : !cliente.Ativo ? MotivoDeExclusao.ClienteInativo
                 : !cliente.ContatoWhatsappAtivo || string.IsNullOrWhiteSpace(cliente.Whatsapp) ? MotivoDeExclusao.ContatoInvalido
                 : !cliente.PermiteMarketingWhatsapp ? MotivoDeExclusao.SemPermissao
                 : !contatosElegiveis.Add(cliente.Whatsapp) ? MotivoDeExclusao.ContatoDuplicado : null;

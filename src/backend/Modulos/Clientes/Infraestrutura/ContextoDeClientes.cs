@@ -20,6 +20,7 @@ public sealed class ContextoDeClientes(DbContextOptions<ContextoDeClientes> opco
             e.ToTable("clientes"); e.HasKey(x => x.Id); e.Property(x => x.Id).HasColumnName("id");
             e.Property(x => x.TenantId).HasColumnName("tenant_id"); e.Property(x => x.Nome).HasColumnName("nome").HasMaxLength(200);
             e.Property(x => x.NomeFantasia).HasColumnName("nome_fantasia").HasMaxLength(200); e.Property(x => x.Tipo).HasColumnName("tipo").HasMaxLength(50);
+            e.Property(x => x.CodigoExterno).HasColumnName("codigo_externo").HasMaxLength(100); e.Property(x => x.DataCadastroOrigem).HasColumnName("data_cadastro_origem");
             e.Property(x => x.DataNascimento).HasColumnName("data_nascimento"); e.Property(x => x.Situacao).HasColumnName("situacao").HasConversion<string>().HasMaxLength(20);
             e.Property(x => x.DataCriacao).HasColumnName("data_criacao"); e.Property(x => x.DataAtualizacao).HasColumnName("data_atualizacao"); e.Property(x => x.Versao).IsRowVersion();
             e.HasQueryFilter(x => x.TenantId == usuario.TenantId);
@@ -27,6 +28,7 @@ public sealed class ContextoDeClientes(DbContextOptions<ContextoDeClientes> opco
             e.HasMany(x => x.Contatos).WithOne().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(x => x.Permissoes).WithOne().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(x => x.Etiquetas).WithOne().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.TenantId, x.CodigoExterno }).IsUnique().HasFilter("codigo_externo IS NOT NULL");
         });
         b.Entity<ContatoDoCliente>(e =>
         {

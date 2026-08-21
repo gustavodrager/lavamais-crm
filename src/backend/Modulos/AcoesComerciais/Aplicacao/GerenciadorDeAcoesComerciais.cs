@@ -66,17 +66,51 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
 
     public Task<List<DestinatarioDaAcao>> ListarDestinatarios(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Where(x => x.Id == id).SelectMany(x => x.Destinatarios).OrderBy(x => x.NomeClienteSnapshot).ToListAsync(ct);
 
-    public async Task Iniciar(Guid id, uint versaoEsperada, CancellationToken ct)
+    public async Task<EnvioIndividualAceito> EnviarDestinatario(Guid acaoId, Guid destinatarioId, uint versaoEsperada, CancellationToken ct)
     {
-        await using var tx = await banco.Database.BeginTransactionAsync(ct); var acao = await banco.Acoes.Include(x => x.Destinatarios).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
-        if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario."); var agora = relogio.GetUtcNow(); acao.Iniciar(agora); await banco.SaveChangesAsync(ct);
-        var mensagens = acao.Destinatarios.Select(d => { var solicitacao = new SolicitacaoNotificationHub("lavamais-crm", "Whatsapp", d.ChaveTemplateNotificacaoSnapshot, d.ChaveIdempotencia!, d.NomeClienteSnapshot, d.DestinoSnapshot, JsonSerializer.Deserialize<Dictionary<string, string>>(d.PayloadNotificacaoJson, OpcoesJson)!); return new MensagemDeOutboxSolicitada(acao.TenantId, "SolicitarNotificacao", d.ChaveIdempotencia!, JsonSerializer.Serialize(new MensagemDeEnvioOutbox(acao.TenantId, d.Id, solicitacao), OpcoesJson), agora); }).ToArray();
-        var dbtx = tx.GetDbTransaction(); await outbox.Publicar(mensagens, dbtx, ct); await auditoria.Registrar(new("AcaoComercialIniciada", "AcaoComercial", acao.Id, JsonSerializer.Serialize(new { quantidade = mensagens.Length }, OpcoesJson), agora), dbtx, ct); await tx.CommitAsync(ct);
+        await using var tx = await banco.Database.BeginTransactionAsync(ct);
+        var acao = await banco.Acoes.Include(x => x.Destinatarios)
+            .SingleOrDefaultAsync(x => x.Id == acaoId && x.Destinatarios.Any(d => d.Id == destinatarioId), ct)
+            ?? throw new ExcecaoDeRecursoNaoEncontrado("Destinatario da acao nao encontrado.");
+        var destinatario = acao.Destinatarios.Single(x => x.Id == destinatarioId);
+        if (destinatario.Versao != versaoEsperada)
+            throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario.");
+
+        var agora = relogio.GetUtcNow();
+        acao.SolicitarEnvio(destinatarioId, agora);
+        try
+        {
+            await banco.SaveChangesAsync(ct);
+            var solicitacao = new SolicitacaoNotificationHub(
+                "lavamais-crm",
+                "Whatsapp",
+                destinatario.ChaveTemplateNotificacaoSnapshot,
+                destinatario.ChaveIdempotencia!,
+                destinatario.NomeClienteSnapshot,
+                destinatario.DestinoSnapshot,
+                JsonSerializer.Deserialize<Dictionary<string, string>>(destinatario.PayloadNotificacaoJson, OpcoesJson)!);
+            var mensagem = new MensagemDeOutboxSolicitada(
+                acao.TenantId,
+                "SolicitarNotificacao",
+                destinatario.ChaveIdempotencia!,
+                JsonSerializer.Serialize(new MensagemDeEnvioOutbox(acao.TenantId, destinatario.Id, solicitacao), OpcoesJson),
+                agora);
+            var dbtx = tx.GetDbTransaction();
+            await outbox.Publicar(mensagem, dbtx, ct);
+            await auditoria.Registrar(new("EnvioIndividualSolicitado", "DestinatarioDaAcao", destinatario.Id, JsonSerializer.Serialize(new { acaoId }, OpcoesJson), agora), dbtx, ct);
+            await tx.CommitAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario.");
+        }
+
+        return new(destinatario.Id, destinatario.SituacaoEnvio, destinatario.Versao);
     }
 
     public async Task RegistrarSolicitacao(Guid tenantId, Guid destinatarioId, string notificacaoId, System.Data.Common.DbTransaction transacao, CancellationToken ct)
     { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); d.RegistrarSolicitacao(notificacaoId); await banco.SaveChangesAsync(ct); }
-    public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) => await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().AsNoTracking().Where(x => x.NotificacaoExternaId != null && x.SituacaoEnvio != SituacaoDoEnvio.Entregue && x.SituacaoEnvio != SituacaoDoEnvio.Lido && x.SituacaoEnvio != SituacaoDoEnvio.Falhou).Take(limite).Select(x => new NotificacaoPendente(x.TenantId, x.Id, x.NotificacaoExternaId!)).ToListAsync(ct);
+    public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) => await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().AsNoTracking().Where(x => x.NotificacaoExternaId != null && x.SituacaoEnvio != SituacaoDoEnvio.Entregue && x.SituacaoEnvio != SituacaoDoEnvio.Lido && x.SituacaoEnvio != SituacaoDoEnvio.Falhou).OrderBy(x => x.DataUltimaReconciliacao ?? DateTimeOffset.MinValue).ThenBy(x => x.Id).Take(limite).Select(x => new NotificacaoPendente(x.TenantId, x.Id, x.NotificacaoExternaId!)).ToListAsync(ct);
     public async Task AtualizarEstado(Guid tenantId, Guid destinatarioId, string estadoExterno, string? codigoFalha, CancellationToken ct)
     { var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); var estado = estadoExterno.ToUpperInvariant() switch { "PENDING" or "PROCESSING" => SituacaoDoEnvio.Solicitado, "SENT" => SituacaoDoEnvio.Enviado, "DELIVERED" => SituacaoDoEnvio.Entregue, "READ" => SituacaoDoEnvio.Lido, "FAILED" or "UNDELIVERABLE" => SituacaoDoEnvio.Falhou, _ => d.SituacaoEnvio }; var agora = relogio.GetUtcNow(); d.AtualizarEstado(estado, codigoFalha, agora); var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == d.AcaoComercialId, ct); acao.RecalcularConclusao(agora); await banco.SaveChangesAsync(ct); }
 
@@ -103,3 +137,4 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
 }
 
 public sealed record DadosDoRascunho(string Nome, string? Objetivo, Guid ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios);
+public sealed record EnvioIndividualAceito(Guid Id, SituacaoDoEnvio SituacaoEnvio, uint Versao);

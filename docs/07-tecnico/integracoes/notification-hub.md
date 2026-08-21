@@ -92,7 +92,7 @@ O CRM nao copia tentativas, resposta bruta do provedor ou webhook da Meta. Esses
 
 ## Escopo inicial
 
-Embora o hub suporte agendamento, e-mail e SMS, a interface da Versao 1.0 oferece apenas envio imediato por WhatsApp.
+Embora o hub suporte agendamento, e-mail e SMS, a interface da Versao 1.0 oferece apenas envio imediato individual por WhatsApp, confirmado por destinatario. Nao existe disparo coletivo no CRM.
 
 ## Fonte verificada
 

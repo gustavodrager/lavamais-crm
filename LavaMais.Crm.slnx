@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/backend/">
     <Project Path="src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj" />
+    <Project Path="src/backend/LavaMais.Crm.Migrador/LavaMais.Crm.Migrador.csproj" />
     <Project Path="src/backend/LavaMais.Crm.Worker/LavaMais.Crm.Worker.csproj" />
     <Project Path="src/backend/BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
   </Folder>
@@ -18,5 +19,6 @@
   <Folder Name="/testes/backend/">
     <Project Path="testes/backend/LavaMais.Crm.Testes.Arquitetura/LavaMais.Crm.Testes.Arquitetura.csproj" />
     <Project Path="testes/backend/LavaMais.Crm.Testes.Integracao/LavaMais.Crm.Testes.Integracao.csproj" />
+    <Project Path="testes/backend/LavaMais.Crm.Testes.Unidade/LavaMais.Crm.Testes.Unidade.csproj" />
   </Folder>
 </Solution>
