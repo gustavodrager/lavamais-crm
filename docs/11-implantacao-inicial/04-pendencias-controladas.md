@@ -13,6 +13,7 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 
 ## Identidade
 
+- localizar, publicar e operar o Identity Hub; em 20 de agosto de 2026 nao havia servico ou repositorio disponivel no ambiente inspecionado;
 - evoluir o Identity Hub para registrar escopo/recurso `lavamais-crm-api` e emitir `aud`;
 - criar cliente OIDC `lavamais-crm-web`;
 - definir dominios e callbacks de homologacao e producao;
@@ -21,6 +22,7 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 
 ## Notification Hub
 
+- substituir ou evoluir a implantacao encontrada em 20 de agosto de 2026: ela ainda usa o contrato anterior, sem autenticacao por chave, sem idempotencia e com processamento manual, portanto nao deve receber envios do CRM;
 - cadastrar origem e chave `lavamais-crm`;
 - aprovar e provisionar templates da Meta;
 - confirmar nomes e ordem dos parametros;
@@ -28,7 +30,7 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 
 ## Dados
 
-- obter CSV real autorizado;
+- converter as planilhas autorizadas de clientes e servicos para o CSV canonico, revisar a pre-visualizacao e somente entao confirmar a carga em homologacao;
 - validar com a operacao a atualizacao idempotente por `codigoExterno` ou WhatsApp;
 - validar retencao do arquivo e das linhas de importacao;
 - definir politica de anonimizacao e exclusao conforme orientacao juridica.
@@ -36,9 +38,9 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 ## Infraestrutura
 
 - PostgreSQL provisionado no projeto Railway `lavamais-crm`, com ambientes isolados `homologacao` e `production`, conforme ADR-008;
-- escolher o provedor de hospedagem da API, do Worker e do frontend;
-- definir dominio, DNS e certificados;
-- habilitar e testar backup, retencao, restauracao, RPO e RTO antes de inserir dados empresariais em producao;
+- API, BFF, Worker e migrador provisionados no Railway em homologacao; o Worker permanece com zero replicas ate a liberacao do Notification Hub;
+- substituir os dominios temporarios do Railway por dominios definitivos, configurar DNS e registrar os callbacks no Identity Hub;
+- PITR habilitado em homologacao e producao; confirmar a primeira cobertura, executar restauracao isolada e definir RPO e RTO antes de inserir dados empresariais em producao;
 - configurar alertas e responsaveis operacionais.
 
 ## Sistema atual
