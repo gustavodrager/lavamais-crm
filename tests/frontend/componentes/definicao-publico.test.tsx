@@ -24,8 +24,9 @@ describe("DefinicaoPublico", () => {
     render(<DefinicaoPublico acaoId="6d3d0d64-a111-4cff-8db8-111111111111" criterios={criterios} />);
     fireEvent.change(screen.getByLabelText("Cidades"), { target: { value: "Praia Grande" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar filtros e simular público" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "Excluir" })).toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
+    const botaoExcluir = await screen.findByRole("button", { name: "Excluir" });
+    await waitFor(() => expect(botaoExcluir).toBeEnabled());
+    fireEvent.click(botaoExcluir);
     await waitFor(() => expect(screen.getByText("Excluído manualmente")).toBeInTheDocument(), { timeout: 10_000 });
     expect(alterarExclusaoDoPublico).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", excluir: true });
   });
