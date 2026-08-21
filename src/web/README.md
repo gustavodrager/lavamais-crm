@@ -16,7 +16,7 @@ LAVAMAIS_OIDC_CLIENT_SECRET=<segredo do ambiente compartilhado>
 
 O callback a registrar é `/api/autenticacao/callback`. O BFF usa descoberta OIDC, Authorization Code com PKCE S256, `state`, `nonce`, cookie opaco `HttpOnly`, `Secure`, `SameSite=Lax` e refresh serializado por sessão. O `tenant_id` nunca é recebido do navegador: a CRM API o deriva exclusivamente do access token.
 
-O repositório de sessão atual é uma fronteira em memória adequada somente a desenvolvimento e testes de instância única. Homologação e produção exigem armazenamento compartilhado e limpeza de sessões, registro do cliente `lavamais-crm-web` e emissão da audiência `lavamais-crm-api` pelo Identity Hub.
+Em desenvolvimento, o repositorio de sessoes usa memoria. Homologacao e producao usam o schema tecnico `web` do PostgreSQL, com tokens criptografados por AES-256-GCM e renovacao serializada entre instancias. Configure `LAVAMAIS_SESSOES_DATABASE_URL` e uma chave Base64 de 32 bytes em `LAVAMAIS_CHAVE_CRIPTOGRAFIA_SESSAO`, depois aplique o script `infraestrutura/postgresql/001-sessoes-web.sql` como etapa controlada. O Identity Hub tambem precisa registrar o cliente `lavamais-crm-web` e emitir a audiencia `lavamais-crm-api`.
 
 ## Fluxos integrados
 

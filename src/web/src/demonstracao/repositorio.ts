@@ -41,5 +41,15 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async listarClientes() {
     return { itens: clientesDemonstracao, pagina: 1, tamanhoPagina: 20, total: clientesDemonstracao.length };
   },
+  async criarCliente() { return { id: crypto.randomUUID() }; },
+  async preVisualizarImportacao() {
+    return { referenciaArquivo: crypto.randomUUID(), colunas: ["nome", "whatsapp"], totalLinhas: 1, amostra: [{ numero: 2, valores: ["Ana Martins", "13999999999"], erros: [] }] };
+  },
+  async confirmarImportacao() { return { id: crypto.randomUUID(), situacao: "Concluida", totalLinhas: 1, totalInseridas: 1, totalAtualizadas: 0, totalRejeitadas: 0 }; },
+  async listarCatalogo() { return (await this.listarItensDeCatalogoAtivos()).map((item) => ({ ...item, valorReferencia: null, situacao: "Ativo" as const, codigoExterno: null })); },
+  async criarServico() { return { id: crypto.randomUUID() }; },
+  async listarEtiquetas() { return [{ id: "6d3d0d64-a111-4cff-8db8-111111111119", nome: "Residencial" }]; },
+  async criarEtiqueta() { return { id: crypto.randomUUID() }; },
+  async criarEPublicarModelo() { return { id: crypto.randomUUID() }; },
 };
 import "server-only";

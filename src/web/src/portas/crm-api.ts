@@ -8,6 +8,8 @@ import type {
   CriteriosDeSegmentacao,
   SimulacaoDePublico,
   ResultadoComercial,
+  PreVisualizacaoImportacao,
+  ResultadoImportacao,
 } from "@/contratos/apresentacao";
 
 export interface ConsultarAcoesComerciais {
@@ -16,7 +18,21 @@ export interface ConsultarAcoesComerciais {
 }
 
 export interface ConsultarClientes {
-  listarClientes(): Promise<ResultadoPaginado<ResumoCliente>>;
+  listarClientes(busca?: string): Promise<ResultadoPaginado<ResumoCliente>>;
+  criarCliente(entrada: { nome: string; whatsapp: string; tipo: string | null; permiteMarketingWhatsapp: boolean; endereco: { bairro: string | null; cidade: string | null }; codigoExterno: string | null }): Promise<{ id: string }>;
+}
+
+export interface ImportarClientes {
+  preVisualizarImportacao(arquivo: File): Promise<PreVisualizacaoImportacao>;
+  confirmarImportacao(referenciaArquivo: string): Promise<ResultadoImportacao>;
+}
+
+export interface AdministrarConfiguracoes {
+  listarCatalogo(): Promise<Array<{ id: string; nome: string; tipo: "Produto" | "Servico"; categoria: string | null; valorReferencia: number | null; situacao: "Ativo" | "Inativo"; codigoExterno: string | null }>>;
+  criarServico(entrada: { nome: string; categoria: string | null; valorReferencia: number | null; codigoExterno: string | null }): Promise<{ id: string }>;
+  listarEtiquetas(): Promise<Array<{ id: string; nome: string }>>;
+  criarEtiqueta(nome: string): Promise<{ id: string }>;
+  criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string; chaveTemplateNotificacao: string }): Promise<{ id: string }>;
 }
 
 export interface ConsultarCatalogo {
@@ -61,6 +77,8 @@ export interface RegistrarResultadoComercial {
 export interface PortaCrmApi
   extends ConsultarAcoesComerciais,
     ConsultarClientes,
+    ImportarClientes,
+    AdministrarConfiguracoes,
     ConsultarCatalogo,
     ConsultarModelosDeMensagem,
     CriarAcaoComercial,

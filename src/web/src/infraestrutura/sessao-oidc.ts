@@ -3,7 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { descobrirOidc, obterConfiguracaoOidc } from "@/infraestrutura/configuracao-oidc";
-import { sessoes, type SessaoServidor } from "@/infraestrutura/repositorio-sessoes";
+import { comBloqueioDaSessao, excluirSessao, obterSessao, salvarSessao, type SessaoServidor } from "@/infraestrutura/repositorio-sessoes";
 import type { PortaSessao } from "@/portas/sessao";
 import { autenticacaoEstaDesabilitada, obterAccessTokenDesenvolvimento } from "@/infraestrutura/autenticacao-desenvolvimento";
 
@@ -14,7 +14,7 @@ const esquemaToken = z.object({ access_token: z.string().min(1), refresh_token: 
 async function obterRegistro() {
   const id = (await cookies()).get(NOME_COOKIE_SESSAO)?.value;
   if (process.env.LAVAMAIS_AMBIENTE_TESTE === "1" && id === "sessao-controlada-e2e") return { id, sessao: { apresentacao: { usuario: { nome: "Teste Automatizado", iniciais: "TA" }, tenant: { nome: "Tenant de teste" }, papel: "Gerente" as const }, accessToken: "token-controlado-e2e", expiraEm: Date.now() + 3_600_000 } };
-  return id ? { id, sessao: sessoes.get(id) } : null;
+  return id ? { id, sessao: await obterSessao(id) } : null;
 }
 
 async function renovar(id: string, sessao: SessaoServidor) {
@@ -22,14 +22,18 @@ async function renovar(id: string, sessao: SessaoServidor) {
   const refreshToken = sessao.refreshToken;
   const existente = renovacoes.get(id); if (existente) return existente;
   const tarefa = (async () => {
-    const configuracao = obterConfiguracaoOidc(); const descoberta = await descobrirOidc();
-    const corpo = new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken, client_id: configuracao.clientId });
-    if (configuracao.clientSecret) corpo.set("client_secret", configuracao.clientSecret);
-    const resposta = await fetch(descoberta.token_endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: corpo, cache: "no-store" });
-    if (!resposta.ok) { sessoes.delete(id); return null; }
-    const tokens = esquemaToken.parse(await resposta.json());
-    const atualizada = { ...sessao, accessToken: tokens.access_token, refreshToken: tokens.refresh_token ?? sessao.refreshToken, idToken: tokens.id_token ?? sessao.idToken, expiraEm: Date.now() + tokens.expires_in * 1000 };
-    sessoes.set(id, atualizada); return atualizada;
+    return comBloqueioDaSessao(id, async (cliente) => {
+      const persistida = await obterSessao(id, cliente); if (!persistida) return null;
+      if (persistida.expiraEm > Date.now() + 30_000) return persistida;
+      const configuracao = obterConfiguracaoOidc(); const descoberta = await descobrirOidc();
+      const corpo = new URLSearchParams({ grant_type: "refresh_token", refresh_token: persistida.refreshToken ?? refreshToken, client_id: configuracao.clientId });
+      if (configuracao.clientSecret) corpo.set("client_secret", configuracao.clientSecret);
+      const resposta = await fetch(descoberta.token_endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: corpo, cache: "no-store" });
+      if (!resposta.ok) { await excluirSessao(id, cliente); return null; }
+      const tokens = esquemaToken.parse(await resposta.json());
+      const atualizada = { ...persistida, accessToken: tokens.access_token, refreshToken: tokens.refresh_token ?? persistida.refreshToken, idToken: tokens.id_token ?? persistida.idToken, expiraEm: Date.now() + tokens.expires_in * 1000 };
+      await salvarSessao(id, atualizada, cliente); return atualizada;
+    });
   })().finally(() => renovacoes.delete(id));
   renovacoes.set(id, tarefa); return tarefa;
 }

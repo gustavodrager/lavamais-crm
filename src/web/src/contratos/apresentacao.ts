@@ -20,7 +20,7 @@ export interface ResumoAcaoComercial {
 }
 
 export interface CriteriosDeSegmentacao {
-  versaoSchema: 1;
+  versaoSchema: 1 | 2;
   modo: "Filtros" | "Manual";
   tipoCliente: string | null;
   cidades: string[] | null;
@@ -30,13 +30,15 @@ export interface CriteriosDeSegmentacao {
   dataNascimentoDe: string | null;
   dataNascimentoAte: string | null;
   clienteIds: string[] | null;
+  clienteIdsExcluidos: string[] | null;
 }
 
 export type MotivoExclusaoPublico =
   | "ClienteInativo"
   | "ContatoInvalido"
   | "SemPermissao"
-  | "ContatoDuplicado";
+  | "ContatoDuplicado"
+  | "ExcluidoManualmente";
 
 export interface ClienteSimulado {
   clienteId: string;
@@ -96,8 +98,25 @@ export interface ResumoCliente {
   nome: string;
   whatsapp: string;
   localidade: string;
-  etiquetas: string[];
+  quantidadeEtiquetas: number;
   permiteWhatsapp: boolean;
+  codigoExterno: string | null;
+}
+
+export interface PreVisualizacaoImportacao {
+  referenciaArquivo: string;
+  colunas: string[];
+  totalLinhas: number;
+  amostra: Array<{ numero: number; valores: string[]; erros: string[] }>;
+}
+
+export interface ResultadoImportacao {
+  id: string;
+  situacao: string;
+  totalLinhas: number;
+  totalInseridas: number;
+  totalAtualizadas: number;
+  totalRejeitadas: number;
 }
 
 export interface OpcaoItemDeCatalogo {

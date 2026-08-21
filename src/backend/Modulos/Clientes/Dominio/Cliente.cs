@@ -24,6 +24,8 @@ public sealed class Cliente
     public string Nome { get; private set; } = string.Empty;
     public string? NomeFantasia { get; private set; }
     public string? Tipo { get; private set; }
+    public string? CodigoExterno { get; private set; }
+    public DateTimeOffset? DataCadastroOrigem { get; private set; }
     public DateOnly? DataNascimento { get; private set; }
     public SituacaoDoCliente Situacao { get; private set; }
     public DateTimeOffset DataCriacao { get; private set; }
@@ -40,18 +42,31 @@ public sealed class Cliente
         bool permiteMarketingWhatsapp, EnderecoDoCliente? endereco, IEnumerable<Guid> etiquetaIds, DateTimeOffset agora)
     {
         DefinirNome(nome);
-        Contatos.Clear();
-        Contatos.Add(ContatoDoCliente.CriarWhatsapp(TenantId, Id, whatsapp));
+        var contatoWhatsapp = Contatos.SingleOrDefault(x => x.Tipo == TipoDeContato.Whatsapp);
+        if (contatoWhatsapp is null) Contatos.Add(ContatoDoCliente.CriarWhatsapp(TenantId, Id, whatsapp)); else contatoWhatsapp.AtualizarWhatsapp(whatsapp);
         NomeFantasia = Limitar(nomeFantasia, 200, "nome_fantasia_invalido");
         Tipo = Limitar(tipo, 50, "tipo_invalido");
         var emailNormalizado = Limitar(email, 254, "email_invalido")?.ToLowerInvariant();
-        if (emailNormalizado is not null) Contatos.Add(ContatoDoCliente.CriarEmail(TenantId, Id, emailNormalizado));
+        var contatoEmail = Contatos.SingleOrDefault(x => x.Tipo == TipoDeContato.Email);
+        if (emailNormalizado is null && contatoEmail is not null) Contatos.Remove(contatoEmail);
+        else if (emailNormalizado is not null && contatoEmail is null) Contatos.Add(ContatoDoCliente.CriarEmail(TenantId, Id, emailNormalizado));
+        else if (emailNormalizado is not null) contatoEmail!.AtualizarEmail(emailNormalizado);
         DataNascimento = dataNascimento;
-        Permissoes.Clear();
-        Permissoes.Add(new PermissaoDeComunicacao(TenantId, Id, permiteMarketingWhatsapp, agora));
-        Endereco = endereco;
-        Etiquetas.Clear();
-        foreach (var etiquetaId in etiquetaIds.Distinct()) Etiquetas.Add(new ClienteEtiqueta(TenantId, Id, etiquetaId));
+        var permissaoWhatsapp = Permissoes.SingleOrDefault(x => x.Canal == TipoDeContato.Whatsapp && x.Finalidade == "Marketing");
+        if (permissaoWhatsapp is null) Permissoes.Add(new PermissaoDeComunicacao(TenantId, Id, permiteMarketingWhatsapp, agora)); else permissaoWhatsapp.Definir(permiteMarketingWhatsapp, agora);
+        if (endereco is null) Endereco = null;
+        else if (Endereco is null) Endereco = endereco;
+        else Endereco.Atualizar(endereco);
+        var etiquetasDesejadas = etiquetaIds.Distinct().ToHashSet();
+        foreach (var atual in Etiquetas.Where(x => !etiquetasDesejadas.Contains(x.EtiquetaId)).ToArray()) Etiquetas.Remove(atual);
+        foreach (var etiquetaId in etiquetasDesejadas.Where(id => Etiquetas.All(x => x.EtiquetaId != id))) Etiquetas.Add(new ClienteEtiqueta(TenantId, Id, etiquetaId));
+        DataAtualizacao = agora;
+    }
+
+    public void DefinirDadosDeOrigem(string? codigoExterno, DateTimeOffset? dataCadastroOrigem, DateTimeOffset agora)
+    {
+        CodigoExterno = Limitar(codigoExterno, 100, "codigo_externo_invalido");
+        DataCadastroOrigem = dataCadastroOrigem?.ToUniversalTime();
         DataAtualizacao = agora;
     }
 

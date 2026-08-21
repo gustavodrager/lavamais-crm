@@ -1,7 +1,7 @@
 import type { ResumoAcaoComercial, ResumoCliente } from "@/contratos/apresentacao";
 
 const criteriosVazios = {
-  versaoSchema: 1 as const,
+  versaoSchema: 2 as const,
   modo: "Filtros" as const,
   tipoCliente: null,
   cidades: null,
@@ -11,6 +11,7 @@ const criteriosVazios = {
   dataNascimentoDe: null,
   dataNascimentoAte: null,
   clienteIds: null,
+  clienteIdsExcluidos: null,
 };
 
 export const acoesDemonstracao: ResumoAcaoComercial[] = [
@@ -20,7 +21,7 @@ export const acoesDemonstracao: ResumoAcaoComercial[] = [
 ];
 
 export const clientesDemonstracao: ResumoCliente[] = [
-  { id: "1", nome: "Ana Martins", whatsapp: "+55 13 99123-4567", localidade: "Boqueirao, Praia Grande", etiquetas: ["Edredom", "Residencial"], permiteWhatsapp: true },
-  { id: "2", nome: "Carlos Almeida", whatsapp: "+55 13 98845-2201", localidade: "Guilhermina, Praia Grande", etiquetas: ["Corporativo"], permiteWhatsapp: true },
-  { id: "3", nome: "Patricia Souza", whatsapp: "+55 13 99774-8032", localidade: "Canto do Forte, Praia Grande", etiquetas: ["Ternos"], permiteWhatsapp: false },
+  { id: "1", nome: "Ana Martins", whatsapp: "+55 13 99123-4567", localidade: "Boqueirao, Praia Grande", quantidadeEtiquetas: 2, permiteWhatsapp: true, codigoExterno: "1001" },
+  { id: "2", nome: "Carlos Almeida", whatsapp: "+55 13 98845-2201", localidade: "Guilhermina, Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: true, codigoExterno: "1002" },
+  { id: "3", nome: "Patricia Souza", whatsapp: "+55 13 99774-8032", localidade: "Canto do Forte, Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: false, codigoExterno: null },
 ];

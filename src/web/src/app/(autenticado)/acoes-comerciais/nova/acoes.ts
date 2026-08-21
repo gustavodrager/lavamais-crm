@@ -43,7 +43,7 @@ export async function criarRascunho(entrada: EntradaCriarRascunho): Promise<Falh
       ...validacao.data,
       versaoModeloId: null,
       criterios: {
-        versaoSchema: 1,
+        versaoSchema: 2,
         modo: "Filtros",
         tipoCliente: null,
         cidades: null,
@@ -53,6 +53,7 @@ export async function criarRascunho(entrada: EntradaCriarRascunho): Promise<Falh
         dataNascimentoDe: null,
         dataNascimentoAte: null,
         clienteIds: null,
+        clienteIdsExcluidos: null,
       },
     });
     id = resultado.id;

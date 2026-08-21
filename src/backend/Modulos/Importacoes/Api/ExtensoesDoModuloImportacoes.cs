@@ -31,6 +31,6 @@ public static class ExtensoesDoModuloImportacoes
         return endpoints;
     }
     public sealed record ConfirmarImportacao(Guid ReferenciaArquivo, MapeamentoCsv Mapeamento);
-    public sealed record Resposta(Guid Id, string Situacao, int TotalLinhas, int TotalInseridas, int TotalRejeitadas, object Linhas)
-    { public static Resposta Criar(Dominio.ImportacaoDeClientes i) => new(i.Id, i.Situacao.ToString(), i.TotalLinhas, i.TotalInseridas, i.TotalRejeitadas, i.Linhas.Select(l => new { l.Numero, resultado = l.Resultado.ToString(), l.ClienteId, l.Erro })); }
+    public sealed record Resposta(Guid Id, string Situacao, int TotalLinhas, int TotalInseridas, int TotalAtualizadas, int TotalRejeitadas, object Linhas)
+    { public static Resposta Criar(Dominio.ImportacaoDeClientes i) => new(i.Id, i.Situacao.ToString(), i.TotalLinhas, i.TotalInseridas, i.TotalAtualizadas, i.TotalRejeitadas, i.Linhas.Select(l => new { l.Numero, resultado = l.Resultado.ToString(), l.ClienteId, l.Erro })); }
 }

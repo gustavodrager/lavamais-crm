@@ -19,7 +19,9 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
     public async Task<ItemDeCatalogo> Criar(DadosDoItemDeCatalogo dados, CancellationToken ct)
     {
         var item = ItemDeCatalogo.Criar(usuario.TenantId, dados.Tipo, dados.Nome, dados.Descricao, dados.Categoria, dados.ValorReferencia, relogio.GetUtcNow());
+        AplicarDadosDeOrigem(item, dados);
         await ValidarNome(item.NomeNormalizado, null, ct);
+        await ValidarCodigoExterno(item.CodigoExterno, null, ct);
         banco.Add(item); await banco.SaveChangesAsync(ct); return item;
     }
 
@@ -27,8 +29,28 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
     {
         var item = await banco.Itens.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Item de catalogo nao encontrado.");
         item.Atualizar(dados.Tipo, dados.Nome, dados.Descricao, dados.Categoria, dados.ValorReferencia, relogio.GetUtcNow());
+        AplicarDadosDeOrigem(item, dados);
         item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow());
-        await ValidarNome(item.NomeNormalizado, id, ct); await banco.SaveChangesAsync(ct);
+        await ValidarNome(item.NomeNormalizado, id, ct); await ValidarCodigoExterno(item.CodigoExterno, id, ct); await banco.SaveChangesAsync(ct);
+    }
+
+    public async Task<ResultadoDaImportacaoDeItem> ImportarOuAtualizar(DadosDoItemDeCatalogo dados, CancellationToken ct)
+    {
+        var codigo = string.IsNullOrWhiteSpace(dados.CodigoExterno) ? null : dados.CodigoExterno.Trim();
+        var nome = dados.Nome.Trim().ToUpperInvariant();
+        var candidatos = await banco.Itens.Where(x => (codigo != null && x.CodigoExterno == codigo) || x.NomeNormalizado == nome).Take(2).ToListAsync(ct);
+        if (candidatos.Count > 1) throw new ExcecaoDeConflito("dados_origem_ambiguos", "O codigo externo e o nome identificam itens de catalogo diferentes.");
+        var item = candidatos.SingleOrDefault();
+        if (item is null) return new(await Criar(dados, ct), false);
+        item.Atualizar(dados.Tipo, dados.Nome, dados.Descricao, dados.Categoria, dados.ValorReferencia, relogio.GetUtcNow());
+        item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow()); AplicarDadosDeOrigem(item, dados);
+        await ValidarCodigoExterno(item.CodigoExterno, item.Id, ct); await banco.SaveChangesAsync(ct); return new(item, true);
+    }
+
+    private void AplicarDadosDeOrigem(ItemDeCatalogo item, DadosDoItemDeCatalogo dados)
+    {
+        if (dados.CodigoExterno is not null || dados.DataCadastroOrigem is not null)
+            item.DefinirDadosDeOrigem(dados.CodigoExterno, dados.DataCadastroOrigem, relogio.GetUtcNow());
     }
 
     private async Task ValidarNome(string nome, Guid? ignorarId, CancellationToken ct)
@@ -36,9 +58,15 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
         if (await banco.Itens.AnyAsync(x => x.NomeNormalizado == nome && x.Id != ignorarId, ct))
             throw new ExcecaoDeConflito("item_duplicado", "Ja existe um item de catalogo com este nome.");
     }
+    private async Task ValidarCodigoExterno(string? codigo, Guid? ignorarId, CancellationToken ct)
+    {
+        if (codigo is not null && await banco.Itens.AnyAsync(x => x.CodigoExterno == codigo && x.Id != ignorarId, ct))
+            throw new ExcecaoDeConflito("codigo_externo_duplicado", "Ja existe um item de catalogo com este codigo externo.");
+    }
 }
 
-public sealed record DadosDoItemDeCatalogo(TipoDeItemDeCatalogo Tipo, string Nome, string? Descricao, string? Categoria, decimal? ValorReferencia, SituacaoDoItemDeCatalogo Situacao = SituacaoDoItemDeCatalogo.Ativo);
+public sealed record DadosDoItemDeCatalogo(TipoDeItemDeCatalogo Tipo, string Nome, string? Descricao, string? Categoria, decimal? ValorReferencia, SituacaoDoItemDeCatalogo Situacao = SituacaoDoItemDeCatalogo.Ativo, string? CodigoExterno = null, DateTimeOffset? DataCadastroOrigem = null);
+public sealed record ResultadoDaImportacaoDeItem(ItemDeCatalogo Item, bool Atualizado);
 
 public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco)
 {

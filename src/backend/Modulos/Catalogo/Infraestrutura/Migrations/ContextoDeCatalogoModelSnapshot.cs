@@ -35,9 +35,18 @@ namespace LavaMais.Crm.Modulos.Catalogo.Infraestrutura.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("categoria");
 
+                    b.Property<string>("CodigoExterno")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("codigo_externo");
+
                     b.Property<DateTimeOffset>("DataAtualizacao")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("data_atualizacao");
+
+                    b.Property<DateTimeOffset?>("DataCadastroOrigem")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_cadastro_origem");
 
                     b.Property<DateTimeOffset>("DataCriacao")
                         .HasColumnType("timestamp with time zone")
@@ -88,6 +97,10 @@ namespace LavaMais.Crm.Modulos.Catalogo.Infraestrutura.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "CodigoExterno")
+                        .IsUnique()
+                        .HasFilter("codigo_externo IS NOT NULL");
 
                     b.HasIndex("TenantId", "NomeNormalizado")
                         .IsUnique();

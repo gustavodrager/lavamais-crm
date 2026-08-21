@@ -41,7 +41,7 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         await using var bancoIntegracoes = new ContextoDeIntegracoes(opcoesIntegracoes, contexto); await bancoIntegracoes.Database.MigrateAsync(ct);
         var clientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
         var endereco = new DadosDoEndereco(null, null, null, "Centro", "Praia Grande", "SP", null);
-        await clientes.Criar(new("Cliente elegivel", "13997776651", null, "Residencial", null, null, true, endereco, []), ct);
+        var clienteExcluivel = await clientes.Criar(new("Cliente elegivel", "13997776651", null, "Residencial", null, null, true, endereco, []), ct);
         await clientes.Criar(new("Outro elegivel", "13997776654", null, "Residencial", null, null, true, endereco, []), ct);
         await clientes.Criar(new("Sem permissao", "13997776652", null, "Residencial", null, null, false, endereco, []), ct);
         var inativo = await clientes.Criar(new("Cliente inativo", "13997776653", null, "Residencial", null, null, true, endereco, []), ct); await clientes.Inativar(inativo.Id, ct);
@@ -50,6 +50,9 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         var gerenciadorModelos = new GerenciadorDeModelos(bancoModelos, contexto, TimeProvider.System);
         var modelo = await gerenciadorModelos.Criar("Oferta", ct); var versao = await gerenciadorModelos.Publicar(modelo.Id, new("Ola {{nomeCliente}}", ["nomeCliente"], "crm_oferta"), ct);
         var simulador = new SimuladorDePublico(new ConsultaDeClientesParaSegmentacao(bancoClientes));
+        var simulacaoComExclusao = await simulador.Simular(new CriteriosDeSegmentacao(2, ModoDeSelecao.Filtros, "Residencial", ["Praia Grande"], null, null, null, null, null, null, [clienteExcluivel.Id]), 1, 10, ct);
+        Assert.Equal(1, simulacaoComExclusao.QuantidadeElegivel);
+        Assert.Contains(simulacaoComExclusao.Clientes, x => x.ClienteId == clienteExcluivel.Id && x.MotivoExclusao == MotivoDeExclusao.ExcluidoManualmente);
         var gerenciadorAcoes = new GerenciadorDeAcoesComerciais(bancoAcoes, new ConsultaDeCatalogo(bancoCatalogo), new ConsultaDeModelos(bancoModelos), simulador, new RegistradorDeAuditoria(bancoAuditoria, contexto), new PublicadorDeOutbox(bancoIntegracoes), contexto, TimeProvider.System);
         var criterios = new CriteriosDeSegmentacao(1, ModoDeSelecao.Filtros, "Residencial", ["Praia Grande"], null, null, null, null, null, null);
 
@@ -134,8 +137,9 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
     [Fact]
     public void Deve_validar_versao_e_selecao_manual_dos_criterios()
     {
-        Assert.Throws<ExcecaoDeRegraDeNegocio>(() => new CriteriosDeSegmentacao(2, ModoDeSelecao.Filtros, null, null, null, null, null, null, null, null).Validar());
+        Assert.Throws<ExcecaoDeRegraDeNegocio>(() => new CriteriosDeSegmentacao(3, ModoDeSelecao.Filtros, null, null, null, null, null, null, null, null).Validar());
         Assert.Throws<ExcecaoDeRegraDeNegocio>(() => new CriteriosDeSegmentacao(1, ModoDeSelecao.Manual, null, null, null, null, null, null, null, []).Validar());
+        Assert.Throws<ExcecaoDeRegraDeNegocio>(() => new CriteriosDeSegmentacao(1, ModoDeSelecao.Filtros, null, null, null, null, null, null, null, null, [Guid.NewGuid()]).Validar());
     }
 
     private static DbContextOptions<T> Opcoes<T>(string conexao, string schema, string historico) where T : DbContext => new DbContextOptionsBuilder<T>().UseNpgsql(conexao, p => p.MigrationsHistoryTable(historico, schema)).Options;

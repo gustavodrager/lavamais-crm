@@ -16,8 +16,7 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 - evoluir o Identity Hub para registrar escopo/recurso `lavamais-crm-api` e emitir `aud`;
 - criar cliente OIDC `lavamais-crm-web`;
 - definir dominios e callbacks de homologacao e producao;
-- definir armazenamento server-side e limpeza das sessoes do BFF;
-- substituir o repositorio em memoria do BFF por armazenamento compartilhado antes de homologacao e definir expiracao e limpeza operacional;
+- aplicar o schema tecnico das sessoes do BFF, provisionar chave de criptografia por ambiente e validar login apos reinicio;
 - definir procedimento de provisionamento do primeiro administrador.
 
 ## Notification Hub
@@ -30,13 +29,13 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 ## Dados
 
 - obter CSV real autorizado;
-- definir politica de atualizacao em duplicidades;
+- validar com a operacao a atualizacao idempotente por `codigoExterno` ou WhatsApp;
 - validar retencao do arquivo e das linhas de importacao;
 - definir politica de anonimizacao e exclusao conforme orientacao juridica.
 
 ## Infraestrutura
 
-- PostgreSQL provisionado no projeto Railway `lavamais-crm`, com ambientes isolados `homologacao` e `production`, conforme ADR-007;
+- PostgreSQL provisionado no projeto Railway `lavamais-crm`, com ambientes isolados `homologacao` e `production`, conforme ADR-008;
 - escolher o provedor de hospedagem da API, do Worker e do frontend;
 - definir dominio, DNS e certificados;
 - habilitar e testar backup, retencao, restauracao, RPO e RTO antes de inserir dados empresariais em producao;

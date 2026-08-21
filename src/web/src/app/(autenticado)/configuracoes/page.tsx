@@ -1,6 +1,9 @@
-import { Boxes, MessageSquareText, Tags } from "lucide-react";
 import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
+import { FormulariosConfiguracao } from "./formularios-configuracao";
 
-const secoes = [{ titulo: "Catálogo", descricao: "Produtos e serviços usados nas ações comerciais.", icone: Boxes }, { titulo: "Etiquetas", descricao: "Marcadores declarados para organizar e selecionar clientes.", icone: Tags }, { titulo: "Modelos de mensagem", descricao: "Versões aprovadas e vinculadas aos templates técnicos.", icone: MessageSquareText }];
-export default function Configuracoes() { return <><CabecalhoPagina titulo="Configurações" descricao="Prepare os dados de apoio necessários para executar uma Ação Comercial." /><div className="grid gap-4 md:grid-cols-3">{secoes.map(({ titulo, descricao, icone: Icone }) => <Card key={titulo} className="transition-colors hover:border-primary/40"><CardHeader><span className="mb-2 grid size-10 place-items-center rounded-lg bg-primary/10 text-primary"><Icone className="size-5" aria-hidden="true" /></span><CardTitle className="text-base">{titulo}</CardTitle></CardHeader><CardContent><p className="text-sm leading-6 text-muted-foreground">{descricao}</p><p className="mt-4 text-xs font-medium text-primary">Estrutura preparada</p></CardContent></Card>)}</div></>; }
+export default async function Configuracoes() {
+  const porta = obterPortaCrmApi();
+  const [catalogo, etiquetas, modelos] = await Promise.all([porta.listarCatalogo(), porta.listarEtiquetas(), porta.listarModelosPublicados()]);
+  return <><CabecalhoPagina titulo="Configurações" descricao="Prepare serviços, etiquetas e modelos necessários para executar uma Ação Comercial." /><FormulariosConfiguracao itens={catalogo.filter((item) => item.tipo === "Servico")} etiquetas={etiquetas} modelos={modelos} /></>;
+}

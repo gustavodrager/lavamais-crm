@@ -24,7 +24,7 @@ POST   /api/v1/importacoes/clientes
 GET    /api/v1/importacoes/clientes/{id}
 ```
 
-A confirmacao recebe uma referencia segura ao arquivo temporario e o mapeamento validado; nao confia novamente em totais enviados pelo navegador.
+A confirmacao recebe uma referencia segura ao conteudo persistido da pre-visualizacao e o mapeamento validado; nao confia novamente em arquivo ou totais enviados pelo navegador.
 
 ## Catalogo e modelos
 

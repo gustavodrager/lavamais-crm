@@ -1,0 +1,11 @@
+.git
+.github
+**/bin
+**/obj
+**/node_modules
+**/.next
+**/TestResults
+prototipo
+prototipo_v1
+tests
+testes

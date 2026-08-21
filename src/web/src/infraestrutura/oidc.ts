@@ -4,7 +4,7 @@ import { createHash, createPublicKey, randomBytes, randomUUID, verify } from "no
 import type { JsonWebKey as ChaveWebJson } from "node:crypto";
 import { z } from "zod";
 import { descobrirOidc, obterConfiguracaoOidc, type DescobertaOidc } from "@/infraestrutura/configuracao-oidc";
-import { estadosOidc, sessoes } from "@/infraestrutura/repositorio-sessoes";
+import { consumirEstadoOidc, salvarEstadoOidc, salvarSessao } from "@/infraestrutura/repositorio-sessoes";
 
 const esquemaTokens = z.object({ access_token: z.string().min(1), refresh_token: z.string().optional(), id_token: z.string().min(1), expires_in: z.number().positive() });
 const esquemaUsuario = z.object({
@@ -32,14 +32,14 @@ async function validarIdToken(token: string, nonce: string, descoberta: Descober
 export async function iniciarOidc(retorno: string) {
   const configuracao = obterConfiguracaoOidc(); const descoberta = await descobrirOidc();
   const state = base64Url(randomBytes(32)); const nonce = base64Url(randomBytes(32)); const verificadorPkce = base64Url(randomBytes(48));
-  const identificador = randomUUID(); estadosOidc.set(identificador, { state, nonce, verificadorPkce, retorno: retorno.startsWith("/") && !retorno.startsWith("//") ? retorno : "/acoes-comerciais" });
+  const identificador = randomUUID(); await salvarEstadoOidc(identificador, { state, nonce, verificadorPkce, retorno: retorno.startsWith("/") && !retorno.startsWith("//") ? retorno : "/acoes-comerciais" });
   const url = new URL(descoberta.authorization_endpoint);
   url.search = new URLSearchParams({ response_type: "code", client_id: configuracao.clientId, redirect_uri: new URL("/api/autenticacao/callback", configuracao.urlAplicacao).toString(), scope: "openid profile email offline_access", state, nonce, code_challenge: base64Url(createHash("sha256").update(verificadorPkce).digest()), code_challenge_method: "S256" }).toString();
   return { url, identificador };
 }
 
 export async function concluirOidc(identificador: string, code: string, state: string) {
-  const transacao = estadosOidc.get(identificador); estadosOidc.delete(identificador);
+  const transacao = await consumirEstadoOidc(identificador);
   if (!transacao || transacao.state !== state) throw new Error("Estado OIDC invalido ou expirado.");
   const configuracao = obterConfiguracaoOidc(); const descoberta = await descobrirOidc();
   const corpo = new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: new URL("/api/autenticacao/callback", configuracao.urlAplicacao).toString(), client_id: configuracao.clientId, code_verifier: transacao.verificadorPkce });
@@ -53,6 +53,6 @@ export async function concluirOidc(identificador: string, code: string, state: s
   const usuario = esquemaUsuario.parse(await respostaUsuario.json());
   if (usuario.sub !== identidade.sub) throw new Error("Identity token e UserInfo pertencem a usuarios diferentes.");
   const nome = usuario.name ?? usuario.preferred_username ?? usuario.email ?? "Usuario";
-  const id = randomUUID(); sessoes.set(id, { apresentacao: { usuario: { nome, iniciais: nome.split(/\s+/).slice(0, 2).map((parte) => parte[0]).join("").toUpperCase() }, tenant: { nome: usuario.tenant_slug ?? usuario.tenant_id } }, accessToken: tokens.access_token, refreshToken: tokens.refresh_token, idToken: tokens.id_token, expiraEm: Date.now() + tokens.expires_in * 1000 });
+  const id = randomUUID(); await salvarSessao(id, { apresentacao: { usuario: { nome, iniciais: nome.split(/\s+/).slice(0, 2).map((parte) => parte[0]).join("").toUpperCase() }, tenant: { nome: usuario.tenant_slug ?? usuario.tenant_id } }, accessToken: tokens.access_token, refreshToken: tokens.refresh_token, idToken: tokens.id_token, expiraEm: Date.now() + tokens.expires_in * 1000 });
   return { id, retorno: transacao.retorno };
 }

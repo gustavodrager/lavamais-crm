@@ -25,4 +25,9 @@ public sealed class EnderecoDoCliente
     public string? Cidade { get; private set; }
     public string? Estado { get; private set; }
     public string? Cep { get; private set; }
+    internal void Atualizar(EnderecoDoCliente endereco)
+    {
+        Logradouro = endereco.Logradouro; Numero = endereco.Numero; Complemento = endereco.Complemento;
+        Bairro = endereco.Bairro; Cidade = endereco.Cidade; Estado = endereco.Estado; Cep = endereco.Cep;
+    }
 }

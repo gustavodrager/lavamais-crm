@@ -24,7 +24,7 @@
 
 ## Fatia 3 — Importacao CSV
 
-- upload temporario;
+- conteudo pendente persistido e isolado por tenant;
 - mapeamento e pre-visualizacao;
 - confirmacao e relatorio;
 - testes com arquivos validos e invalidos.

@@ -13,6 +13,7 @@ const esquema = z.object({ acaoId: z.string().uuid(), tipoCliente: z.string().tr
 });
 export type EntradaSimularPublico = z.input<typeof esquema>;
 export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
+export type ResultadoAlterarExclusao = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoPrepararAcao = { sucesso: false; mensagem: string };
 export type ResultadoEnviarMensagem = { sucesso: true } | { sucesso: false; mensagem: string };
 export type ResultadoRegistrarResultado = { sucesso: true } | { sucesso: false; mensagem: string };
@@ -26,10 +27,29 @@ export async function salvarESimularPublico(entrada: EntradaSimularPublico): Pro
   const dados = validacao.data;
   try {
     const porta = obterPortaCrmApi();
-    await porta.atualizarCriterios(dados.acaoId, { versaoSchema: 1, modo: "Filtros", tipoCliente: dados.tipoCliente || null, cidades: lista(dados.cidades), bairros: lista(dados.bairros), etiquetaIds: null, cadastradoApartirDe: dados.cadastradoApartirDe ? `${dados.cadastradoApartirDe}T00:00:00.000Z` : null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null });
+    await porta.atualizarCriterios(dados.acaoId, { versaoSchema: 2, modo: "Filtros", tipoCliente: dados.tipoCliente || null, cidades: lista(dados.cidades), bairros: lista(dados.bairros), etiquetaIds: null, cadastradoApartirDe: dados.cadastradoApartirDe ? `${dados.cadastradoApartirDe}T00:00:00.000Z` : null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null });
     return { sucesso: true, simulacao: await porta.simularPublico(dados.acaoId) };
   } catch (erro) {
     if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para alterar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e tente novamente." : erro.status === 422 ? erro.message : "Não foi possível simular o público agora. Tente novamente." };
+    throw erro;
+  }
+}
+
+export async function alterarExclusaoDoPublico(entrada: { acaoId: string; clienteId: string; excluir: boolean }): Promise<ResultadoAlterarExclusao> {
+  const validacao = z.object({ acaoId: z.string().uuid(), clienteId: z.string().uuid(), excluir: z.boolean() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "O cliente selecionado é inválido. Atualize a página." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
+  try {
+    const porta = obterPortaCrmApi();
+    const acao = await porta.obter(validacao.data.acaoId);
+    if (!acao || acao.situacao !== "Rascunho") return { sucesso: false, mensagem: "Somente rascunhos permitem alterar o público." };
+    const exclusoes = new Set(acao.criterios.clienteIdsExcluidos ?? []);
+    if (validacao.data.excluir) exclusoes.add(validacao.data.clienteId); else exclusoes.delete(validacao.data.clienteId);
+    await porta.atualizarCriterios(validacao.data.acaoId, { ...acao.criterios, versaoSchema: 2, clienteIdsExcluidos: exclusoes.size ? [...exclusoes] : null });
+    return { sucesso: true, simulacao: await porta.simularPublico(validacao.data.acaoId) };
+  } catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para alterar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível alterar o público agora." };
     throw erro;
   }
 }

@@ -10,6 +10,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
 namespace LavaMais.Crm.Testes.Integracao;
@@ -72,6 +73,28 @@ public sealed class ApiDaFundacaoTestes
 
         Assert.Contains(envio.Metadata.GetOrderedMetadata<IAuthorizeData>(), x => x.Policy == PoliticasDeAutorizacao.Gestor);
         Assert.DoesNotContain(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{id:guid}/iniciar");
+    }
+
+    [Fact]
+    public void Deve_aplicar_perfis_nas_configuracoes_comerciais()
+    {
+        using var fabrica = CriarFabrica();
+        var rotas = fabrica.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToArray();
+
+        AssertPolitica(HttpMethods.Post, "/api/v1/itens-de-catalogo/", PoliticasDeAutorizacao.Gestor);
+        AssertPolitica(HttpMethods.Put, "/api/v1/itens-de-catalogo/{id:guid}", PoliticasDeAutorizacao.Gestor);
+        AssertPolitica(HttpMethods.Post, "/api/v1/etiquetas/", PoliticasDeAutorizacao.Gestor);
+        AssertPolitica(HttpMethods.Post, "/api/v1/modelos-de-mensagem/", PoliticasDeAutorizacao.Administrador);
+        AssertPolitica(HttpMethods.Post, "/api/v1/modelos-de-mensagem/{id:guid}/publicar", PoliticasDeAutorizacao.Administrador);
+        return;
+
+        void AssertPolitica(string metodo, string rota, string politica)
+        {
+            var endpoint = Assert.Single(rotas, endpoint =>
+                endpoint.RoutePattern.RawText == rota
+                && endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Contains(metodo) == true);
+            Assert.Contains(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>(), autorizacao => autorizacao.Policy == politica);
+        }
     }
 
     [Theory]

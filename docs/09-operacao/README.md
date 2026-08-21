@@ -1,11 +1,11 @@
 # Operacao do Backend
 
-Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-007. A hospedagem dos componentes da aplicacao ainda sera definida.
+Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-008.
 
 ## Implantacao
 
 1. fornecer segredos por variaveis do ambiente, sem arquivos versionados;
-2. executar migrations como etapa unica e controlada antes de liberar a nova versao;
+2. executar migrations e o script `infraestrutura/postgresql/001-sessoes-web.sql` como etapa unica e controlada antes de liberar a nova versao;
 3. iniciar a API e validar `/saude/vivo` e `/saude/pronto`;
 4. iniciar uma unica instancia do Worker e confirmar processamento da outbox;
 5. executar uma acao de homologacao com destinatario autorizado e conferir idempotencia e reconciliacao.
@@ -15,6 +15,8 @@ Rollback de aplicacao deve reutilizar uma versao compatível com o schema já ap
 ### Conexao dos componentes no Railway
 
 Para a API e o Worker, criar em cada ambiente uma variavel de referencia `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Usar `ASPNETCORE_ENVIRONMENT=Homologacao` e `DOTNET_ENVIRONMENT=Homologacao` em homologacao; em producao, usar `Production` nos dois componentes.
+
+Para o BFF, criar `LAVAMAIS_SESSOES_DATABASE_URL=${{Postgres.DATABASE_URL}}` e uma chave aleatoria Base64 de 32 bytes em `LAVAMAIS_CHAVE_CRIPTOGRAFIA_SESSAO`. A chave nao pode ser compartilhada entre ambientes ou registrada em logs; sua rotacao encerra as sessoes existentes.
 
 O backend converte a URL do Railway para o formato do Npgsql. Nao copiar a URL resolvida, usuario ou senha para arquivos, comandos, logs ou documentacao. Nao criar `DATABASE_PUBLIC_URL`: a comunicacao deve permanecer na rede privada do projeto.
 
