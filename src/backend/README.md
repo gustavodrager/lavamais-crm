@@ -51,6 +51,12 @@ Quando os servicos da API e do Worker forem criados no Railway, cada um deve rec
 
 O Notification Hub usa `NotificationHub__BaseUrl`, `NotificationHub__ApiKey` e o `source` exclusivo `lavamais-crm`. A chave de API permanece vazia no repositorio. Ambientes compartilhados devem fornecer conexoes e credenciais por configuracao externa e nunca versionar segredos.
 
+### Homologacao incremental sem as centrais
+
+Enquanto a Central de Identidade e a Central de Notificacao nao estiverem disponiveis, somente o ambiente `Homologacao` pode usar uma identidade tecnica fixa. Configure `HomologacaoSemAutenticacao__Habilitado=true`, `HomologacaoSemAutenticacao__TenantId`, `HomologacaoSemAutenticacao__UsuarioId` e `HomologacaoSemAutenticacao__Papel`. A API recusa esse modo em qualquer outro ambiente. O tenant e o papel sao configuracao exclusiva do servidor e nunca sao aceitos do navegador.
+
+Nesta etapa `EnvioNotificacoes__Habilitado=false` e o Worker deve permanecer com zero replicas. A homologacao termina na preparacao e revisao da audiencia; o endpoint de envio responde `503` antes de alterar o destinatario ou gravar outbox.
+
 Cada confirmacao individual muda somente o destinatario escolhido para `AguardandoSolicitacao` e gera uma mensagem de outbox na mesma transacao. A primeira confirmacao muda a Acao Comercial para `EmProcessamento`; nao existe comando coletivo. O Worker processa uma intencao por vez, reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` em novas tentativas, recupera leases interrompidos e apenas consulta o estado tecnico no Notification Hub. Retentativas de provedor e webhooks permanecem sob responsabilidade do Hub.
 
 ## Build e testes

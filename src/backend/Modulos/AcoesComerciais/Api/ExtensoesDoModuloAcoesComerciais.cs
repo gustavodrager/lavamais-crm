@@ -12,13 +12,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Api;
 
 public static class ExtensoesDoModuloAcoesComerciais
 {
+    public sealed class OpcoesDeEnvioDeNotificacoes { public bool Habilitado { get; set; } }
+
     public static IServiceCollection AdicionarModuloAcoesComerciais(this IServiceCollection servicos, IConfiguration configuracao)
-    { servicos.AdicionarContextoDoModulo<ContextoDeAcoesComerciais>(configuracao, ContextoDeAcoesComerciais.Historico, ContextoDeAcoesComerciais.Schema); servicos.AddScoped<GerenciadorDeAcoesComerciais>(); servicos.AddScoped<IProjecaoDeEnvios>(p => p.GetRequiredService<GerenciadorDeAcoesComerciais>()); return servicos; }
+    { servicos.AdicionarContextoDoModulo<ContextoDeAcoesComerciais>(configuracao, ContextoDeAcoesComerciais.Historico, ContextoDeAcoesComerciais.Schema); servicos.Configure<OpcoesDeEnvioDeNotificacoes>(configuracao.GetSection("EnvioNotificacoes")); servicos.AddScoped<GerenciadorDeAcoesComerciais>(); servicos.AddScoped<IProjecaoDeEnvios>(p => p.GetRequiredService<GerenciadorDeAcoesComerciais>()); return servicos; }
 
     public static IEndpointRouteBuilder MapearModuloAcoesComerciais(this IEndpointRouteBuilder endpoints)
     {
@@ -29,8 +32,12 @@ public static class ExtensoesDoModuloAcoesComerciais
         grupo.MapPut("/{id:guid}", async (Guid id, DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); });
         grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct)));
         grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); });
-        grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/enviar", async (Guid acaoId, Guid destinatarioId, EnviarDestinatario dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
-            TypedResults.Accepted((string?)null, await g.EnviarDestinatario(acaoId, destinatarioId, dados.Versao, ct)));
+        grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/enviar", async (Guid acaoId, Guid destinatarioId, EnviarDestinatario dados, GerenciadorDeAcoesComerciais g, IOptions<OpcoesDeEnvioDeNotificacoes> envio, CancellationToken ct) =>
+        {
+            if (!envio.Value.Habilitado)
+                return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Envio de notificacoes indisponivel", detail: "A Central de Notificacao ainda nao esta habilitada neste ambiente.");
+            return Results.Accepted((string?)null, await g.EnviarDestinatario(acaoId, destinatarioId, dados.Versao, ct));
+        });
         grupo.MapGet("/{id:guid}/destinatarios", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.ListarDestinatarios(id, ct)).Select(DestinatarioResposta.Criar));
 
         endpoints.MapPut("/api/v1/acoes-comerciais/{id:guid}/destinatarios/{destinatarioId:guid}/resultado", async (Guid id, Guid destinatarioId, RegistrarResultado dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>

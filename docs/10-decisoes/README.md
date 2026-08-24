@@ -15,6 +15,7 @@ Esta pasta registra decisoes arquiteturais e de produto que orientam todas as co
 | [ADR-007](ADR-007-envio-individual-de-mensagens.md) | Conferencia e envio individual por destinatario |
 | [ADR-008](ADR-008-postgresql-inicial-no-railway.md) | PostgreSQL remoto isolado no Railway para homologacao e producao |
 | [ADR-009](ADR-009-sessoes-bff-no-postgresql.md) | Sessoes compartilhadas e criptografadas do BFF no PostgreSQL |
+| [ADR-010](ADR-010-homologacao-incremental-sem-centrais.md) | Homologacao do nucleo sem dependencia temporaria das centrais |
 
 ## Regra
 

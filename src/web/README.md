@@ -36,6 +36,12 @@ LAVAMAIS_CRM_API_URL=http://127.0.0.1:5000 npm run dev:sem-autenticacao
 
 Esse modo existe apenas fora de produção, não implementa login local e não recebe `tenantId`. Se a CRM API real exigir bearer token, ele pode ser informado somente no servidor por `LAVAMAIS_ACCESS_TOKEN_DESENVOLVIMENTO`. A aplicação recusa a flag `LAVAMAIS_DESABILITAR_AUTENTICACAO=1` quando `NODE_ENV=production`.
 
+### Homologacao incremental sem as centrais
+
+Para validar o nucleo do CRM antes da Central de Identidade, configure `LAVAMAIS_AMBIENTE=Homologacao` e `LAVAMAIS_HOMOLOGACAO_SEM_AUTENTICACAO=1`. O BFF usa uma sessao tecnica fixa e envia apenas um marcador server-side para a API. Esse modo e recusado fora de homologacao.
+
+Mantenha `LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO=0` enquanto a Central de Notificacao nao estiver integrada. A interface permite preparar e revisar a audiencia, mas nao apresenta a confirmacao de envio.
+
 ## Executar e verificar
 
 ```bash

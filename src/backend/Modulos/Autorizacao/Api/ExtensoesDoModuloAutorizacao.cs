@@ -23,14 +23,22 @@ public static class ExtensoesDoModuloAutorizacao
         servicos.AddSingleton(TimeProvider.System);
         servicos.AddScoped<GerenciadorDeUsuariosCrm>();
         servicos.AddScoped<IAuthorizationHandler, TratadorDePapelDoCrm>();
+        var homologacaoSemAutenticacao = configuracao.GetValue<bool>("HomologacaoSemAutenticacao:Habilitado");
         servicos.AddAuthorization(opcoes =>
         {
-            opcoes.AddPolicy(PoliticasDeAutorizacao.UsuarioAtivo, politica =>
-                politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(null)));
-            opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica =>
-                politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador)));
-            opcoes.AddPolicy(PoliticasDeAutorizacao.Gestor, politica =>
-                politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador, PapelDoCrm.Gerente)));
+            if (homologacaoSemAutenticacao)
+            {
+                opcoes.AddPolicy(PoliticasDeAutorizacao.UsuarioAtivo, politica => politica.RequireAuthenticatedUser());
+                opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica =>
+                    politica.RequireAuthenticatedUser().RequireClaim("papel_crm", "Administrador"));
+                opcoes.AddPolicy(PoliticasDeAutorizacao.Gestor, politica =>
+                    politica.RequireAuthenticatedUser().RequireClaim("papel_crm", "Administrador", "Gerente"));
+                return;
+            }
+
+            opcoes.AddPolicy(PoliticasDeAutorizacao.UsuarioAtivo, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(null)));
+            opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador)));
+            opcoes.AddPolicy(PoliticasDeAutorizacao.Gestor, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador, PapelDoCrm.Gerente)));
         });
         return servicos;
     }
