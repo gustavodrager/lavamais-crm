@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { OpcaoModeloDeMensagem } from "@/contratos/apresentacao";
+import { modelosPadraoLavaMais, type ModeloPadraoLavaMais } from "@/conteudo/modelos-padrao-lavamais";
 import { criarEtiqueta, criarModelo, criarServico, type ResultadoConfiguracao } from "./acoes";
 
 type Item = { id: string; nome: string; categoria: string | null; valorReferencia: number | null; codigoExterno: string | null };
@@ -32,8 +33,17 @@ function FormularioEtiqueta({ etiquetas }: { etiquetas: Etiqueta[] }) {
 
 function FormularioModelo({ modelos }: { modelos: OpcaoModeloDeMensagem[] }) {
   const referencia = useRef<HTMLFormElement>(null); const [mensagem, setMensagem] = useState<string | null>(null); const [pendente, iniciar] = useTransition();
+  function usarModelo(modelo: ModeloPadraoLavaMais) {
+    const formulario = referencia.current;
+    if (!formulario) return;
+    const nome = formulario.elements.namedItem("nome");
+    const conteudo = formulario.elements.namedItem("conteudoPreVisualizacao");
+    if (nome instanceof HTMLInputElement) nome.value = modelo.nome;
+    if (conteudo instanceof HTMLTextAreaElement) conteudo.value = modelo.conteudoPreVisualizacao;
+    if (nome instanceof HTMLInputElement) nome.focus();
+  }
   function enviar(dados: FormData) { iniciar(async () => concluir(await criarModelo({ nome: String(dados.get("nome") ?? ""), conteudoPreVisualizacao: String(dados.get("conteudoPreVisualizacao") ?? ""), chaveTemplateNotificacao: String(dados.get("chaveTemplateNotificacao") ?? "") }), referencia.current, setMensagem)); }
-  return <Card><CardHeader><CardTitle>Modelos de mensagem</CardTitle><CardDescription>Templates aprovados no Notification Hub.</CardDescription></CardHeader><CardContent className="space-y-5"><form ref={referencia} action={enviar} className="space-y-3"><Campo id="modelo-nome" rotulo="Nome"><Input id="modelo-nome" name="nome" required /></Campo><Campo id="modelo-template" rotulo="Chave do template"><Input id="modelo-template" name="chaveTemplateNotificacao" required /></Campo><Campo id="modelo-conteudo" rotulo="Pré-visualização"><Textarea id="modelo-conteudo" name="conteudoPreVisualizacao" placeholder="Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}." required /></Campo><Mensagem mensagem={mensagem} /><Button type="submit" disabled={pendente}>{pendente ? "Publicando..." : "Criar e publicar"}</Button></form><ListaVaziaOuItens vazio="Nenhum modelo publicado." itens={modelos.map((item) => <li key={item.versaoId}><span>{item.nome}</span><Badge variant="secondary" className="ml-2">v{item.numeroVersao}</Badge></li>)} /></CardContent></Card>;
+  return <Card><CardHeader><CardTitle>Modelos de mensagem</CardTitle><CardDescription>Mensagens comerciais da LavaMais vinculadas a templates aprovados na Central de Notificação.</CardDescription></CardHeader><CardContent className="space-y-5"><section aria-labelledby="titulo-modelos-padrao" className="space-y-3"><div><h3 id="titulo-modelos-padrao" className="font-medium">Sugestões LavaMais</h3><p className="text-xs text-muted-foreground">Escolha uma mensagem para preencher o formulário.</p></div><div className="grid gap-2">{modelosPadraoLavaMais.map((modelo) => <button key={modelo.id} type="button" onClick={() => usarModelo(modelo)} className="min-h-11 rounded-lg border bg-card px-3 py-2 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><span className="block text-sm font-medium">{modelo.nome}</span><span className="block text-xs text-muted-foreground">{modelo.objetivo}</span></button>)}</div></section><form ref={referencia} action={enviar} className="space-y-3 border-t pt-5"><Campo id="modelo-nome" rotulo="Nome"><Input id="modelo-nome" name="nome" required /></Campo><Campo id="modelo-template" rotulo="Chave aprovada na Central de Notificação"><Input id="modelo-template" name="chaveTemplateNotificacao" required /></Campo><Campo id="modelo-conteudo" rotulo="Pré-visualização"><Textarea id="modelo-conteudo" name="conteudoPreVisualizacao" placeholder="Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}." required /></Campo><p className="text-xs text-muted-foreground">A mensagem só deve ser publicada depois que a chave correspondente estiver disponível na Central de Notificação.</p><Mensagem mensagem={mensagem} /><Button type="submit" disabled={pendente}>{pendente ? "Publicando..." : "Criar e publicar"}</Button></form><ListaVaziaOuItens vazio="Nenhum modelo publicado." itens={modelos.map((item) => <li key={item.versaoId}><span>{item.nome}</span><Badge variant="secondary" className="ml-2">v{item.numeroVersao}</Badge></li>)} /></CardContent></Card>;
 }
 
 function concluir(resultado: ResultadoConfiguracao, formulario: HTMLFormElement | null, definirMensagem: (mensagem: string | null) => void) { if (resultado.sucesso) { formulario?.reset(); definirMensagem(null); } else definirMensagem(resultado.mensagem); }
