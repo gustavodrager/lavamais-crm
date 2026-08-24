@@ -9,18 +9,15 @@ A listagem e o detalhe de Ações Comerciais são renderizados no servidor e sem
 ```text
 LAVAMAIS_CRM_API_URL=https://crm-api.exemplo
 LAVAMAIS_URL_APLICACAO=https://crm.exemplo
-LAVAMAIS_OIDC_AUTORIDADE=https://identity.exemplo
-LAVAMAIS_OIDC_CLIENT_ID=lavamais-crm-web
-LAVAMAIS_OIDC_CLIENT_SECRET=<segredo do ambiente compartilhado>
 ```
 
-O callback a registrar é `/api/autenticacao/callback`. O BFF usa descoberta OIDC, Authorization Code com PKCE S256, `state`, `nonce`, cookie opaco `HttpOnly`, `Secure`, `SameSite=Lax` e refresh serializado por sessão. O `tenant_id` nunca é recebido do navegador: a CRM API o deriva exclusivamente do access token.
+O login usa telefone e senha pela CRM API. O BFF persiste o token opaco somente na sessao server-side e entrega ao navegador um cookie `HttpOnly`, `Secure` e `SameSite=Lax`. O `tenant_id` nunca é recebido do navegador.
 
-Em desenvolvimento, o repositorio de sessoes usa memoria. Homologacao e producao usam o schema tecnico `web` do PostgreSQL, com tokens criptografados por AES-256-GCM e renovacao serializada entre instancias. Configure `LAVAMAIS_SESSOES_DATABASE_URL` e uma chave Base64 de 32 bytes em `LAVAMAIS_CHAVE_CRIPTOGRAFIA_SESSAO`, depois aplique o script `infraestrutura/postgresql/001-sessoes-web.sql` como etapa controlada. O Identity Hub tambem precisa registrar o cliente `lavamais-crm-web` e emitir a audiencia `lavamais-crm-api`.
+Em desenvolvimento, o repositorio de sessoes usa memoria. Homologacao e producao usam o schema tecnico `web` do PostgreSQL, com tokens criptografados por AES-256-GCM. Configure `LAVAMAIS_SESSOES_DATABASE_URL` e uma chave Base64 de 32 bytes em `LAVAMAIS_CHAVE_CRIPTOGRAFIA_SESSAO`, depois aplique o script `infraestrutura/postgresql/001-sessoes-web.sql`.
 
 ## Fluxos integrados
 
-- autenticação OIDC com PKCE e sessão server-side;
+- autenticação local por telefone e sessão server-side;
 - listagem e detalhe de Ações Comerciais;
 - criação de rascunho com item ativo do catálogo;
 - validação no navegador e novamente na Server Action;
@@ -36,11 +33,7 @@ LAVAMAIS_CRM_API_URL=http://127.0.0.1:5000 npm run dev:sem-autenticacao
 
 Esse modo existe apenas fora de produção, não implementa login local e não recebe `tenantId`. Se a CRM API real exigir bearer token, ele pode ser informado somente no servidor por `LAVAMAIS_ACCESS_TOKEN_DESENVOLVIMENTO`. A aplicação recusa a flag `LAVAMAIS_DESABILITAR_AUTENTICACAO=1` quando `NODE_ENV=production`.
 
-### Homologacao incremental sem as centrais
-
-Para validar o nucleo do CRM antes da Central de Identidade, configure `LAVAMAIS_AMBIENTE=Homologacao` e `LAVAMAIS_HOMOLOGACAO_SEM_AUTENTICACAO=1`. O BFF usa uma sessao tecnica fixa e envia apenas um marcador server-side para a API. Esse modo e recusado fora de homologacao.
-
-Mantenha `LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO=0` enquanto a Central de Notificacao nao estiver integrada. A interface permite preparar e revisar a audiencia, mas nao apresenta a confirmacao de envio.
+Mantenha `LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO=0` enquanto a Central de Notificacao nao estiver integrada.
 
 ## Executar e verificar
 

@@ -48,8 +48,7 @@ export async function obterAccessToken() {
 export const sessaoOidc: PortaSessao = {
   async obterSessao() {
     if (autenticacaoEstaDesabilitada()) {
-      const homologacao = process.env.LAVAMAIS_HOMOLOGACAO_SEM_AUTENTICACAO === "1";
-      return { usuario: { nome: homologacao ? "Equipe LavaMais" : "Ambiente local", iniciais: homologacao ? "LM" : "AL" }, tenant: { nome: homologacao ? "LavaMais Homologacao" : "Tenant derivado pela CRM API" }, papel: homologacao ? "Administrador" : "Gerente", autenticacaoDesabilitada: true };
+      return { usuario: { nome: "Ambiente local", iniciais: "AL" }, tenant: { nome: "Tenant derivado pela CRM API" }, papel: "Gerente", autenticacaoDesabilitada: true };
     }
     return (await obterRegistro())?.sessao?.apresentacao ?? null;
   },

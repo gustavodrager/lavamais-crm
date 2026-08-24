@@ -18,6 +18,7 @@ catalogo
 comunicacao
 acoes_comerciais
 importacoes
+identidade
 autorizacao
 auditoria
 integracoes
@@ -142,6 +143,11 @@ Restricao unica: `tenant_id + acao_comercial_id + cliente_id`.
 - `autorizacao.usuarios_crm` vincula `sub + tenant_id` ao papel local;
 - `auditoria.registros_de_auditoria` guarda a trilha segura;
 - `integracoes.mensagens_da_outbox` persiste efeitos externos e controle de processamento.
+
+## Identidade
+
+- `identidade.usuarios` guarda telefone normalizado, senha protegida, tenant, nome, papel e situacao;
+- `identidade.sessoes` guarda apenas o hash do token opaco, expiracao e eventual revogacao.
 
 ## Dados futuros
 

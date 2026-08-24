@@ -12,7 +12,7 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF 
 
 Em 20 de agosto de 2026, a homologacao foi publicada no Railway com componentes separados. A API responde em `https://lavamais-crm-api-homologacao.up.railway.app` e o BFF em `https://lavamais-crm-web-homologacao.up.railway.app`. O migrador concluiu e encerrou com sucesso. O Worker foi validado contra o banco e mantido com zero replicas ate existir um Notification Hub compativel e credenciado.
 
-O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige primeiro login OIDC funcional, contrato seguro do Notification Hub e ensaio de restauracao.
+O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige login local validado, contrato seguro da Central de Notificacao e ensaio de restauracao.
 
 Rollback de aplicacao deve reutilizar uma versao compatível com o schema já aplicado. Migrations destrutivas exigem plano específico e backup validado; não se executa `database update` automaticamente no startup.
 

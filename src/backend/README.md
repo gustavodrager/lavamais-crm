@@ -51,9 +51,9 @@ Quando os servicos da API e do Worker forem criados no Railway, cada um deve rec
 
 O Notification Hub usa `NotificationHub__BaseUrl`, `NotificationHub__ApiKey` e o `source` exclusivo `lavamais-crm`. A chave de API permanece vazia no repositorio. Ambientes compartilhados devem fornecer conexoes e credenciais por configuracao externa e nunca versionar segredos.
 
-### Homologacao incremental sem as centrais
+### Identidade local
 
-Enquanto a Central de Identidade e a Central de Notificacao nao estiverem disponiveis, somente o ambiente `Homologacao` pode usar uma identidade tecnica fixa. Configure `HomologacaoSemAutenticacao__Habilitado=true`, `HomologacaoSemAutenticacao__TenantId`, `HomologacaoSemAutenticacao__UsuarioId` e `HomologacaoSemAutenticacao__Papel`. A API recusa esse modo em qualquer outro ambiente. O tenant e o papel sao configuracao exclusiva do servidor e nunca sao aceitos do navegador.
+Configure `IdentidadeLocal__TelefonePermitido`, `IdentidadeLocal__TenantId`, `IdentidadeLocal__NomeTenant` e `IdentidadeLocal__NomeUsuario`. O primeiro acesso define a senha do unico telefone autorizado. A senha protegida e os hashes das sessoes ficam no schema `identidade`; tokens em claro permanecem apenas no BFF.
 
 Nesta etapa `EnvioNotificacoes__Habilitado=false` e o Worker deve permanecer com zero replicas. A homologacao termina na preparacao e revisao da audiencia; o endpoint de envio responde `503` antes de alterar o destinatario ou gravar outbox.
 
@@ -77,12 +77,6 @@ Cada modulo possui seu proprio `DbContext`, schema e historico de migrations. O 
 
 As fabricas de design dos modulos tambem reconhecem `DATABASE_URL`. Assim, a etapa controlada de migrations pode usar a mesma referencia privada do Railway sem converter ou copiar a senha manualmente.
 
-## Provisionar o primeiro administrador
+## Primeiro administrador
 
-O primeiro administrador de cada tenant e criado somente por operacao controlada, usando os identificadores emitidos pelo Identity Hub:
-
-```bash
-dotnet run --project src/backend/LavaMais.Crm.Worker -- provisionar-administrador <tenant-id> <sub>
-```
-
-O comando aplica as migrations pendentes do modulo `Autorizacao` e recusa duplicidade de `tenant_id + sub`. Nao existe autoatribuicao de papel no primeiro login.
+O primeiro administrador e ativado pela tela de primeiro acesso usando o telefone permitido na configuracao. Depois que a senha e definida, o endpoint recusa nova ativacao.

@@ -37,7 +37,7 @@ Essas capacidades pertencem ao projeto futuro LavaMais Operacao e Producao.
 - ASP.NET Core com .NET 10 na API;
 - Worker em .NET 10;
 - PostgreSQL e Entity Framework Core;
-- Identity Hub para autenticacao e contexto de tenant;
+- identidade local por telefone, senha e sessao opaca;
 - Notification Hub para WhatsApp e futuros canais;
 - xUnit, Testcontainers, Vitest e Playwright;
 - Docker e CI/CD.

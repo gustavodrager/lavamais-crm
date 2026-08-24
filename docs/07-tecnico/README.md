@@ -7,8 +7,8 @@ O LavaMais CRM sera desenvolvido em um monorepo com tres aplicacoes implantaveis
 ```mermaid
 flowchart LR
     U["Usuario"] --> W["Web Next.js e BFF"]
-    W --> I["Identity Hub"]
     W --> A["CRM API .NET 10"]
+    A --> I["Modulo Identidade"]
     A --> D[("PostgreSQL do CRM")]
     A --> O["Outbox"]
     K["CRM Worker"] --> O
@@ -30,7 +30,7 @@ flowchart LR
 - ASP.NET Core com .NET 10;
 - monolito modular;
 - OpenAPI versionada em `/api/v1`;
-- validacao do token emitido pelo Identity Hub;
+- validacao da sessao opaca emitida pelo modulo Identidade;
 - regras de dominio e persistencia do CRM.
 
 ### Worker
@@ -55,7 +55,7 @@ flowchart LR
 - [Multitenancy e seguranca](arquitetura/03-multitenancy-e-seguranca.md)
 - [Modelo de dados](banco-dados/README.md)
 - [Superficie da API](apis/README.md)
-- [Identity Hub](integracoes/identity-hub.md)
+- [Identidade local](../../10-decisoes/ADR-011-identidade-local-do-crm.md)
 - [Notification Hub](integracoes/notification-hub.md)
 - [Hybex e Essence GO Industrial](integracoes/hybex-essence-go.md)
 

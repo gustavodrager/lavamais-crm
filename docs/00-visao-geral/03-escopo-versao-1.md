@@ -8,7 +8,7 @@ Validar que a LavaMais consegue selecionar um publico relevante da base de clien
 
 ### Acesso
 
-- login pelo Identity Hub;
+- login local pelo telefone autorizado e senha definida no primeiro acesso;
 - selecao e validacao do tenant;
 - papeis locais `Administrador`, `Gerente` e `Operador`;
 - auditoria das operacoes importantes.

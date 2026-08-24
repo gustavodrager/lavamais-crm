@@ -1,5 +1,7 @@
 # Integracao com Identity Hub
 
+> Historico: este contrato foi substituido pela identidade local definida na ADR-011 e nao representa a implementacao vigente.
+
 Verificado em: 2026-08-15.
 
 ## Papel do servico

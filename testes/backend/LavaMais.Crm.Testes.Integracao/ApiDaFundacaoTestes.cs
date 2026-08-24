@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -125,38 +123,6 @@ public sealed class ApiDaFundacaoTestes
         using var resposta = await cliente.GetAsync("/api/v1/usuarios-crm", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, resposta.StatusCode);
-    }
-
-    [Fact]
-    public async Task Deve_criar_identidade_tecnica_somente_na_homologacao_configurada()
-    {
-        var tenantId = Guid.NewGuid();
-        await using var fabrica = new WebApplicationFactory<Program>().WithWebHostBuilder(construtor =>
-        {
-            construtor.UseEnvironment("Homologacao");
-            construtor.UseSetting("ConnectionStrings:Crm", "Host=localhost;Port=1;Database=teste;Username=teste;Password=teste;Timeout=1");
-            construtor.UseSetting("HomologacaoSemAutenticacao:Habilitado", "true");
-            construtor.UseSetting("HomologacaoSemAutenticacao:TenantId", tenantId.ToString());
-            construtor.UseSetting("HomologacaoSemAutenticacao:UsuarioId", "equipe-homologacao");
-            construtor.UseSetting("HomologacaoSemAutenticacao:Papel", "Administrador");
-        });
-        using var escopo = fabrica.Services.CreateScope();
-        var autenticacao = escopo.ServiceProvider.GetRequiredService<IAuthenticationService>();
-        var contexto = new DefaultHttpContext { RequestServices = escopo.ServiceProvider };
-
-        var resultado = await autenticacao.AuthenticateAsync(contexto, null);
-
-        Assert.True(resultado.Succeeded);
-        Assert.Equal("equipe-homologacao", resultado.Principal!.FindFirst("sub")?.Value);
-        Assert.Equal(tenantId.ToString(), resultado.Principal.FindFirst("tenant_id")?.Value);
-        Assert.Equal("Administrador", resultado.Principal.FindFirst("papel_crm")?.Value);
-
-        using var cliente = fabrica.CreateClient();
-        using var resposta = await cliente.PostAsJsonAsync(
-            $"/api/v1/acoes-comerciais/{Guid.NewGuid()}/destinatarios/{Guid.NewGuid()}/enviar",
-            new { versao = 1 },
-            TestContext.Current.CancellationToken);
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, resposta.StatusCode);
     }
 
     private static WebApplicationFactory<Program> CriarFabrica() =>

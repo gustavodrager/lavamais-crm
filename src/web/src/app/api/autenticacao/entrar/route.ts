@@ -1,12 +1,19 @@
+import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { iniciarOidc } from "@/infraestrutura/oidc";
+import { z } from "zod";
+import { salvarSessao } from "@/infraestrutura/repositorio-sessoes";
+import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-oidc";
 import { criarUrlDaAplicacao } from "@/infraestrutura/url-aplicacao";
 
-export async function GET(requisicao: NextRequest) {
+const esquema = z.object({ token: z.string().min(1), expiraEm: z.string(), nome: z.string(), nomeTenant: z.string(), papel: z.enum(["Administrador", "Gerente", "Operador"]) });
+export async function POST(requisicao: NextRequest) {
+  const dados = await requisicao.formData(); const telefone = String(dados.get("telefone") ?? ""); const senha = String(dados.get("senha") ?? ""); const primeiro = dados.get("primeiroAcesso") === "1"; const urlApi = process.env.LAVAMAIS_CRM_API_URL;
+  if (!urlApi) return NextResponse.redirect(criarUrlDaAplicacao("/entrar?erro=configuracao", requisicao.url), 303);
   try {
-    const { url, identificador } = await iniciarOidc(requisicao.nextUrl.searchParams.get("retorno") ?? "/acoes-comerciais");
-    const resposta = NextResponse.redirect(url);
-    resposta.cookies.set("__Host-lavamais-oidc", identificador, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
-    return resposta;
-  } catch { return NextResponse.redirect(criarUrlDaAplicacao("/entrar?erro=configuracao", requisicao.url)); }
+    const resposta = await fetch(new URL(`/api/v1/autenticacao/${primeiro ? "primeiro-acesso" : "entrar"}`, urlApi), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefone, senha }), cache: "no-store" });
+    if (!resposta.ok) return NextResponse.redirect(criarUrlDaAplicacao("/entrar?erro=credenciais", requisicao.url), 303);
+    const sessao = esquema.parse(await resposta.json()); const id = randomUUID(); const iniciais = sessao.nome.split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+    await salvarSessao(id, { apresentacao: { usuario: { nome: sessao.nome, iniciais }, tenant: { nome: sessao.nomeTenant }, papel: sessao.papel }, accessToken: sessao.token, expiraEm: new Date(sessao.expiraEm).getTime() });
+    const destino = NextResponse.redirect(criarUrlDaAplicacao("/acoes-comerciais", requisicao.url), 303); destino.cookies.set(NOME_COOKIE_SESSAO, id, { httpOnly: true, secure: true, sameSite: "lax", path: "/" }); return destino;
+  } catch { return NextResponse.redirect(criarUrlDaAplicacao("/entrar?erro=indisponivel", requisicao.url), 303); }
 }

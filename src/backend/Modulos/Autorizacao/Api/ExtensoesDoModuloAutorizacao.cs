@@ -23,10 +23,10 @@ public static class ExtensoesDoModuloAutorizacao
         servicos.AddSingleton(TimeProvider.System);
         servicos.AddScoped<GerenciadorDeUsuariosCrm>();
         servicos.AddScoped<IAuthorizationHandler, TratadorDePapelDoCrm>();
-        var homologacaoSemAutenticacao = configuracao.GetValue<bool>("HomologacaoSemAutenticacao:Habilitado");
+        var identidadeLocal = configuracao.GetValue("IdentidadeLocal:Habilitada", true);
         servicos.AddAuthorization(opcoes =>
         {
-            if (homologacaoSemAutenticacao)
+            if (identidadeLocal)
             {
                 opcoes.AddPolicy(PoliticasDeAutorizacao.UsuarioAtivo, politica => politica.RequireAuthenticatedUser());
                 opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica =>
