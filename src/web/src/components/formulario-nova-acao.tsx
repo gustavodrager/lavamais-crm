@@ -22,7 +22,7 @@ import type { OpcaoItemDeCatalogo } from "@/contratos/apresentacao";
 const esquema = z.object({
   nome: z.string().trim().min(3, "Informe um nome com pelo menos 3 caracteres."),
   objetivo: z.string().trim().min(10, "Descreva o objetivo em pelo menos 10 caracteres."),
-  itemDeCatalogoId: z.string().uuid("Selecione um item do catálogo."),
+  itemDeCatalogoId: z.string().uuid().nullable(),
 });
 
 type DadosFormulario = z.infer<typeof esquema>;
@@ -44,7 +44,7 @@ export function FormularioNovaAcao({
     formState: { errors, isSubmitting },
   } = useForm<DadosFormulario>({
     resolver: zodResolver(esquema),
-    defaultValues: { nome: "", objetivo: "", itemDeCatalogoId: "" },
+    defaultValues: { nome: "", objetivo: "", itemDeCatalogoId: null },
   });
 
   const enviar = async (dados: DadosFormulario) => {
@@ -80,16 +80,17 @@ export function FormularioNovaAcao({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="itemDeCatalogoId">Item do catálogo</Label>
+        <Label htmlFor="itemDeCatalogoId">Item do catálogo <span className="font-normal text-muted-foreground">(opcional)</span></Label>
         <Controller
           name="itemDeCatalogoId"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select value={field.value ?? "sem-item"} onValueChange={(valor) => field.onChange(valor === "sem-item" ? null : valor)}>
               <SelectTrigger id="itemDeCatalogoId" aria-invalid={Boolean(errors.itemDeCatalogoId)} aria-describedby={errors.itemDeCatalogoId ? "erro-item-catalogo" : undefined}>
                 <SelectValue placeholder="Selecione um produto ou serviço" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="sem-item">Sem item de catálogo</SelectItem>
                 {itensCatalogo.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
                     {item.nome}{item.categoria ? ` · ${item.categoria}` : ""}
@@ -99,6 +100,7 @@ export function FormularioNovaAcao({
             </Select>
           )}
         />
+        <p className="text-xs text-muted-foreground">Escolha um item somente quando ele fizer parte da comunicação.</p>
         {errors.itemDeCatalogoId ? <p id="erro-item-catalogo" role="alert" className="text-sm text-destructive">{errors.itemDeCatalogoId.message}</p> : null}
       </div>
 

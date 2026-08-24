@@ -9,7 +9,7 @@ import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
 const esquema = z.object({
   nome: z.string().trim().min(3).max(160),
   objetivo: z.string().trim().min(10).max(500),
-  itemDeCatalogoId: z.string().uuid(),
+  itemDeCatalogoId: z.string().uuid().nullable(),
 });
 
 export type EntradaCriarRascunho = z.input<typeof esquema>;

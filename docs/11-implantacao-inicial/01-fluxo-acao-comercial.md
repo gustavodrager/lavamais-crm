@@ -5,7 +5,7 @@
 - usuario autenticado no tenant correto;
 - usuario com papel `Administrador` ou `Gerente`;
 - clientes ativos com WhatsApp e permissao de comunicacao;
-- item de catalogo ativo;
+- item de catalogo ativo, quando informado ou exigido pelo modelo;
 - versao publicada de modelo vinculada a template tecnico existente.
 
 ## 1. Criar rascunho

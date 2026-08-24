@@ -64,7 +64,7 @@ public static class ExtensoesDoModuloAcoesComerciais
         }
     }
 
-    public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao, uint Versao)
+    public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid? ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao, uint Versao)
     {
         private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
         public static Resposta Criar(AcaoComercial acao) => new(acao.Id, acao.Nome, acao.Objetivo, acao.ItemDeCatalogoId, acao.VersaoModeloId,

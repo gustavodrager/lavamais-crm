@@ -21,7 +21,7 @@ const esquemaCriterios = z.object({
 });
 const esquemaAcaoApi = z.object({
   id: z.string().uuid(), nome: z.string(), objetivo: z.string().nullable(),
-  itemDeCatalogoId: z.string().uuid(), versaoModeloId: z.string().uuid().nullable(),
+  itemDeCatalogoId: z.string().uuid().nullable(), versaoModeloId: z.string().uuid().nullable(),
   criterios: esquemaCriterios, situacao: esquemaSituacao,
   dataAtualizacao: z.string().datetime({ offset: true }),
   versao: z.number().int().nonnegative(),

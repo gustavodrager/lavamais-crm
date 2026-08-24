@@ -51,7 +51,7 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("data_preparacao");
 
-                    b.Property<Guid>("ItemDeCatalogoId")
+                    b.Property<Guid?>("ItemDeCatalogoId")
                         .HasColumnType("uuid")
                         .HasColumnName("item_de_catalogo_id");
 

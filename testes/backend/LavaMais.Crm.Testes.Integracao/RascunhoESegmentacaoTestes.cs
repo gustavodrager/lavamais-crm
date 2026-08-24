@@ -56,7 +56,7 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         var gerenciadorAcoes = new GerenciadorDeAcoesComerciais(bancoAcoes, new ConsultaDeCatalogo(bancoCatalogo), new ConsultaDeModelos(bancoModelos), simulador, new RegistradorDeAuditoria(bancoAuditoria, contexto), new PublicadorDeOutbox(bancoIntegracoes), contexto, TimeProvider.System);
         var criterios = new CriteriosDeSegmentacao(1, ModoDeSelecao.Filtros, "Residencial", ["Praia Grande"], null, null, null, null, null, null);
 
-        var acao = await gerenciadorAcoes.Criar(new("Acao de inverno", "Ofertar lavagem", item.Id, versao.Id, criterios), ct);
+        var acao = await gerenciadorAcoes.Criar(new("Acao de inverno", "Ofertar lavagem", null, versao.Id, criterios), ct);
         var resultado = await gerenciadorAcoes.Simular(acao.Id, 1, 10, ct);
 
         Assert.Equal(4, resultado.QuantidadeEncontrada); Assert.Equal(2, resultado.QuantidadeElegivel);
@@ -66,10 +66,12 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         await gerenciadorAcoes.Preparar(acao.Id, acao.Versao, ct);
         var preparada = await bancoAcoes.Acoes.AsNoTracking().Include(x => x.Destinatarios).SingleAsync(x => x.Id == acao.Id, ct);
         Assert.Equal(LavaMais.Crm.Modulos.AcoesComerciais.Dominio.SituacaoDaAcaoComercial.Preparada, preparada.Situacao);
+        Assert.Null(preparada.ItemDeCatalogoId);
+        Assert.Null(preparada.NomeItemSnapshot);
         Assert.Equal(2, preparada.Destinatarios.Count); Assert.All(preparada.Destinatarios, d => Assert.Contains(d.NomeClienteSnapshot, d.ConteudoPreVisualizacaoSnapshot));
         await using var verificacaoAuditoria = new ContextoDeAuditoria(opcoesAuditoria, contexto);
         Assert.Single(await verificacaoAuditoria.Registros.AsNoTracking().Where(x => x.RecursoId == acao.Id).ToListAsync(ct));
-        await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorAcoes.Atualizar(acao.Id, new("Alterada", null, item.Id, versao.Id, criterios), ct));
+        await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorAcoes.Atualizar(acao.Id, new("Alterada", null, null, versao.Id, criterios), ct));
         var primeiro = preparada.Destinatarios.OrderBy(x => x.NomeClienteSnapshot).First();
         var segundo = preparada.Destinatarios.OrderBy(x => x.NomeClienteSnapshot).Last();
         await using var bancoAcoesConcorrente = new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Schema, ContextoDeAcoesComerciais.Historico), contexto);

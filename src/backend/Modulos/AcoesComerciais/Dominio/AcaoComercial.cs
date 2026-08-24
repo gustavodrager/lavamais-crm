@@ -16,7 +16,7 @@ public sealed class AcaoComercial
     public Guid TenantId { get; private set; }
     public string Nome { get; private set; } = string.Empty;
     public string? Objetivo { get; private set; }
-    public Guid ItemDeCatalogoId { get; private set; }
+    public Guid? ItemDeCatalogoId { get; private set; }
     public string? NomeItemSnapshot { get; private set; }
     public Guid? VersaoModeloId { get; private set; }
     public string CriteriosSegmentacaoJson { get; private set; } = string.Empty;
@@ -30,22 +30,22 @@ public sealed class AcaoComercial
     public uint Versao { get; private set; }
     public ICollection<DestinatarioDaAcao> Destinatarios { get; private set; } = new List<DestinatarioDaAcao>();
 
-    public static AcaoComercial Criar(Guid tenantId, string usuarioId, string nome, string? objetivo, Guid itemId, Guid? versaoModeloId, string criteriosJson, DateTimeOffset agora)
+    public static AcaoComercial Criar(Guid tenantId, string usuarioId, string nome, string? objetivo, Guid? itemId, Guid? versaoModeloId, string criteriosJson, DateTimeOffset agora)
     {
         if (tenantId == Guid.Empty) throw new ExcecaoDeRegraDeNegocio("tenant_invalido", "O tenant e obrigatorio.");
         var acao = new AcaoComercial(tenantId, usuarioId, agora); acao.Atualizar(nome, objetivo, itemId, versaoModeloId, criteriosJson, agora); return acao;
     }
 
-    public void Atualizar(string nome, string? objetivo, Guid itemId, Guid? versaoModeloId, string criteriosJson, DateTimeOffset agora)
+    public void Atualizar(string nome, string? objetivo, Guid? itemId, Guid? versaoModeloId, string criteriosJson, DateTimeOffset agora)
     {
         if (Situacao != SituacaoDaAcaoComercial.Rascunho) throw new ExcecaoDeConflito("acao_nao_editavel", "Somente uma acao em rascunho pode ser alterada.");
         if (string.IsNullOrWhiteSpace(nome) || nome.Trim().Length > 160) throw new ExcecaoDeRegraDeNegocio("nome_invalido", "O nome e obrigatorio e deve possuir ate 160 caracteres.");
-        if (itemId == Guid.Empty) throw new ExcecaoDeRegraDeNegocio("item_obrigatorio", "O item de catalogo e obrigatorio.");
+        if (itemId == Guid.Empty) throw new ExcecaoDeRegraDeNegocio("item_invalido", "O item de catalogo informado e invalido.");
         Nome = nome.Trim(); Objetivo = string.IsNullOrWhiteSpace(objetivo) ? null : objetivo.Trim(); ItemDeCatalogoId = itemId;
         VersaoModeloId = versaoModeloId; CriteriosSegmentacaoJson = criteriosJson; DataAtualizacao = agora;
     }
 
-    public void Preparar(string nomeItem, IReadOnlyCollection<DestinatarioPreparado> destinatarios, DateTimeOffset agora)
+    public void Preparar(string? nomeItem, IReadOnlyCollection<DestinatarioPreparado> destinatarios, DateTimeOffset agora)
     {
         if (Situacao != SituacaoDaAcaoComercial.Rascunho) throw new ExcecaoDeConflito("acao_ja_preparada", "A acao comercial nao esta em rascunho.");
         if (VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Uma versao publicada de modelo e obrigatoria para preparar.");

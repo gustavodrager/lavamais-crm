@@ -14,8 +14,24 @@ describe("FormularioNovaAcao", () => {
     const usuario = userEvent.setup();
     render(<FormularioNovaAcao itensCatalogo={[itemCatalogo]} aoCriar={vi.fn()} />);
     await usuario.click(screen.getByRole("button", { name: "Criar e definir público" }));
-    expect(await screen.findAllByRole("alert")).toHaveLength(3);
+    expect(await screen.findAllByRole("alert")).toHaveLength(2);
     expect(screen.getByLabelText("Nome da ação")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("permite criar uma ação sem item de catálogo", async () => {
+    const usuario = userEvent.setup();
+    const aoCriar = vi.fn().mockResolvedValue({ sucesso: false, mensagem: "API indisponível para teste." });
+    render(<FormularioNovaAcao itensCatalogo={[]} aoCriar={aoCriar} />);
+
+    await usuario.type(screen.getByLabelText(/Nome da ação/), "Contato de relacionamento");
+    await usuario.type(screen.getByLabelText("Objetivo"), "Conversar com os clientes selecionados");
+    await usuario.click(screen.getByRole("button", { name: "Criar e definir público" }));
+
+    expect(aoCriar).toHaveBeenCalledWith({
+      nome: "Contato de relacionamento",
+      objetivo: "Conversar com os clientes selecionados",
+      itemDeCatalogoId: null,
+    });
   });
 
   it("envia dados validos e apresenta uma falha controlada da API", async () => {

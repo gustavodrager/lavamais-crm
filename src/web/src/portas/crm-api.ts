@@ -46,7 +46,7 @@ export interface ConsultarModelosDeMensagem {
 export interface CriarAcaoComercialEntrada {
   nome: string;
   objetivo: string;
-  itemDeCatalogoId: string;
+  itemDeCatalogoId: string | null;
   versaoModeloId: null;
   criterios: CriteriosDeSegmentacao;
 }

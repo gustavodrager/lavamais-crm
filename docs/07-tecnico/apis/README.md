@@ -54,6 +54,8 @@ PUT    /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/resultado
 
 Comandos de transicao validam estado e versao do agregado. Conflitos de concorrencia retornam `409`.
 
+Nos contratos de criacao e alteracao do rascunho, `itemDeCatalogoId` e opcional. Quando a versao do modelo usa a variavel `itemCatalogo`, a preparacao exige um item ativo e retorna `422` se ele nao estiver definido.
+
 ### Envio individual
 
 Nao existe comando de disparo coletivo na Versao 1.0. O usuario seleciona um destinatario congelado, confere `nomeCliente`, `destino` e `conteudoPreVisualizacao` retornados pela consulta e confirma uma unica mensagem.

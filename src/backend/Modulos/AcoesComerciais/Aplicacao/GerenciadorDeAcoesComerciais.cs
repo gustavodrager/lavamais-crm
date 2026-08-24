@@ -48,16 +48,20 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         var acao = await banco.Acoes.Include(x => x.Destinatarios).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
         if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario.");
         var transacaoBanco = transacao.GetDbTransaction();
-        var item = await catalogo.ObterAtivo(acao.ItemDeCatalogoId, ct, transacaoBanco) ?? throw new ExcecaoDeRegraDeNegocio("item_invalido", "O item de catalogo nao existe ou esta inativo.");
+        var item = acao.ItemDeCatalogoId is null
+            ? null
+            : await catalogo.ObterAtivo(acao.ItemDeCatalogoId.Value, ct, transacaoBanco) ?? throw new ExcecaoDeRegraDeNegocio("item_invalido", "O item de catalogo nao existe ou esta inativo.");
         if (acao.VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Selecione uma versao publicada de modelo.");
         var modelo = await modelos.ObterVersaoPublicada(acao.VersaoModeloId.Value, ct, transacaoBanco) ?? throw new ExcecaoDeRegraDeNegocio("modelo_invalido", "A versao do modelo nao existe ou nao esta publicada.");
+        if (item is null && modelo.Variaveis.Contains("itemCatalogo", StringComparer.OrdinalIgnoreCase))
+            throw new ExcecaoDeRegraDeNegocio("item_obrigatorio_para_modelo", "O modelo selecionado exige um item de catalogo.");
         var criterios = JsonSerializer.Deserialize<CriteriosDeSegmentacao>(acao.CriteriosSegmentacaoJson, OpcoesJson) ?? throw new ExcecaoDeRegraDeNegocio("criterios_invalidos", "Os criterios da acao sao invalidos.");
         var primeira = await simulador.Simular(criterios, 1, 100, ct, transacaoBanco); var elegiveis = primeira.Clientes.Where(x => x.Elegivel).ToList();
         var totalPaginas = (int)Math.Ceiling(primeira.QuantidadeEncontrada / 100m);
         for (var pagina = 2; pagina <= totalPaginas; pagina++) elegiveis.AddRange((await simulador.Simular(criterios, pagina, 100, ct, transacaoBanco)).Clientes.Where(x => x.Elegivel));
-        var destinatarios = elegiveis.Select(x => new DestinatarioPreparado(x.ClienteId, x.Nome, x.Whatsapp!, Renderizar(modelo.ConteudoPreVisualizacao, x.Nome, item.Nome), modelo.ChaveTemplateNotificacao,
-            JsonSerializer.Serialize(modelo.Variaveis.ToDictionary(v => v, v => v == "nomeCliente" ? x.Nome : item.Nome), OpcoesJson))).ToArray();
-        var agora = relogio.GetUtcNow(); acao.Preparar(item.Nome, destinatarios, agora); banco.AddRange(acao.Destinatarios);
+        var destinatarios = elegiveis.Select(x => new DestinatarioPreparado(x.ClienteId, x.Nome, x.Whatsapp!, Renderizar(modelo.ConteudoPreVisualizacao, x.Nome, item?.Nome), modelo.ChaveTemplateNotificacao,
+            JsonSerializer.Serialize(modelo.Variaveis.ToDictionary(v => v, v => v == "nomeCliente" ? x.Nome : item?.Nome ?? string.Empty), OpcoesJson))).ToArray();
+        var agora = relogio.GetUtcNow(); acao.Preparar(item?.Nome, destinatarios, agora); banco.AddRange(acao.Destinatarios);
         try { await banco.SaveChangesAsync(ct); }
         catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario."); }
         await auditoria.Registrar(new("AcaoComercialPreparada", "AcaoComercial", acao.Id, JsonSerializer.Serialize(new { acao.QuantidadeDestinatarios }, OpcoesJson), agora), transacaoBanco, ct);
@@ -125,16 +129,17 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         await tx.CommitAsync(ct);
     }
 
-    private static string Renderizar(string conteudo, string nomeCliente, string itemCatalogo) => conteudo.Replace("{{nomeCliente}}", nomeCliente, StringComparison.Ordinal).Replace("{{itemCatalogo}}", itemCatalogo, StringComparison.Ordinal);
+    private static string Renderizar(string conteudo, string nomeCliente, string? itemCatalogo) => conteudo.Replace("{{nomeCliente}}", nomeCliente, StringComparison.Ordinal).Replace("{{itemCatalogo}}", itemCatalogo ?? string.Empty, StringComparison.Ordinal);
 
     private async Task<string> ValidarESerializar(DadosDoRascunho dados, CancellationToken ct)
     {
         dados.Criterios.Validar();
-        if (await catalogo.ObterAtivo(dados.ItemDeCatalogoId, ct) is null) throw new ExcecaoDeRegraDeNegocio("item_invalido", "O item de catalogo nao existe ou esta inativo.");
+        if (dados.ItemDeCatalogoId == Guid.Empty) throw new ExcecaoDeRegraDeNegocio("item_invalido", "O item de catalogo informado e invalido.");
+        if (dados.ItemDeCatalogoId is not null && await catalogo.ObterAtivo(dados.ItemDeCatalogoId.Value, ct) is null) throw new ExcecaoDeRegraDeNegocio("item_invalido", "O item de catalogo nao existe ou esta inativo.");
         if (dados.VersaoModeloId is not null && await modelos.ObterVersaoPublicada(dados.VersaoModeloId.Value, ct) is null) throw new ExcecaoDeRegraDeNegocio("modelo_invalido", "A versao do modelo nao existe ou nao esta publicada.");
         return JsonSerializer.Serialize(dados.Criterios, OpcoesJson);
     }
 }
 
-public sealed record DadosDoRascunho(string Nome, string? Objetivo, Guid ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios);
+public sealed record DadosDoRascunho(string Nome, string? Objetivo, Guid? ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios);
 public sealed record EnvioIndividualAceito(Guid Id, SituacaoDoEnvio SituacaoEnvio, uint Versao);

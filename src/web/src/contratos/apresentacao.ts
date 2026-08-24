@@ -10,7 +10,7 @@ export interface ResumoAcaoComercial {
   id: string;
   nome: string;
   objetivo: string | null;
-  itemDeCatalogoId: string;
+  itemDeCatalogoId: string | null;
   versaoModeloId: string | null;
   criterios: CriteriosDeSegmentacao;
   situacao: SituacaoAcaoComercial;
@@ -117,6 +117,12 @@ export interface ResultadoImportacao {
   totalInseridas: number;
   totalAtualizadas: number;
   totalRejeitadas: number;
+  linhas: Array<{
+    numero: number;
+    resultado: string;
+    clienteId: string | null;
+    erro: string | null;
+  }>;
 }
 
 export interface OpcaoItemDeCatalogo {
