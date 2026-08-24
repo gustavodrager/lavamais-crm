@@ -116,8 +116,8 @@ export class CrmApiHttp implements PortaCrmApi {
   }
 
   async listarClientes(busca?: string) {
-    const parametros = new URLSearchParams(); if (busca) parametros.set("busca", busca);
-    const resultado = esquemaPaginado(esquemaClienteApi).parse(await this.requisitar(`/api/v1/clientes${parametros.size ? `?${parametros}` : ""}`));
+    const parametros = new URLSearchParams({ pagina: "1", tamanhoPagina: "20" }); if (busca) parametros.set("busca", busca);
+    const resultado = esquemaPaginado(esquemaClienteApi).parse(await this.requisitar(`/api/v1/clientes?${parametros}`));
     return { ...resultado, itens: resultado.itens.map((cliente) => ({ id: cliente.id, nome: cliente.nome, whatsapp: cliente.whatsapp, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp, codigoExterno: cliente.codigoExterno })) };
   }
 
@@ -151,8 +151,9 @@ export class CrmApiHttp implements PortaCrmApi {
   }
 
   async preVisualizarImportacao(arquivo: File) {
-    const dados = new FormData(); dados.set("arquivo", arquivo); dados.set("mapeamento", JSON.stringify(this.mapeamentoPadraoImportacao()));
-    return esquemaPreVisualizacaoImportacao.parse(await this.requisitarFormulario("/api/v1/importacoes/clientes/pre-visualizar", dados));
+    const dados = new FormData(); dados.set("arquivo", arquivo);
+    const parametros = new URLSearchParams({ mapeamento: JSON.stringify(this.mapeamentoPadraoImportacao()) });
+    return esquemaPreVisualizacaoImportacao.parse(await this.requisitarFormulario(`/api/v1/importacoes/clientes/pre-visualizar?${parametros}`, dados));
   }
 
   async confirmarImportacao(referenciaArquivo: string) {

@@ -30,9 +30,22 @@ describe("CrmApiHttp", () => {
     expect(requisitar.mock.calls[0][0].toString()).toContain("situacao=Ativo");
   });
   it("adapta o contrato real de clientes sem depender de etiquetas expandidas", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ itens: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: "5513999999999", tipo: "Residencial", permiteMarketingWhatsapp: true, endereco: { bairro: "Centro", cidade: "Praia Grande" }, etiquetaIds: ["6d3d0d64-a111-4cff-8db8-111111111119"], codigoExterno: "CLI-1" }], pagina: 1, tamanhoPagina: 20, total: 1 }), { status: 200 })));
+    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ itens: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: "5513999999999", tipo: "Residencial", permiteMarketingWhatsapp: true, endereco: { bairro: "Centro", cidade: "Praia Grande" }, etiquetaIds: ["6d3d0d64-a111-4cff-8db8-111111111119"], codigoExterno: "CLI-1" }], pagina: 1, tamanhoPagina: 20, total: 1 }), { status: 200 }));
+    vi.stubGlobal("fetch", requisitar);
     const resultado = await new CrmApiHttp("http://crm.test", async () => "token").listarClientes();
     expect(resultado.itens[0]).toEqual({ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: "5513999999999", localidade: "Centro · Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: true, codigoExterno: "CLI-1" });
+    expect(requisitar.mock.calls[0][0].toString()).toBe("http://crm.test/api/v1/clientes?pagina=1&tamanhoPagina=20");
+  });
+  it("envia o mapeamento da pre-visualizacao na query exigida pela API", async () => {
+    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ referenciaArquivo: "6d3d0d64-a111-4cff-8db8-111111111120", colunas: ["nome", "whatsapp"], totalLinhas: 1, amostra: [] }), { status: 200 }));
+    vi.stubGlobal("fetch", requisitar);
+    const arquivo = new File(["nome,whatsapp\nAna,5513999999999"], "clientes.csv", { type: "text/csv" });
+    await new CrmApiHttp("http://crm.test", async () => "token").preVisualizarImportacao(arquivo);
+    const url = new URL(requisitar.mock.calls[0][0].toString());
+    expect(url.pathname).toBe("/api/v1/importacoes/clientes/pre-visualizar");
+    expect(JSON.parse(url.searchParams.get("mapeamento") ?? "null")).toMatchObject({ nome: "nome", whatsapp: "whatsapp" });
+    expect(requisitar.mock.calls[0][1].body).toBeInstanceOf(FormData);
+    expect((requisitar.mock.calls[0][1].body as FormData).has("mapeamento")).toBe(false);
   });
   it("envia o contrato completo ao criar um rascunho", async () => {
     const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: acao.id }), { status: 201 }));
