@@ -67,6 +67,8 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
         return new(cliente, true);
     }
 
+    public void DescartarAlteracoesPendentes() => banco.ChangeTracker.Clear();
+
     public async Task Inativar(Guid id, CancellationToken ct)
     {
         var cliente = await banco.Clientes.Include(x => x.Contatos).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Cliente nao encontrado.");
@@ -82,8 +84,24 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
 
     public Task<List<Etiqueta>> ListarEtiquetas(CancellationToken ct) => banco.Etiquetas.AsNoTracking().OrderBy(x => x.Nome).ToListAsync(ct);
 
-    private void Aplicar(Cliente cliente, DadosDoCliente d) => cliente.Atualizar(d.Nome, d.Whatsapp, d.NomeFantasia, d.Tipo, d.Email, d.DataNascimento, d.PermiteMarketingWhatsapp,
-        d.Endereco is null ? null : new EnderecoDoCliente(contexto.TenantId, d.Endereco.Logradouro, d.Endereco.Numero, d.Endereco.Complemento, d.Endereco.Bairro, d.Endereco.Cidade, d.Endereco.Estado, d.Endereco.Cep), d.EtiquetaIds, relogio.GetUtcNow());
+    private void Aplicar(Cliente cliente, DadosDoCliente d)
+    {
+        var clienteJaRastreado = banco.Entry(cliente).State != EntityState.Detached;
+        var enderecoExistia = cliente.Endereco is not null;
+        var contatosExistentes = cliente.Contatos.Select(x => x.Id).ToHashSet();
+        var permissoesExistentes = cliente.Permissoes.Select(x => x.Id).ToHashSet();
+        cliente.Atualizar(d.Nome, d.Whatsapp, d.NomeFantasia, d.Tipo, d.Email, d.DataNascimento, d.PermiteMarketingWhatsapp,
+            d.Endereco is null ? null : new EnderecoDoCliente(contexto.TenantId, d.Endereco.Logradouro, d.Endereco.Numero, d.Endereco.Complemento, d.Endereco.Bairro, d.Endereco.Cidade, d.Endereco.Estado, d.Endereco.Cep), d.EtiquetaIds, relogio.GetUtcNow());
+        if (clienteJaRastreado)
+        {
+            if (!enderecoExistia && cliente.Endereco is not null)
+                banco.Entry(cliente.Endereco).State = EntityState.Added;
+            foreach (var contato in cliente.Contatos.Where(x => !contatosExistentes.Contains(x.Id)))
+                banco.Entry(contato).State = EntityState.Added;
+            foreach (var permissao in cliente.Permissoes.Where(x => !permissoesExistentes.Contains(x.Id)))
+                banco.Entry(permissao).State = EntityState.Added;
+        }
+    }
 
     private void AplicarDadosDeOrigem(Cliente cliente, DadosDoCliente dados)
     {

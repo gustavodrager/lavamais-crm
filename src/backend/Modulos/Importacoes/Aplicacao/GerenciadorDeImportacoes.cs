@@ -35,8 +35,19 @@ public sealed class GerenciadorDeImportacoes(ContextoDeImportacoes banco, Gerenc
             {
                 var resultado = await clientes.ImportarOuAtualizar(validacao.Dados!, ct);
                 importacao.Registrar(i + 1, resultado.Atualizado ? ResultadoDaLinha.Atualizada : ResultadoDaLinha.Inserida, resultado.Cliente.Id, null);
+                clientes.DescartarAlteracoesPendentes();
             }
-            catch (Exception ex) when (ex is ExcecaoDeRegraDeNegocio or ExcecaoDeConflito or DbUpdateException) { importacao.Registrar(i + 1, ResultadoDaLinha.Rejeitada, null, ex.Message); }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                var entidades = string.Join(", ", ex.Entries.Select(entrada => $"{entrada.Metadata.ClrType.Name}:{entrada.State}"));
+                clientes.DescartarAlteracoesPendentes();
+                importacao.Registrar(i + 1, ResultadoDaLinha.Rejeitada, null, $"Falha de concorrencia em {entidades}. {ex.Message}");
+            }
+            catch (Exception ex) when (ex is ExcecaoDeRegraDeNegocio or ExcecaoDeConflito or DbUpdateException)
+            {
+                clientes.DescartarAlteracoesPendentes();
+                importacao.Registrar(i + 1, ResultadoDaLinha.Rejeitada, null, ex.Message);
+            }
         }
         importacao.Concluir(relogio.GetUtcNow()); banco.AddRange(importacao.Linhas); await banco.SaveChangesAsync(ct);
         return importacao;

@@ -55,6 +55,7 @@ flowchart LR
 - [Multitenancy e seguranca](arquitetura/03-multitenancy-e-seguranca.md)
 - [Modelo de dados](banco-dados/README.md)
 - [Superficie da API](apis/README.md)
+- [Identidade visual e padrao de imagens do CRM](frontend/identidade-visual.md)
 - [Identidade local](../../10-decisoes/ADR-011-identidade-local-do-crm.md)
 - [Notification Hub](integracoes/notification-hub.md)
 - [Hybex e Essence GO Industrial](integracoes/hybex-essence-go.md)

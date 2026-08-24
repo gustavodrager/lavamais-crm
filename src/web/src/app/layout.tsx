@@ -8,6 +8,12 @@ export const metadata: Metadata = {
     template: "%s | LavaMais CRM",
   },
   description: "Relacionamento comercial simples, relevante e rastreavel.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "64x64", type: "image/x-icon" },
+      { url: "/icon.png", sizes: "1254x1254", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

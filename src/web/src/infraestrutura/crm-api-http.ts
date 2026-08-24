@@ -56,7 +56,20 @@ const esquemaItemDeCatalogo = z.object({
 const esquemaPaginado = <T extends z.ZodType>(item: T) => z.object({ itens: z.array(item), pagina: z.number().int().positive(), tamanhoPagina: z.number().int().positive(), total: z.number().int().nonnegative() });
 const esquemaCriacao = z.object({ id: z.string().uuid() });
 const esquemaPreVisualizacaoImportacao = z.object({ referenciaArquivo: z.string().uuid(), colunas: z.array(z.string()), totalLinhas: z.number().int().nonnegative(), amostra: z.array(z.object({ numero: z.number().int().positive(), valores: z.array(z.string()), erros: z.array(z.string()) }).passthrough()) });
-const esquemaResultadoImportacao = z.object({ id: z.string().uuid(), situacao: z.string(), totalLinhas: z.number().int().nonnegative(), totalInseridas: z.number().int().nonnegative(), totalAtualizadas: z.number().int().nonnegative(), totalRejeitadas: z.number().int().nonnegative() }).passthrough();
+const esquemaResultadoImportacao = z.object({
+  id: z.string().uuid(),
+  situacao: z.string(),
+  totalLinhas: z.number().int().nonnegative(),
+  totalInseridas: z.number().int().nonnegative(),
+  totalAtualizadas: z.number().int().nonnegative(),
+  totalRejeitadas: z.number().int().nonnegative(),
+  linhas: z.array(z.object({
+    numero: z.number().int().positive(),
+    resultado: z.string(),
+    clienteId: z.string().uuid().nullable(),
+    erro: z.string().nullable(),
+  })),
+}).passthrough();
 const esquemaEtiqueta = z.object({ id: z.string().uuid(), nome: z.string() });
 const esquemaEnvioIndividual = z.object({ id: z.string().uuid(), situacaoEnvio: z.literal("AguardandoSolicitacao"), versao: z.number().int().nonnegative() });
 const esquemaSimulacao = z.object({
@@ -239,7 +252,7 @@ export class CrmApiHttp implements PortaCrmApi {
   }
 
   private mapeamentoPadraoImportacao() {
-    return { nome: "nome", whatsapp: "whatsapp", email: "email", bairro: "bairro", cidade: "cidade", tipo: "tipo", permiteMarketingWhatsapp: null, codigoExterno: "codigoExterno", dataCadastroOrigem: "dataCadastroOrigem", dddPadrao: 13, permiteMarketingWhatsappPadrao: true };
+    return { nome: "nome", whatsapp: "whatsapp", email: "email", bairro: "bairro", cidade: "cidade", tipo: "tipo", permiteMarketingWhatsapp: "permiteMarketingWhatsapp", codigoExterno: "codigoExterno", dataCadastroOrigem: "dataCadastroOrigem", dddPadrao: 13, permiteMarketingWhatsappPadrao: false };
   }
 
   private async requisitarFormulario(caminho: string, dados: FormData) {

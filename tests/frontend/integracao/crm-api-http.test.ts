@@ -43,7 +43,12 @@ describe("CrmApiHttp", () => {
     await new CrmApiHttp("http://crm.test", async () => "token").preVisualizarImportacao(arquivo);
     const url = new URL(requisitar.mock.calls[0][0].toString());
     expect(url.pathname).toBe("/api/v1/importacoes/clientes/pre-visualizar");
-    expect(JSON.parse(url.searchParams.get("mapeamento") ?? "null")).toMatchObject({ nome: "nome", whatsapp: "whatsapp" });
+    expect(JSON.parse(url.searchParams.get("mapeamento") ?? "null")).toMatchObject({
+      nome: "nome",
+      whatsapp: "whatsapp",
+      permiteMarketingWhatsapp: "permiteMarketingWhatsapp",
+      permiteMarketingWhatsappPadrao: false,
+    });
     expect(requisitar.mock.calls[0][1].body).toBeInstanceOf(FormData);
     expect((requisitar.mock.calls[0][1].body as FormData).has("mapeamento")).toBe(false);
   });
