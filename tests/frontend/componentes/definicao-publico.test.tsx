@@ -12,28 +12,29 @@ function DefinicaoControlada() {
 }
 
 describe("DefinicaoPublico", () => {
-  it("apresenta o resumo e os motivos de exclusão após a simulação", async () => {
+  it("apresenta um resumo simples e oculta exclusões automáticas", async () => {
     vi.mocked(salvarESimularPublico).mockResolvedValue({ sucesso: true, simulacao: { quantidadeEncontrada: 2, quantidadeElegivel: 1, pagina: 1, tamanhoPagina: 20, clientes: [
       { clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", elegivel: true, motivoExclusao: null },
       { clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nome: "Patricia Souza", whatsapp: null, elegivel: false, motivoExclusao: "SemPermissao" },
     ] } });
     render(<DefinicaoControlada />);
-    fireEvent.change(screen.getByLabelText("Cidades"), { target: { value: "Praia Grande" } });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar filtros e simular público" }));
-    await waitFor(() => expect(screen.getByText("1 elegíveis")).toBeInTheDocument());
-    expect(screen.getByText("Sem permissão")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Cidade"), { target: { value: "Praia Grande" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ver clientes" }));
+    await waitFor(() => expect(screen.getByText("1")).toBeInTheDocument());
+    expect(screen.getByText("cliente pode receber a mensagem")).toBeInTheDocument();
+    expect(screen.queryByText("Sem permissão")).not.toBeInTheDocument();
   });
 
   it("permite excluir manualmente um cliente elegível", async () => {
     vi.mocked(salvarESimularPublico).mockResolvedValue({ sucesso: true, simulacao: { quantidadeEncontrada: 1, quantidadeElegivel: 1, pagina: 1, tamanhoPagina: 20, clientes: [{ clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", elegivel: true, motivoExclusao: null }] } });
     vi.mocked(alterarExclusaoDoPublico).mockResolvedValue({ sucesso: true, simulacao: { quantidadeEncontrada: 1, quantidadeElegivel: 0, pagina: 1, tamanhoPagina: 20, clientes: [{ clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", elegivel: false, motivoExclusao: "ExcluidoManualmente" }] } });
     render(<DefinicaoControlada />);
-    fireEvent.change(screen.getByLabelText("Cidades"), { target: { value: "Praia Grande" } });
-    fireEvent.click(screen.getByRole("button", { name: "Salvar filtros e simular público" }));
-    const botaoExcluir = await screen.findByRole("button", { name: "Excluir" });
+    fireEvent.change(screen.getByLabelText("Cidade"), { target: { value: "Praia Grande" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ver clientes" }));
+    const botaoExcluir = await screen.findByRole("button", { name: "Não enviar" });
     await waitFor(() => expect(botaoExcluir).toBeEnabled());
     fireEvent.click(botaoExcluir);
-    await waitFor(() => expect(screen.getByText("Excluído manualmente")).toBeInTheDocument(), { timeout: 10_000 });
+    await waitFor(() => expect(screen.getByText("Clientes retirados manualmente (1)")).toBeInTheDocument(), { timeout: 10_000 });
     expect(alterarExclusaoDoPublico).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", excluir: true });
   });
 });

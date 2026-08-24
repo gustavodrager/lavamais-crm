@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, MessageCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
 import type { OpcaoModeloDeMensagem, SimulacaoDePublico } from "@/contratos/apresentacao";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { prepararAcao } from "./acoes";
 
-export function PreparacaoAcao({ acaoId, modelos, versaoModeloId, aoSelecionarModelo, simulacao }: { acaoId: string; modelos: OpcaoModeloDeMensagem[]; versaoModeloId: string; aoSelecionarModelo: (id: string) => void; simulacao: SimulacaoDePublico | null }) {
+export function PreparacaoAcao({ acaoId, modelos, versaoModeloId, aoSelecionarModelo, simulacao, aoVoltar }: { acaoId: string; modelos: OpcaoModeloDeMensagem[]; versaoModeloId: string; aoSelecionarModelo: (id: string) => void; simulacao: SimulacaoDePublico | null; aoVoltar?: () => void }) {
   const [mensagem, setMensagem] = useState<string | null>(null);
   const [pendente, iniciarTransicao] = useTransition();
   const modelo = modelos.find((item) => item.versaoId === versaoModeloId);
@@ -19,7 +19,8 @@ export function PreparacaoAcao({ acaoId, modelos, versaoModeloId, aoSelecionarMo
   const previaPersonalizada = modelo?.conteudoPreVisualizacao.replaceAll("{{nomeCliente}}", clienteExemplo?.nome ?? "cliente").replaceAll("{{itemCatalogo}}", "o serviço selecionado");
   function preparar() { setMensagem(null); iniciarTransicao(async () => { const resultado = await prepararAcao({ acaoId, versaoModeloId }); if (!resultado.sucesso) setMensagem(resultado.mensagem); }); }
   const podePreparar = Boolean(modelo && simulacao && simulacao.quantidadeElegivel > 0);
-  return <Card className="mt-6"><CardHeader><CardTitle>Mensagem e revisão final</CardTitle><CardDescription>Escolha uma mensagem publicada e confira o resumo antes de criar a lista definitiva de destinatários.</CardDescription></CardHeader><CardContent className="space-y-5">
+  const rotuloClientes = simulacao?.quantidadeElegivel === 1 ? "1 cliente" : `${simulacao?.quantidadeElegivel ?? 0} clientes`;
+  return <Card className="mt-6"><CardHeader><CardTitle>2. Escolha a mensagem</CardTitle><CardDescription>Selecione uma opção e confira como um cliente verá o texto.</CardDescription></CardHeader><CardContent className="space-y-5">
     {modelos.length === 0 ? <Alert><MessageCircle /><AlertTitle>Nenhum modelo publicado</AlertTitle><AlertDescription>Publique um modelo de mensagem antes de preparar esta ação.</AlertDescription></Alert> : <>
       <div className="space-y-2"><Label htmlFor="modelo-mensagem">Modelo de mensagem</Label><Select value={versaoModeloId} onValueChange={aoSelecionarModelo}><SelectTrigger id="modelo-mensagem" className="w-full sm:max-w-md"><SelectValue placeholder="Selecione um modelo publicado" /></SelectTrigger><SelectContent>{modelos.map((item) => <SelectItem key={item.versaoId} value={item.versaoId}>{item.nome} · versão {item.numeroVersao}</SelectItem>)}</SelectContent></Select></div>
       {modelo && <div className="rounded-xl border bg-secondary/45 p-4"><p className="mb-2 text-xs font-semibold text-muted-foreground">Exemplo personalizado{clienteExemplo ? ` para ${clienteExemplo.nome}` : ""}</p><p className="whitespace-pre-wrap text-sm leading-6">{previaPersonalizada}</p></div>}
@@ -27,7 +28,7 @@ export function PreparacaoAcao({ acaoId, modelos, versaoModeloId, aoSelecionarMo
       {mensagem && <Alert variant="destructive"><AlertTitle>Não foi possível preparar</AlertTitle><AlertDescription>{mensagem}</AlertDescription></Alert>}
       {!simulacao && <p className="text-sm text-muted-foreground">Simule o público acima para liberar a revisão final.</p>}
       {simulacao && simulacao.quantidadeElegivel === 0 && <Alert variant="destructive"><AlertTitle>Nenhum cliente elegível</AlertTitle><AlertDescription>Ajuste os filtros antes de preparar a ação.</AlertDescription></Alert>}
-      <AlertDialog><AlertDialogTrigger asChild><Button type="button" disabled={pendente || !podePreparar}>{pendente ? "Preparando..." : "Revisar e confirmar preparação"}</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Criar a lista definitiva de destinatários?</AlertDialogTitle><AlertDialogDescription>Serão incluídos {simulacao?.quantidadeElegivel ?? 0} clientes usando {modelo?.nome ?? "o modelo selecionado"}. Público e mensagem não poderão mais ser alterados.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Voltar e revisar</AlertDialogCancel><AlertDialogAction onClick={preparar}>Confirmar preparação</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between"><Button type="button" variant="ghost" onClick={aoVoltar}><ArrowLeft />Voltar para os clientes</Button><AlertDialog><AlertDialogTrigger asChild><Button type="button" disabled={pendente || !podePreparar}>{pendente ? "Preparando..." : "Confirmar público e mensagem"}</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Está tudo certo para continuar?</AlertDialogTitle><AlertDialogDescription>Esta ação ficará pronta com {rotuloClientes} e a mensagem “{modelo?.nome ?? "selecionada"}”. Depois desta confirmação, essas escolhas não poderão ser alteradas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Conferir novamente</AlertDialogCancel><AlertDialogAction onClick={preparar}>Sim, deixar ação pronta</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
     </>}
   </CardContent></Card>;
 }
