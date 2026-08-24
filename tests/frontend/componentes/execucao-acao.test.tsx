@@ -15,7 +15,7 @@ describe("ExecucaoAcao", () => {
       id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana! Conheça a lavagem de edredom.", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1,
     }]} />);
     expect(screen.queryByRole("button", { name: /Iniciar processamento/ })).not.toBeInTheDocument();
-    await usuario.click(screen.getByRole("button", { name: "Conferir mensagem" }));
+    await usuario.click(screen.getAllByRole("button", { name: "Conferir mensagem" })[0]);
     expect(screen.getByText("Olá, Ana! Conheça a lavagem de edredom.")).toBeInTheDocument();
     await usuario.click(screen.getByRole("button", { name: "Enviar esta mensagem" }));
     expect(screen.getByRole("alertdialog")).toHaveTextContent("Será solicitada somente esta mensagem");
@@ -31,7 +31,7 @@ describe("ExecucaoAcao", () => {
     }]} />);
 
     expect(screen.getByText("Envio ainda não habilitado")).toBeInTheDocument();
-    await usuario.click(screen.getByRole("button", { name: "Conferir mensagem" }));
+    await usuario.click(screen.getAllByRole("button", { name: "Conferir mensagem" })[0]);
     expect(screen.getByText("Olá, Ana! Conheça a lavagem de edredom.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Enviar esta mensagem" })).not.toBeInTheDocument();
     expect(enviarMensagemIndividual).not.toHaveBeenCalled();

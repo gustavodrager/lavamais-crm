@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -102,8 +103,9 @@ export function FormularioNovaAcao({
       </div>
 
       <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
+        <Button asChild type="button" variant="ghost"><Link href="/acoes-comerciais">Cancelar</Link></Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Criando rascunho..." : "Criar e continuar"}
+          {isSubmitting ? "Criando rascunho..." : "Criar e definir público"}
         </Button>
       </div>
     </form>

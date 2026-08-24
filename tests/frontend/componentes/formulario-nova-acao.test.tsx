@@ -13,7 +13,7 @@ describe("FormularioNovaAcao", () => {
   it("informa os campos obrigatorios de forma acessivel", async () => {
     const usuario = userEvent.setup();
     render(<FormularioNovaAcao itensCatalogo={[itemCatalogo]} aoCriar={vi.fn()} />);
-    await usuario.click(screen.getByRole("button", { name: "Criar e continuar" }));
+    await usuario.click(screen.getByRole("button", { name: "Criar e definir público" }));
     expect(await screen.findAllByRole("alert")).toHaveLength(3);
     expect(screen.getByLabelText("Nome da ação")).toHaveAttribute("aria-invalid", "true");
   });
@@ -26,7 +26,7 @@ describe("FormularioNovaAcao", () => {
     await usuario.type(screen.getByLabelText("Nome da ação"), "Cuidados com edredons");
     await usuario.type(screen.getByLabelText("Objetivo"), "Apresentar o serviço aos clientes elegíveis");
     fireEvent.change(document.querySelector("select")!, { target: { value: itemCatalogo.id } });
-    await usuario.click(screen.getByRole("button", { name: "Criar e continuar" }));
+    await usuario.click(screen.getByRole("button", { name: "Criar e definir público" }));
 
     expect(aoCriar).toHaveBeenCalledWith({
       nome: "Cuidados com edredons",

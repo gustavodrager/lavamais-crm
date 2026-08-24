@@ -4,11 +4,11 @@ import { EstadoFalhaApi } from "@/components/estado-falha-api";
 import { SituacaoAcao } from "@/components/situacao-acao";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
-import { DefinicaoPublico } from "./definicao-publico";
-import { PreparacaoAcao } from "./preparacao";
 import { ExecucaoAcao } from "./execucao";
 import { ResumoAcao } from "./resumo-acao";
 import { AtualizacaoAutomatica } from "./atualizacao-automatica";
+import { ConfiguracaoAcao } from "./configuracao-acao";
+import { JornadaAcao } from "@/components/jornada-acao";
 
 export default async function DetalheAcao({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,12 +16,15 @@ export default async function DetalheAcao({ params }: { params: Promise<{ id: st
   try { acao = await obterPortaCrmApi().obter(id); }
   catch (erro) { if (erro instanceof ErroCrmApi) return <><CabecalhoPagina titulo="Detalhe da Ação Comercial" descricao="Acompanhe a preparação, a entrega e o resultado comercial." /><EstadoFalhaApi status={erro.status} /></>; throw erro; }
   if (!acao) notFound();
-  const modelos = acao.situacao === "Rascunho" ? await obterPortaCrmApi().listarModelosPublicados() : [];
+  const rascunho = acao.situacao === "Rascunho";
+  const temFiltrosSalvos = Boolean(acao.criterios.tipoCliente || acao.criterios.cidades?.length || acao.criterios.bairros?.length || acao.criterios.cadastradoApartirDe || acao.criterios.clienteIds?.length || acao.criterios.clienteIdsExcluidos?.length);
+  const [modelos, simulacaoInicial] = rascunho ? await Promise.all([
+    obterPortaCrmApi().listarModelosPublicados(),
+    temFiltrosSalvos ? obterPortaCrmApi().simularPublico(acao.id) : Promise.resolve(null),
+  ]) : [[], null];
   return <><CabecalhoPagina titulo={acao.nome} descricao={acao.objetivo ?? "Acompanhe a preparação, a entrega e o resultado comercial."} acao={<SituacaoAcao situacao={acao.situacao} />} />
     {acao.situacao === "EmProcessamento" && <AtualizacaoAutomatica />}
-    <ResumoAcao acao={acao} />
-    {acao.situacao === "Rascunho" && <DefinicaoPublico acaoId={acao.id} criterios={acao.criterios} />}
-    {acao.situacao === "Rascunho" && <PreparacaoAcao acaoId={acao.id} modelos={modelos} versaoModeloAtualId={acao.versaoModeloId} />}
+    {rascunho ? <ConfiguracaoAcao acaoId={acao.id} criterios={acao.criterios} modelos={modelos} versaoModeloAtualId={acao.versaoModeloId} simulacaoInicial={simulacaoInicial} /> : <><JornadaAcao etapaAtual={5} /><ResumoAcao acao={acao} /></>}
     {acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada" && <ExecucaoAcao acaoId={acao.id} situacao={acao.situacao} destinatarios={acao.destinatarios} envioHabilitado={process.env.LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO === "1"} />}
   </>;
 }

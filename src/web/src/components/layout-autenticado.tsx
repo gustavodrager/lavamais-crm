@@ -12,16 +12,16 @@ export async function LayoutAutenticado({ children }: { children: ReactNode }) {
   if (!sessao) redirect("/entrar");
   return (
     <div className="min-h-screen md:grid md:grid-cols-[16rem_1fr]">
-      <aside className="fixed inset-y-0 hidden w-64 border-r bg-card p-5 md:flex md:flex-col">
+      <aside className="fixed inset-y-0 hidden w-64 border-r border-sidebar-border bg-sidebar p-5 text-sidebar-foreground md:flex md:flex-col">
         <Marca />
-        <div className="mt-8 flex-1"><Navegacao /></div>
-        <div className="rounded-xl border bg-muted/40 p-3">
+        <div className="mt-8 flex-1"><Navegacao tema="escuro" /></div>
+        <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-3">
           <p className="truncate text-sm font-medium">{sessao.tenant.nome}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Tenant da sessão autenticada</p>
+          <p className="mt-1 text-xs text-sidebar-foreground/70">Ambiente empresarial ativo</p>
         </div>
       </aside>
       <div className="md:col-start-2">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-card/95 px-4 backdrop-blur sm:px-6 lg:px-8">
           <div className="flex items-center gap-2"><MenuMobile /><span className="text-sm text-muted-foreground md:hidden">LavaMais CRM</span></div>
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block"><p className="text-sm font-medium">{sessao.usuario.nome}</p><p className="text-xs text-muted-foreground">{sessao.papel ?? "Usuário autenticado"}</p></div>
