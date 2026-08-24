@@ -24,7 +24,8 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await page.getByRole("button", { name: "Criar e definir público" }).click();
   await expect(page).toHaveURL(/\/acoes-comerciais\/7e4e1e75-b222-4cff-8db8-222222222222$/);
   await expect(page.getByRole("heading", { name: "Ação criada pelo frontend" })).toBeVisible();
-  await page.getByLabel("Cidade").fill("Praia Grande");
+  await page.getByRole("combobox", { name: "Cidade" }).click();
+  await page.getByRole("option", { name: "Praia Grande" }).click();
   await page.getByRole("button", { name: "Ver clientes" }).click();
   await expect(page.getByText("cliente pode receber a mensagem")).toBeVisible();
   await page.getByRole("button", { name: "Continuar para a mensagem" }).click();

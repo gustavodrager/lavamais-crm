@@ -8,9 +8,7 @@ import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
 
-const esquema = z.object({ acaoId: z.string().uuid(), tipoCliente: z.string().trim().max(80), cidades: z.string().trim().max(500), bairros: z.string().trim().max(500), cadastradoApartirDe: z.string().date().or(z.literal("")), confirmarBaseCompleta: z.boolean() }).superRefine((dados, contexto) => {
-  if (!dados.tipoCliente && !dados.cidades && !dados.bairros && !dados.cadastradoApartirDe && !dados.confirmarBaseCompleta) contexto.addIssue({ code: "custom", path: ["confirmarBaseCompleta"], message: "Confirme o uso de toda a base ou informe ao menos um filtro." });
-});
+const esquema = z.object({ acaoId: z.string().uuid(), cidades: z.literal("Praia Grande"), bairros: z.string().trim().min(1).max(500) });
 export type EntradaSimularPublico = z.input<typeof esquema>;
 export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoAlterarExclusao = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
@@ -27,7 +25,7 @@ export async function salvarESimularPublico(entrada: EntradaSimularPublico): Pro
   const dados = validacao.data;
   try {
     const porta = obterPortaCrmApi();
-    await porta.atualizarCriterios(dados.acaoId, { versaoSchema: 2, modo: "Filtros", tipoCliente: dados.tipoCliente || null, cidades: lista(dados.cidades), bairros: lista(dados.bairros), etiquetaIds: null, cadastradoApartirDe: dados.cadastradoApartirDe ? `${dados.cadastradoApartirDe}T00:00:00.000Z` : null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null });
+    await porta.atualizarCriterios(dados.acaoId, { versaoSchema: 2, modo: "Filtros", tipoCliente: null, cidades: lista(dados.cidades), bairros: lista(dados.bairros), etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null });
     return { sucesso: true, simulacao: await porta.simularPublico(dados.acaoId) };
   } catch (erro) {
     if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para alterar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e tente novamente." : erro.status === 422 ? erro.message : "Não foi possível simular o público agora. Tente novamente." };
