@@ -82,6 +82,7 @@ export interface RegistrarResultadoComercial {
 
 export interface AdministrarMovimentacoesComerciais {
   listarOfertasDoCatalogoDeLavanderia(): Promise<OfertaDoCatalogoDeLavanderia[]>;
+  carregarCatalogoInicialDeLavanderia(): Promise<{ artigosCriados: number; servicosCriados: number; ofertasCriadas: number }>;
   listarMovimentacoes(clienteId?: string, limite?: number): Promise<ResumoMovimentacaoComercial[]>;
   registrarMovimentacao(entrada: { clienteId: string; linhas: Array<{ ofertaDeServicoId: string; quantidade: number; precoUnitario: number | null }>; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }): Promise<{ id: string }>;
   cancelarMovimentacao(id: string, motivo: string, versao: number): Promise<void>;

@@ -60,6 +60,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async criarEPublicarModelo() { return { id: crypto.randomUUID() }; },
   async listarMovimentacoes() { return []; },
   async listarOfertasDoCatalogoDeLavanderia() { return [{ id: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Camisa", categoria: "Vestuário", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem e passadoria", precoUnitario: 16.20 }]; },
+  async carregarCatalogoInicialDeLavanderia() { return { artigosCriados: 0, servicosCriados: 0, ofertasCriadas: 0 }; },
   async registrarMovimentacao() { return { id: crypto.randomUUID() }; },
   async cancelarMovimentacao() {},
   async obterRoteiro() { return null; }, async criarRoteiro() { return { id: crypto.randomUUID() }; }, async adicionarParada() {}, async atualizarParada() {}, async removerParada() {}, async reordenarParadas() {}, async publicarRoteiro() {}, async iniciarParada() {}, async concluirParada() {}, async naoRealizarParada() {},

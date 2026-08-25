@@ -23,6 +23,17 @@ export async function criarServico(entrada: { nome: string; categoria: string; v
   try { await obterPortaCrmApi().criarServico({ nome: validacao.data.nome, categoria: textoOpcional(validacao.data.categoria), valorReferencia: numero, codigoExterno: textoOpcional(validacao.data.codigoExterno) }); revalidatePath("/configuracoes"); return { sucesso: true }; } catch (erro) { return falha(erro); }
 }
 
+export async function carregarCatalogoInicial(): Promise<ResultadoConfiguracao & { resumo?: string }> {
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect("/entrar?retorno=/configuracoes");
+  if (sessao.papel !== "Administrador") return { sucesso: false, mensagem: "Somente administradores podem carregar o catálogo inicial." };
+  try {
+    const resultado = await obterPortaCrmApi().carregarCatalogoInicialDeLavanderia();
+    revalidatePath("/configuracoes"); revalidatePath("/movimentacoes");
+    return { sucesso: true, resumo: `${resultado.artigosCriados} artigos, ${resultado.servicosCriados} serviços e ${resultado.ofertasCriadas} ofertas criados.` };
+  } catch (erro) { return falha(erro); }
+}
+
 export async function criarEtiqueta(entrada: { nome: string }): Promise<ResultadoConfiguracao> {
   await validarSessao(); const validacao = z.object({ nome: z.string().trim().min(2).max(80) }).safeParse(entrada); if (!validacao.success) return { sucesso: false, mensagem: "Informe um nome válido para a etiqueta." };
   try { await obterPortaCrmApi().criarEtiqueta(validacao.data.nome); revalidatePath("/configuracoes"); return { sucesso: true }; } catch (erro) { return falha(erro); }

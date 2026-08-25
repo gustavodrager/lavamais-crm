@@ -190,6 +190,9 @@ export class CrmApiHttp implements PortaCrmApi {
     const ofertas = z.array(esquemaOfertaDoCatalogoDeLavanderia).parse(await this.requisitar("/api/v1/catalogo-lavanderia/ofertas"));
     return ofertas.map(({ id, artigoDeLavanderiaId, nomeArtigo, categoria, servicoDeLavanderiaId, nomeServico, precoUnitario }) => ({ id, artigoDeLavanderiaId, nomeArtigo, categoria, servicoDeLavanderiaId, nomeServico, precoUnitario }));
   }
+  async carregarCatalogoInicialDeLavanderia() {
+    return z.object({ artigosCriados: z.number().int().nonnegative(), servicosCriados: z.number().int().nonnegative(), ofertasCriadas: z.number().int().nonnegative() }).parse(await this.requisitar("/api/v1/catalogo-lavanderia/carga-inicial", { metodo: "POST" }));
+  }
 
   async registrarMovimentacao(entrada: { clienteId: string; linhas: Array<{ ofertaDeServicoId: string; quantidade: number; precoUnitario: number | null }>; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }) {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/movimentacoes-comerciais", { metodo: "POST", corpo: entrada }));
