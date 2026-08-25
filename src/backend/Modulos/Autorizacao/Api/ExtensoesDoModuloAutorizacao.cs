@@ -22,6 +22,7 @@ public static class ExtensoesDoModuloAutorizacao
             ContextoDeAutorizacao.Schema);
         servicos.AddSingleton(TimeProvider.System);
         servicos.AddScoped<GerenciadorDeUsuariosCrm>();
+        servicos.AddScoped<IAutorizacaoDaIdentidade, AutorizacaoDaIdentidade>();
         servicos.AddScoped<IAuthorizationHandler, TratadorDePapelDoCrm>();
         var identidadeLocal = configuracao.GetValue("IdentidadeLocal:Habilitada", true);
         servicos.AddAuthorization(opcoes =>

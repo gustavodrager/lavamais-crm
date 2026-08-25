@@ -40,8 +40,8 @@ const esquemaDestinatario = z.object({
 });
 const esquemaDetalhe = z.object({ acao: esquemaAcaoApi, totais: esquemaTotais, destinatarios: z.array(esquemaDestinatario) }).passthrough();
 const esquemaClienteApi = z.object({
-  id: z.string().uuid(), nome: z.string(), whatsapp: z.string(), tipo: z.string().nullable(), permiteMarketingWhatsapp: z.boolean(),
-  endereco: z.object({ bairro: z.string().nullable(), cidade: z.string().nullable() }).passthrough().nullable(),
+  id: z.string().uuid(), nome: z.string(), nomeFantasia: z.string().nullable(), whatsapp: z.string(), email: z.string().nullable(), dataNascimento: z.string().nullable(), tipo: z.string().nullable(), situacao: z.enum(["Ativo", "Inativo"]), permiteMarketingWhatsapp: z.boolean(),
+  endereco: z.object({ logradouro: z.string().nullable(), numero: z.string().nullable(), complemento: z.string().nullable(), bairro: z.string().nullable(), cidade: z.string().nullable(), estado: z.string().nullable(), cep: z.string().nullable() }).nullable(),
   etiquetaIds: z.array(z.string().uuid()), codigoExterno: z.string().nullable(),
 }).passthrough();
 const esquemaItemDeCatalogo = z.object({
@@ -96,6 +96,12 @@ const esquemaModelo = z.object({
     variaveis: z.array(z.string()), chaveTemplateNotificacao: z.string(), dataPublicacao: z.string().datetime({ offset: true }),
   })),
 });
+const esquemaMovimentacao = z.object({
+  id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), itemDeCatalogoId: z.string().uuid(), nomeItem: z.string(),
+  valorTotal: z.number().nonnegative(), dataMovimentacao: z.string().datetime({ offset: true }), codigoExterno: z.string().nullable(), observacao: z.string().nullable(),
+  origem: z.enum(["Recepcao", "ImportacaoEssence", "IntegracaoEssence"]), situacao: z.enum(["Registrada", "Cancelada"]),
+  versao: z.number().int().nonnegative(),
+});
 
 interface ProblemDetails {
   title?: string;
@@ -134,6 +140,13 @@ export class CrmApiHttp implements PortaCrmApi {
     return { ...resultado, itens: resultado.itens.map((cliente) => ({ id: cliente.id, nome: cliente.nome, whatsapp: cliente.whatsapp, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp, codigoExterno: cliente.codigoExterno })) };
   }
 
+  async obterCliente(id: string) {
+    const resposta = await this.requisitar(`/api/v1/clientes/${encodeURIComponent(id)}`, { aceitarNaoEncontrado: true });
+    if (resposta === null) return null;
+    const cliente = esquemaClienteApi.parse(resposta);
+    return { ...cliente, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp };
+  }
+
   async criarCliente(entrada: { nome: string; whatsapp: string; tipo: string | null; permiteMarketingWhatsapp: boolean; endereco: { bairro: string | null; cidade: string | null }; codigoExterno: string | null }) {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/clientes", { metodo: "POST", corpo: { ...entrada, nomeFantasia: null, email: null, dataNascimento: null, etiquetaIds: [] } }));
   }
@@ -152,6 +165,15 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async criarServico(entrada: { nome: string; categoria: string | null; valorReferencia: number | null; codigoExterno: string | null }) {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/itens-de-catalogo", { metodo: "POST", corpo: { tipo: "Servico", descricao: null, situacao: "Ativo", dataCadastroOrigem: null, ...entrada } }));
+  }
+
+  async listarMovimentacoes(clienteId?: string, limite = 30) {
+    const parametros = new URLSearchParams({ limite: String(limite) }); if (clienteId) parametros.set("clienteId", clienteId);
+    return z.array(esquemaMovimentacao).parse(await this.requisitar(`/api/v1/movimentacoes-comerciais?${parametros}`));
+  }
+
+  async registrarMovimentacao(entrada: { clienteId: string; itemDeCatalogoId: string; valorTotal: number; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }) {
+    return esquemaCriacao.parse(await this.requisitar("/api/v1/movimentacoes-comerciais", { metodo: "POST", corpo: entrada }));
   }
 
   async listarEtiquetas() { return z.array(esquemaEtiqueta).parse(await this.requisitar("/api/v1/etiquetas")); }

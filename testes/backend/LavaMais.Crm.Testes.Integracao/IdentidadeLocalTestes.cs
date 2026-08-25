@@ -1,4 +1,8 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.Modulos.Autorizacao.Aplicacao;
+using LavaMais.Crm.Modulos.Autorizacao.Dominio;
+using LavaMais.Crm.Modulos.Autorizacao.Infraestrutura;
 using LavaMais.Crm.Modulos.Identidade.Aplicacao;
 using LavaMais.Crm.Modulos.Identidade.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
@@ -13,18 +17,36 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
     {
         var opcoesBanco = new DbContextOptionsBuilder<ContextoDeIdentidade>().UseNpgsql(postgres.Conexao, x => x.MigrationsHistoryTable(ContextoDeIdentidade.Historico, ContextoDeIdentidade.Schema)).Options;
         await using var banco = new ContextoDeIdentidade(opcoesBanco); await banco.Database.MigrateAsync(TestContext.Current.CancellationToken);
+        var tenantId = Guid.NewGuid();
+        var opcoesAutorizacao = new DbContextOptionsBuilder<ContextoDeAutorizacao>().UseNpgsql(postgres.Conexao, x => x.MigrationsHistoryTable(ContextoDeAutorizacao.TabelaDeHistoricoDasMigrations, ContextoDeAutorizacao.Schema)).Options;
+        await using var bancoAutorizacao = new ContextoDeAutorizacao(opcoesAutorizacao, new ContextoDeTeste(tenantId));
+        await bancoAutorizacao.Database.MigrateAsync(TestContext.Current.CancellationToken);
         await banco.Sessoes.ExecuteDeleteAsync(TestContext.Current.CancellationToken); await banco.Usuarios.ExecuteDeleteAsync(TestContext.Current.CancellationToken);
-        var configuracao = Options.Create(new OpcoesDeIdentidadeLocal { TenantId = Guid.NewGuid(), TelefonePermitido = "11997372540", NomeTenant = "LavaMais" });
-        var servico = new ServicoDeIdentidade(banco, configuracao, TimeProvider.System);
+        await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().ExecuteDeleteAsync(TestContext.Current.CancellationToken);
+        var configuracao = Options.Create(new OpcoesDeIdentidadeLocal { TenantId = tenantId, TelefonePermitido = "11997372540", NomeTenant = "LavaMais" });
+        var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao), configuracao, TimeProvider.System);
 
         await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.PrimeiroAcesso("11999999999", "uma-senha-segura", TestContext.Current.CancellationToken));
         var primeira = await servico.PrimeiroAcesso("(11) 99737-2540", "uma-senha-segura", TestContext.Current.CancellationToken);
         await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.PrimeiroAcesso("11997372540", "outra-senha-segura", TestContext.Current.CancellationToken));
         await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.Entrar("11997372540", "senha-incorreta", TestContext.Current.CancellationToken));
+        var autorizacao = await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().SingleAsync(TestContext.Current.CancellationToken);
+        autorizacao.AlterarPapel(PapelDoCrm.Gerente, DateTimeOffset.UtcNow);
+        await bancoAutorizacao.SaveChangesAsync(TestContext.Current.CancellationToken);
         var entrada = await servico.Entrar("11997372540", "uma-senha-segura", TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(primeira.Token); Assert.NotEmpty(entrada.Token); Assert.NotEqual(primeira.Token, entrada.Token);
+        Assert.Equal("Administrador", primeira.Papel);
+        Assert.Equal("Gerente", entrada.Papel);
         Assert.DoesNotContain(primeira.Token, (await banco.Usuarios.SingleAsync(TestContext.Current.CancellationToken)).SenhaProtegida);
         Assert.DoesNotContain(primeira.Token, (await banco.Sessoes.FirstAsync(TestContext.Current.CancellationToken)).TokenHash);
+        Assert.Equal(PapelDoCrm.Gerente, autorizacao.Papel);
+        Assert.Equal((await banco.Usuarios.SingleAsync(TestContext.Current.CancellationToken)).Id.ToString(), autorizacao.UsuarioIdentidadeId);
+    }
+
+    private sealed record ContextoDeTeste(Guid TenantId) : IContextoDoUsuario
+    {
+        public bool Autenticado => true;
+        public string UsuarioIdentidadeId => "usuario-de-teste";
     }
 }

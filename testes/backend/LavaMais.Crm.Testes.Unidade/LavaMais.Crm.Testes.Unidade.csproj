@@ -10,5 +10,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <ProjectReference Include="../../../src/backend/BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+    <ProjectReference Include="../../../src/backend/Modulos/MovimentacoesComerciais/LavaMais.Crm.Modulos.MovimentacoesComerciais.csproj" />
   </ItemGroup>
 </Project>

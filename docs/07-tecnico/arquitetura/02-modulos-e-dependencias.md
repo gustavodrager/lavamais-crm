@@ -9,6 +9,7 @@
 | `Segmentacao` | criterios, simulacao e elegibilidade |
 | `ModelosDeMensagem` | modelos comerciais e versoes publicadas |
 | `AcoesComerciais` | fluxo, audiencia, envios e resultados |
+| `MovimentacoesComerciais` | historico comercial manual sem controle operacional |
 | `Importacoes` | entrada de clientes por CSV |
 | `Autorizacao` | papeis especificos do CRM |
 | `Auditoria` | registro imutavel de eventos sensiveis |
@@ -29,6 +30,8 @@ flowchart LR
     AU -. protege .-> C
     AD[Auditoria] -. observa eventos .-> A
     AD -. observa eventos .-> C
+    C -->|porta de consulta| MV[MovimentacoesComerciais]
+    G -->|porta de consulta| MV
 ```
 
 As setas representam contratos de aplicacao, nao acesso a tabelas ou entidades internas.

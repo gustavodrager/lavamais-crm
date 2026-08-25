@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
 using LavaMais.Crm.Modulos.Clientes.Aplicacao;
@@ -17,7 +18,7 @@ public static class ExtensoesDoModuloClientes
     public static IServiceCollection AdicionarModuloClientes(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeClientes>(configuracao, ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema);
-        servicos.AddScoped<GerenciadorDeClientes>(); servicos.AddScoped<ConsultaDeClientesParaSegmentacao>(); return servicos;
+        servicos.AddScoped<GerenciadorDeClientes>(); servicos.AddScoped<ConsultaDeClientesParaSegmentacao>(); servicos.AddScoped<IConsultaDeClienteParaMovimentacao, ConsultaDeClienteParaMovimentacao>(); return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloClientes(this IEndpointRouteBuilder endpoints)

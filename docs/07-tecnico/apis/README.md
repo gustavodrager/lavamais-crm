@@ -84,6 +84,16 @@ Content-Type: application/json
 
 O comando exige papel `Administrador` ou `Gerente`. Destinatario fora da acao ou do tenant nao e revelado (`404`); versao desatualizada, envio concorrente ou destinatario ja solicitado retorna `409`; regra que impede o envio retorna `422`. A outbox e a mudanca de estado sao gravadas na mesma transacao.
 
+## Movimentacoes comerciais
+
+```text
+GET    /api/v1/movimentacoes-comerciais
+POST   /api/v1/movimentacoes-comerciais
+POST   /api/v1/movimentacoes-comerciais/{id}/cancelar
+```
+
+O registro recebe um cliente ativo, um item ativo do tipo `Servico`, valor total, data opcional, codigo externo opcional e observacao. O tenant, o usuario e a origem `Recepcao` sao derivados no servidor. O cancelamento exige `Administrador` ou `Gerente`, motivo e a versao atual do agregado; concorrencia retorna `409`.
+
 ## Autorizacao
 
 ```text

@@ -17,6 +17,7 @@ clientes
 catalogo
 comunicacao
 acoes_comerciais
+movimentacoes_comerciais
 importacoes
 identidade
 autorizacao
@@ -132,6 +133,14 @@ versao
 
 Restricao unica: `tenant_id + acao_comercial_id + cliente_id`.
 
+## Movimentacoes comerciais
+
+### `movimentacoes_comerciais.movimentacoes`
+
+Registra cliente e servico por identificador e snapshot, valor total, data da movimentacao, origem, codigo externo opcional e dados de cancelamento. O registro e informativo e nao representa caixa, pagamento, producao ou pedido operacional.
+
+O codigo externo e unico dentro do tenant quando informado. O agregado usa `xmin` para concorrencia otimista e nunca e excluido fisicamente.
+
 ## Importacoes
 
 - `importacoes.importacoes_de_clientes` registra nome, conteudo pendente ate a confirmacao, totais, usuario e estado;
@@ -146,9 +155,9 @@ Restricao unica: `tenant_id + acao_comercial_id + cliente_id`.
 
 ## Identidade
 
-- `identidade.usuarios` guarda telefone normalizado, senha protegida, tenant, nome, papel e situacao;
+- `identidade.usuarios` guarda telefone normalizado, senha protegida, tenant, nome e situacao da credencial; a coluna de papel existente permanece apenas para compatibilidade e nao autoriza requisicoes;
 - `identidade.sessoes` guarda apenas o hash do token opaco, expiracao e eventual revogacao.
 
 ## Dados futuros
 
-Pedidos, movimentacoes, interacoes, oportunidades, funil e campanhas recorrentes nao fazem parte das migrations iniciais. Eles serao modelados quando entrarem no escopo.
+Pedidos operacionais, interacoes, oportunidades, funil e campanhas recorrentes nao fazem parte das migrations iniciais. Eles serao modelados quando entrarem no escopo.

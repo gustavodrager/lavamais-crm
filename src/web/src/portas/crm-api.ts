@@ -4,12 +4,14 @@ import type {
   OpcaoItemDeCatalogo,
   OpcaoModeloDeMensagem,
   ResumoCliente,
+  DetalheCliente,
   ResultadoPaginado,
   CriteriosDeSegmentacao,
   SimulacaoDePublico,
   ResultadoComercial,
   PreVisualizacaoImportacao,
   ResultadoImportacao,
+  ResumoMovimentacaoComercial,
 } from "@/contratos/apresentacao";
 
 export interface ConsultarAcoesComerciais {
@@ -19,6 +21,7 @@ export interface ConsultarAcoesComerciais {
 
 export interface ConsultarClientes {
   listarClientes(busca?: string, pagina?: number, tamanhoPagina?: number): Promise<ResultadoPaginado<ResumoCliente>>;
+  obterCliente(id: string): Promise<DetalheCliente | null>;
   criarCliente(entrada: { nome: string; whatsapp: string; tipo: string | null; permiteMarketingWhatsapp: boolean; endereco: { bairro: string | null; cidade: string | null }; codigoExterno: string | null }): Promise<{ id: string }>;
 }
 
@@ -73,6 +76,11 @@ export interface RegistrarResultadoComercial {
   registrarResultado(id: string, destinatarioId: string, resultado: Exclude<ResultadoComercial, "NaoInformado">, valorConvertido: number | null, versao: number): Promise<void>;
 }
 
+export interface AdministrarMovimentacoesComerciais {
+  listarMovimentacoes(clienteId?: string, limite?: number): Promise<ResumoMovimentacaoComercial[]>;
+  registrarMovimentacao(entrada: { clienteId: string; itemDeCatalogoId: string; valorTotal: number; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }): Promise<{ id: string }>;
+}
+
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.
 export interface PortaCrmApi
   extends ConsultarAcoesComerciais,
@@ -85,4 +93,5 @@ export interface PortaCrmApi
     AtualizarESimularPublico,
     PrepararAcaoComercial,
     EnviarMensagemIndividual,
-    RegistrarResultadoComercial {}
+    RegistrarResultadoComercial,
+    AdministrarMovimentacoesComerciais {}

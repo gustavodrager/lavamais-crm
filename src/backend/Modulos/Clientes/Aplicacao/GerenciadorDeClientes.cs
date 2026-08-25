@@ -1,5 +1,6 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.Modulos.Clientes.Dominio;
 using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
@@ -156,3 +157,10 @@ public sealed class ConsultaDeClientesParaSegmentacao(ContextoDeClientes banco)
 
 public sealed record FiltroDeClientesParaSegmentacao(IReadOnlyCollection<Guid> ClienteIds, string? Tipo, IReadOnlyCollection<string> Cidades, IReadOnlyCollection<string> Bairros, IReadOnlyCollection<Guid> EtiquetaIds, DateTimeOffset? CadastradoApartirDe, DateOnly? DataNascimentoDe, DateOnly? DataNascimentoAte);
 public sealed record ClienteParaSegmentacao(Guid Id, string Nome, bool Ativo, DateTimeOffset DataCriacao, string? Whatsapp, bool ContatoWhatsappAtivo, bool PermiteMarketingWhatsapp);
+
+public sealed class ConsultaDeClienteParaMovimentacao(ContextoDeClientes banco) : IConsultaDeClienteParaMovimentacao
+{
+    public Task<ClienteDisponivelParaMovimentacao?> ObterAtivo(Guid id, CancellationToken ct) =>
+        banco.Clientes.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoCliente.Ativo)
+            .Select(x => new ClienteDisponivelParaMovimentacao(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
+}

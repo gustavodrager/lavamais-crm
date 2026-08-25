@@ -1,5 +1,6 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
 using LavaMais.Crm.Modulos.Catalogo.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
@@ -68,13 +69,17 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
 public sealed record DadosDoItemDeCatalogo(TipoDeItemDeCatalogo Tipo, string Nome, string? Descricao, string? Categoria, decimal? ValorReferencia, SituacaoDoItemDeCatalogo Situacao = SituacaoDoItemDeCatalogo.Ativo, string? CodigoExterno = null, DateTimeOffset? DataCadastroOrigem = null);
 public sealed record ResultadoDaImportacaoDeItem(ItemDeCatalogo Item, bool Atualizado);
 
-public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco)
+public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco) : IConsultaDeCatalogoParaMovimentacao
 {
     public async Task<ItemDeCatalogoDisponivel?> ObterAtivo(Guid id, CancellationToken ct, DbTransaction? transacao = null)
     {
         if (transacao is not null) { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); }
         return await banco.Itens.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo).Select(x => new ItemDeCatalogoDisponivel(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
     }
+
+    public async Task<ItemDeCatalogoDisponivelParaMovimentacao?> ObterServicoAtivo(Guid id, CancellationToken ct) =>
+        await banco.Itens.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo && x.Tipo == TipoDeItemDeCatalogo.Servico)
+            .Select(x => new ItemDeCatalogoDisponivelParaMovimentacao(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
 }
 
 public sealed record ItemDeCatalogoDisponivel(Guid Id, string Nome);

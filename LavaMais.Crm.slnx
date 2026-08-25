@@ -15,6 +15,7 @@
     <Project Path="src/backend/Modulos/Identidade/LavaMais.Crm.Modulos.Identidade.csproj" />
     <Project Path="src/backend/Modulos/Integracoes/LavaMais.Crm.Modulos.Integracoes.csproj" />
     <Project Path="src/backend/Modulos/ModelosDeMensagem/LavaMais.Crm.Modulos.ModelosDeMensagem.csproj" />
+    <Project Path="src/backend/Modulos/MovimentacoesComerciais/LavaMais.Crm.Modulos.MovimentacoesComerciais.csproj" />
     <Project Path="src/backend/Modulos/Segmentacao/LavaMais.Crm.Modulos.Segmentacao.csproj" />
   </Folder>
   <Folder Name="/testes/backend/">

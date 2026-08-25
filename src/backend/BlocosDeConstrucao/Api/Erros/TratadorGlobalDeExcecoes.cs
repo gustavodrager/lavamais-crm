@@ -17,6 +17,7 @@ public sealed class TratadorGlobalDeExcecoes(
         {
             ExcecaoDeRecursoNaoEncontrado => (StatusCodes.Status404NotFound, "Recurso nao encontrado", "recurso_nao_encontrado"),
             ExcecaoDeConflito conflito => (StatusCodes.Status409Conflict, "Conflito", conflito.Codigo),
+            DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "Conflito", "versao_desatualizada"),
             DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } => (StatusCodes.Status409Conflict, "Conflito", "restricao_unica"),
             ExcecaoDeRegraDeNegocio regra => (StatusCodes.Status422UnprocessableEntity, "Regra de negocio nao atendida", regra.Codigo),
             ExcecaoDeDominio => (StatusCodes.Status422UnprocessableEntity, "Regra de dominio nao atendida", "regra_de_dominio"),

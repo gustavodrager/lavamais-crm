@@ -79,6 +79,12 @@ Essas responsabilidades podem ser combinadas em menos rotas durante o desenho da
 - respostas automaticas ou chatbot;
 - producao e operacao da lavanderia.
 
+## Extensao controlada de homologacao
+
+Conforme ADR-012, a recepcao pode registrar uma `MovimentacaoComercial` minima para formar historico comercial. Esse registro nao representa controle de pedido operacional e nao substitui o Essence GO Industrial.
+
+O detalhe do cliente apresenta o historico dessas movimentacoes e indicadores descritivos calculados somente sobre registros validos: quantidade, total movimentado, ticket medio, ultima movimentacao e quantidade de servicos distintos. Esses dados nao representam controle financeiro nem classificacao automatica do cliente.
+
 ## Criterios de sucesso
 
 - uma base real de clientes pode ser importada com seguranca;

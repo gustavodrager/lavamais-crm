@@ -17,6 +17,7 @@ Esta pasta registra decisoes arquiteturais e de produto que orientam todas as co
 | [ADR-009](ADR-009-sessoes-bff-no-postgresql.md) | Persistencia criptografada de sessoes do BFF; artefatos OIDC deixaram de ser vigentes |
 | [ADR-010](ADR-010-homologacao-incremental-sem-centrais.md) | Homologacao incremental; parte de identidade substituida pelo ADR-011 |
 | [ADR-011](ADR-011-identidade-local-do-crm.md) | Login local por telefone e senha definida no primeiro acesso |
+| [ADR-012](ADR-012-movimentacoes-comerciais-manuais.md) | Registro comercial minimo de pedidos sem substituir o Essence GO Industrial |
 
 ## Regra
 

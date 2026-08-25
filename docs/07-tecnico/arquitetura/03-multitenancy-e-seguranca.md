@@ -4,6 +4,8 @@
 
 O CRM autentica localmente pelo telefone autorizado e pela senha definida no primeiro acesso. O servidor associa a identidade ao tenant e ao papel configurados; o navegador nunca informa `tenantId` ou papel como fonte de autorizacao.
 
+A identidade e responsavel pela credencial e pela sessao. O modulo `Autorizacao` e a fonte unica do papel e da situacao de acesso ao CRM; o claim `papel_crm` e montado novamente a cada autenticacao da requisicao a partir dessa fonte. Alterar o papel ou inativar a autorizacao produz efeito sem recriar a sessao.
+
 Senhas usam PBKDF2-SHA256 com salt individual. Sessoes usam tokens aleatorios opacos, e apenas o hash SHA-256 e persistido no schema `identidade`.
 
 ## Sessao no BFF

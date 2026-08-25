@@ -42,6 +42,10 @@ export const repositorioDemonstracao: PortaCrmApi = {
     const inicio = (pagina - 1) * tamanhoPagina;
     return { itens: clientesDemonstracao.slice(inicio, inicio + tamanhoPagina), pagina, tamanhoPagina, total: clientesDemonstracao.length };
   },
+  async obterCliente(id) {
+    const cliente = clientesDemonstracao.find((item) => item.id === id);
+    return cliente ? { ...cliente, nomeFantasia: null, tipo: null, email: null, dataNascimento: null, situacao: "Ativo" as const, endereco: null } : null;
+  },
   async criarCliente() { return { id: crypto.randomUUID() }; },
   async preVisualizarImportacao() {
     return { referenciaArquivo: crypto.randomUUID(), colunas: ["nome", "whatsapp"], totalLinhas: 1, amostra: [{ numero: 2, valores: ["Ana Martins", "13999999999"], erros: [] }] };
@@ -52,5 +56,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async listarEtiquetas() { return [{ id: "6d3d0d64-a111-4cff-8db8-111111111119", nome: "Residencial" }]; },
   async criarEtiqueta() { return { id: crypto.randomUUID() }; },
   async criarEPublicarModelo() { return { id: crypto.randomUUID() }; },
+  async listarMovimentacoes() { return []; },
+  async registrarMovimentacao() { return { id: crypto.randomUUID() }; },
 };
 import "server-only";

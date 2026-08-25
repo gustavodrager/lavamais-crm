@@ -30,7 +30,7 @@ describe("CrmApiHttp", () => {
     expect(requisitar.mock.calls[0][0].toString()).toContain("situacao=Ativo");
   });
   it("adapta o contrato real de clientes sem depender de etiquetas expandidas", async () => {
-    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ itens: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: "5513999999999", tipo: "Residencial", permiteMarketingWhatsapp: true, endereco: { bairro: "Centro", cidade: "Praia Grande" }, etiquetaIds: ["6d3d0d64-a111-4cff-8db8-111111111119"], codigoExterno: "CLI-1" }], pagina: 1, tamanhoPagina: 20, total: 1 }), { status: 200 }));
+    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ itens: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", nomeFantasia: null, whatsapp: "5513999999999", email: null, dataNascimento: null, tipo: "Residencial", situacao: "Ativo", permiteMarketingWhatsapp: true, endereco: { logradouro: null, numero: null, complemento: null, bairro: "Centro", cidade: "Praia Grande", estado: null, cep: null }, etiquetaIds: ["6d3d0d64-a111-4cff-8db8-111111111119"], codigoExterno: "CLI-1" }], pagina: 1, tamanhoPagina: 20, total: 1 }), { status: 200 }));
     vi.stubGlobal("fetch", requisitar);
     const resultado = await new CrmApiHttp("http://crm.test", async () => "token").listarClientes();
     expect(resultado.itens[0]).toEqual({ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: "5513999999999", localidade: "Centro · Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: true, codigoExterno: "CLI-1" });

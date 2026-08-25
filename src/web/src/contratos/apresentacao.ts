@@ -103,6 +103,23 @@ export interface ResumoCliente {
   codigoExterno: string | null;
 }
 
+export interface DetalheCliente extends ResumoCliente {
+  nomeFantasia: string | null;
+  tipo: string | null;
+  email: string | null;
+  dataNascimento: string | null;
+  situacao: "Ativo" | "Inativo";
+  endereco: {
+    logradouro: string | null;
+    numero: string | null;
+    complemento: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    estado: string | null;
+    cep: string | null;
+  } | null;
+}
+
 export interface PreVisualizacaoImportacao {
   referenciaArquivo: string;
   colunas: string[];
@@ -154,4 +171,19 @@ export interface ResultadoPaginado<T> {
   pagina: number;
   tamanhoPagina: number;
   total: number;
+}
+
+export interface ResumoMovimentacaoComercial {
+  id: string;
+  clienteId: string;
+  nomeCliente: string;
+  itemDeCatalogoId: string;
+  nomeItem: string;
+  valorTotal: number;
+  dataMovimentacao: string;
+  codigoExterno: string | null;
+  observacao: string | null;
+  origem: "Recepcao" | "ImportacaoEssence" | "IntegracaoEssence";
+  situacao: "Registrada" | "Cancelada";
+  versao: number;
 }

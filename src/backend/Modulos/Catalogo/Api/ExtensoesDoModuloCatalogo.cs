@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
 using LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
@@ -16,7 +17,7 @@ public static class ExtensoesDoModuloCatalogo
     public static IServiceCollection AdicionarModuloCatalogo(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeCatalogo>(configuracao, ContextoDeCatalogo.Historico, ContextoDeCatalogo.Schema);
-        servicos.AddScoped<GerenciadorDeCatalogo>(); servicos.AddScoped<ConsultaDeCatalogo>(); return servicos;
+        servicos.AddScoped<GerenciadorDeCatalogo>(); servicos.AddScoped<ConsultaDeCatalogo>(); servicos.AddScoped<IConsultaDeCatalogoParaMovimentacao>(provedor => provedor.GetRequiredService<ConsultaDeCatalogo>()); return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloCatalogo(this IEndpointRouteBuilder endpoints)
