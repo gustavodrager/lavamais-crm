@@ -37,7 +37,7 @@ Como nao existe historico inicial de pedidos ou movimentacoes, nao implementar c
 - Worker em .NET 10.
 - Monolito modular no backend.
 - PostgreSQL com Entity Framework Core.
-- Autenticacao delegada ao Identity Hub por OIDC Authorization Code com PKCE.
+- Autenticacao local por telefone, senha e sessao opaca, conforme ADR-011.
 - Envio de mensagens delegado ao Notification Hub.
 - Outbox transacional no CRM para efeitos externos.
 - OpenAPI para o contrato HTTP.
@@ -62,12 +62,13 @@ Cada modulo organiza `Dominio`, `Aplicacao`, `Infraestrutura` e sua exposicao HT
 
 ## Identidade, tenant e autorizacao
 
-- Nunca implementar cadastro de senha ou login local no CRM.
-- O claim `sub` identifica o usuario.
-- O claim `tenant_id` define obrigatoriamente o tenant empresarial.
+- O CRM autentica localmente pelo telefone autorizado e por senha definida no primeiro acesso.
+- Senhas usam PBKDF2-SHA256 com salt individual e sessoes usam tokens opacos com apenas o hash persistido.
+- O servidor deriva obrigatoriamente usuario, tenant e papel a partir da sessao autenticada.
 - Toda leitura e escrita empresarial deve ser filtrada no servidor pelo tenant autenticado.
 - Nunca aceitar `tenantId` enviado pelo navegador como fonte de autorizacao.
-- Os papeis `Administrador`, `Gerente` e `Operador` sao especificos do CRM e ficam no banco do CRM, vinculados a `sub + tenant_id`.
+- Os papeis `Administrador`, `Gerente` e `Operador` sao especificos do CRM e ficam no banco do CRM.
+- O BFF guarda o token opaco na sessao server-side e entrega ao navegador somente um cookie `HttpOnly`.
 
 ## Notification Hub
 

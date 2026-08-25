@@ -46,6 +46,7 @@ A aplicacao comeca como um monolito modular em um monorepo. O crescimento do pro
 
 ## Documentacao vigente
 
+- [Indice da documentacao](docs/README.md)
 - [Visao do produto](docs/00-visao-geral/02-visao-produto.md)
 - [Escopo da Versao 1.0](docs/00-visao-geral/03-escopo-versao-1.md)
 - [Arquitetura tecnica](docs/07-tecnico/README.md)

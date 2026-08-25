@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { salvarSessao } from "@/infraestrutura/repositorio-sessoes";
-import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-oidc";
+import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-local";
 import { criarUrlDaAplicacao } from "@/infraestrutura/url-aplicacao";
 
 const esquema = z.object({ token: z.string().min(1), expiraEm: z.string(), nome: z.string(), nomeTenant: z.string(), papel: z.enum(["Administrador", "Gerente", "Operador"]) });

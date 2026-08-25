@@ -13,12 +13,11 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 
 ## Identidade
 
-- localizar, publicar e operar o Identity Hub; em 20 de agosto de 2026 nao havia servico ou repositorio disponivel no ambiente inspecionado;
-- evoluir o Identity Hub para registrar escopo/recurso `lavamais-crm-api` e emitir `aud`;
-- criar cliente OIDC `lavamais-crm-web`;
-- definir dominios e callbacks de homologacao e producao;
-- aplicar o schema tecnico das sessoes do BFF, provisionar chave de criptografia por ambiente e validar login apos reinicio;
-- definir procedimento de provisionamento do primeiro administrador.
+- configurar por ambiente o telefone permitido, tenant, nome do tenant e nome do primeiro administrador;
+- executar o primeiro acesso antes da divulgacao da URL;
+- aplicar o schema tecnico das sessoes do BFF e provisionar chave de criptografia exclusiva por ambiente;
+- validar login e continuidade da sessao depois de reinicios e entre multiplas instancias;
+- definir procedimento controlado para recuperacao de acesso enquanto nao existe fluxo automatico de recuperacao de senha;
 
 ## Notification Hub
 
@@ -39,7 +38,7 @@ Estas pendencias nao impedem a consolidacao da arquitetura, mas precisam ser res
 
 - PostgreSQL provisionado no projeto Railway `lavamais-crm`, com ambientes isolados `homologacao` e `production`, conforme ADR-008;
 - API, BFF, Worker e migrador provisionados no Railway em homologacao; o Worker permanece com zero replicas ate a liberacao do Notification Hub;
-- substituir os dominios temporarios do Railway por dominios definitivos, configurar DNS e registrar os callbacks no Identity Hub;
+- substituir os dominios temporarios do Railway por dominios definitivos e configurar DNS;
 - PITR habilitado em homologacao e producao; confirmar a primeira cobertura, executar restauracao isolada e definir RPO e RTO antes de inserir dados empresariais em producao;
 - configurar alertas e responsaveis operacionais.
 

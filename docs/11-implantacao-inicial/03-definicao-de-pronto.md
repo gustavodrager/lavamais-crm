@@ -19,8 +19,8 @@ Uma fatia so esta pronta quando:
 Para a Versao 1.0 estar pronta, tambem e necessario:
 
 - validar importacao com amostra real autorizada;
-- provisionar cliente OIDC e primeiro administrador;
-- validar tokens com audiencia `lavamais-crm-api` em homologacao;
+- configurar de forma segura o telefone permitido e o primeiro administrador;
+- validar primeiro acesso, login, expiracao, revogacao e persistencia das sessoes em homologacao;
 - provisionar chave e templates no Notification Hub;
 - testar idempotencia em repeticao de requisicao;
 - testar falha parcial de destinatarios;

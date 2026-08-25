@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-oidc";
+import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-local";
 
 export async function GET(requisicao: Request) {
   if (process.env.LAVAMAIS_AMBIENTE_TESTE !== "1") return new Response(null, { status: 404 });

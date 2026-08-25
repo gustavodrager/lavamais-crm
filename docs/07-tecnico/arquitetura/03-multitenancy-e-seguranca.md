@@ -1,66 +1,45 @@
 # Multitenancy e Seguranca
 
-## Fonte do tenant
+## Identidade vigente
 
-O Identity Hub emite `tenant_id` e `tenant_slug` no access token e no identity token depois que o usuario seleciona um tenant ativo.
+O CRM autentica localmente pelo telefone autorizado e pela senha definida no primeiro acesso. O servidor associa a identidade ao tenant e ao papel configurados; o navegador nunca informa `tenantId` ou papel como fonte de autorizacao.
 
-O CRM aceita `tenant_id` exclusivamente do principal autenticado. Cabecalhos, query strings, corpo e rotas nunca substituem esse valor para autorizacao.
+Senhas usam PBKDF2-SHA256 com salt individual. Sessoes usam tokens aleatorios opacos, e apenas o hash SHA-256 e persistido no schema `identidade`.
 
-## Isolamento
+## Sessao no BFF
 
-- todas as entidades empresariais possuem `TenantId`;
-- repositorios exigem um contexto de tenant;
-- indices e restricoes unicas incluem `TenantId` quando a regra for empresarial;
-- consultas administrativas tambem passam por autorizacao explicita;
-- testes de integracao verificam tentativa de leitura e escrita entre tenants.
+- o BFF recebe o token opaco da CRM API;
+- o token fica criptografado na sessao server-side;
+- o navegador recebe somente um identificador de sessao em cookie `HttpOnly`, `Secure` e `SameSite=Lax`;
+- homologacao e producao persistem as sessoes no schema tecnico `web` do PostgreSQL;
+- a chave AES-256-GCM e exclusiva por ambiente e fornecida por segredo;
+- a rotacao da chave encerra as sessoes existentes.
 
-## Identidade
+## Isolamento por tenant
 
-- `sub` e armazenado como texto para preservar o contrato OIDC;
-- nome e e-mail podem ser projetados para exibicao, mas o Identity Hub continua sendo a fonte;
-- o CRM nao persiste senha, refresh token ou segredo de cliente no banco de dominio.
+- entidades empresariais possuem `TenantId`;
+- a API deriva o tenant somente da sessao autenticada;
+- filtros globais de persistencia e consultas de aplicacao restringem os dados ao tenant;
+- restricoes unicas empresariais incluem o tenant;
+- recursos de outro tenant nao sao revelados e retornam resposta equivalente a recurso inexistente;
+- nenhum `DbContext`, entidade ou tabela interna de outro modulo e acessado diretamente.
 
-## Autorizacao local
+## Autorizacao
 
-Tabela logica `autorizacao.usuarios_crm`:
+Os papeis locais sao `Administrador`, `Gerente` e `Operador`. As politicas sao aplicadas na API, independentemente do que a interface apresenta ou oculta.
 
-```text
-Id
-TenantId
-UsuarioIdentidadeId
-Papel
-Situacao
-DataCriacao
-DataAtualizacao
-```
+O primeiro administrador e ativado por procedimento controlado. Recuperacao de senha, multiplos usuarios e alteracao do telefone permitido permanecem evolucoes posteriores.
 
-Restricao unica: `TenantId + UsuarioIdentidadeId`.
+## Protecoes operacionais
 
-Papeis iniciais:
+- login e primeiro acesso possuem limitacao de taxa;
+- segredos nao sao versionados nem registrados em logs;
+- logs nao incluem tokens, corpos ou dados pessoais;
+- conexoes de banco usam configuracao externa nos ambientes compartilhados;
+- migrations sao executadas por etapa controlada, nunca no startup;
+- credenciais do Notification Hub ficam somente na API ou no Worker;
+- o envio permanece desabilitado enquanto a integracao segura com o Notification Hub nao estiver pronta.
 
-- `Administrador`;
-- `Gerente`;
-- `Operador`.
+## Historico da decisao
 
-O primeiro administrador de um tenant sera provisionado por operacao controlada de implantacao. Autoatribuicao de papel no primeiro login e proibida.
-
-## BFF
-
-- cliente OIDC confidencial para ambientes compartilhados;
-- Authorization Code com PKCE;
-- cookie de sessao `HttpOnly`, `Secure` e `SameSite=Lax`;
-- tokens mantidos no servidor;
-- protecao CSRF em mutacoes;
-- refresh token rotacionado de forma serializada por sessao;
-- logout local seguido do endpoint de logout do Identity Hub.
-
-## API
-
-- valida assinatura, emissor e expiracao do JWT;
-- valida a audiencia do CRM assim que o Identity Hub passar a emitir o recurso `lavamais-crm-api`;
-- exige tenant para endpoints empresariais;
-- aplica politica de papel por caso de uso;
-- usa correlacao para logs, auditoria e outbox;
-- nao registra tokens nem dados pessoais completos em logs.
-
-Antes da integracao final, o Identity Hub precisa registrar um escopo/recurso da API e emitir o claim `aud`. Enquanto isso nao existir, a ausencia de validacao de audiencia deve ficar limitada ao desenvolvimento local e registrada como risco conhecido.
+A arquitetura anterior previa OIDC pelo Identity Hub. O ADR-011 substituiu essa parte das ADR-003, ADR-004 e ADR-010. O documento de integracao com o Identity Hub permanece marcado como historico.

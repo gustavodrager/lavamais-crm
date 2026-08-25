@@ -9,10 +9,12 @@
 
 ## Fatia 1 — Identidade e tenant
 
-- BFF OIDC;
-- validacao JWT na API;
-- contexto de tenant;
-- autorizacao local e provisionamento controlado do administrador;
+- login local por telefone e senha definida no primeiro acesso;
+- sessao opaca validada pela API;
+- token mantido somente na sessao server-side do BFF;
+- contexto de tenant e papel derivados no servidor;
+- provisionamento controlado do primeiro administrador;
+- limitacao de taxa no login e no primeiro acesso;
 - testes de isolamento.
 
 ## Fatia 2 — Clientes

@@ -2,9 +2,9 @@
 
 ## Separacao de responsabilidades
 
-O Identity Hub autentica o usuario, valida seu vinculo com o tenant e fornece `sub`, `tenant_id` e `tenant_slug`.
+O modulo `Identidade` autentica o usuario local pelo telefone autorizado e pela senha definida no primeiro acesso. A sessao opaca permite que a API derive usuario, tenant e papel exclusivamente no servidor.
 
-O Identity Hub atualmente nao fornece papeis especificos do LavaMais CRM no token. O CRM mantem autorizacao local por `sub + tenant_id`, sem armazenar senha ou duplicar a conta.
+O CRM armazena somente senha protegida com PBKDF2-SHA256 e o hash SHA-256 dos tokens de sessao. Tokens em claro permanecem apenas na sessao server-side do BFF e nunca sao entregues ao JavaScript do navegador.
 
 ## Administrador
 

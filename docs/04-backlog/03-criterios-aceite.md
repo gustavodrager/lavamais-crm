@@ -1,5 +1,7 @@
 # Criterios de Aceite da Versao 1.0
 
+> Status: material historico de descoberta. Os criterios vigentes da implantacao inicial estao em `docs/11-implantacao-inicial/03-definicao-de-pronto.md`.
+
 ## Identidade e tenant
 
 - O CRM nao possui tela ou tabela de senha.

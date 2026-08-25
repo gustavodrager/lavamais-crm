@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { excluirSessao, obterSessao } from "@/infraestrutura/repositorio-sessoes";
-import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-oidc";
+import { NOME_COOKIE_SESSAO } from "@/infraestrutura/sessao-local";
 import { criarUrlDaAplicacao } from "@/infraestrutura/url-aplicacao";
 
 export async function POST(requisicao: NextRequest) {

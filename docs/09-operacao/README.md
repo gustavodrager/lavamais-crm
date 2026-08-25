@@ -5,7 +5,7 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF 
 ## Implantacao
 
 1. fornecer segredos por variaveis do ambiente, sem arquivos versionados;
-2. executar migrations e o script `infraestrutura/postgresql/001-sessoes-web.sql` como etapa unica e controlada antes de liberar a nova versao;
+2. executar migrations e os scripts de `infraestrutura/postgresql/` em ordem numerica como etapa unica e controlada antes de liberar a nova versao;
 3. iniciar a API e validar `/saude/vivo` e `/saude/pronto`;
 4. iniciar uma unica instancia do Worker e confirmar processamento da outbox;
 5. executar uma acao de homologacao com destinatario autorizado e conferir idempotencia e reconciliacao.

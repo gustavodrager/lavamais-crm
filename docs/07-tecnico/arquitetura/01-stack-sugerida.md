@@ -33,8 +33,8 @@ Status: aceita. Consulte [ADR-002](../../10-decisoes/ADR-002-stack-e-monolito-mo
 
 ## Integracoes
 
-- OIDC Authorization Code com PKCE pelo Identity Hub;
-- JWT de acesso validado pela API;
+- autenticacao local por telefone e senha definida no primeiro acesso;
+- sessao opaca validada pela API e mantida no BFF;
 - HTTP com `X-Api-Key` para o Notification Hub;
 - importacao CSV como primeira entrada de dados externa.
 

@@ -1,5 +1,7 @@
 # Historias de Usuario da Versao 1.0
 
+> Status: backlog historico de descoberta. Validar cada historia contra o escopo vigente e os ADRs antes de implementar. A identidade pelo Identity Hub foi substituida pelo ADR-011.
+
 ## Acesso
 
 ### HU01 — Entrar no CRM

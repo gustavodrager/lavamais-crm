@@ -2,10 +2,10 @@ name: Frontend
 
 on:
   pull_request:
-    paths: ["src/web/**", "tests/frontend/**", ".github/workflows/frontend.yml"]
+    paths: ["src/web/**", "testes/frontend/**", ".github/workflows/frontend.yml"]
   push:
     branches: [main]
-    paths: ["src/web/**", "tests/frontend/**", ".github/workflows/frontend.yml"]
+    paths: ["src/web/**", "testes/frontend/**", ".github/workflows/frontend.yml"]
 
 jobs:
   verificar:

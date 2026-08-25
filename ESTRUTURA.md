@@ -1,56 +1,53 @@
 # Estrutura do Repositorio
 
-## Estrutura atual de planejamento
-
-```text
-lavamais-crm/
-├── AGENTS.md
-├── README.md
-├── ESTRUTURA.md
-├── docs/
-│   ├── 00-visao-geral/
-│   ├── 01-descoberta-negocio/
-│   ├── 02-produto/
-│   ├── 03-prototipo/
-│   ├── 04-backlog/
-│   ├── 05-regras-negocio/
-│   ├── 06-lgpd-seguranca/
-│   ├── 07-tecnico/
-│   ├── 08-comercial/
-│   ├── 09-reunioes/
-│   ├── 10-decisoes/
-│   ├── 11-implantacao-inicial/
-│   └── 99-referencias/
-├── prototipo/                  # prototipo historico
-└── prototipo_v1/               # prototipo historico
-```
-
-## Estrutura prevista para o codigo
+Este documento apresenta a organizacao implementada. A fonte de verdade de produto esta em `docs/00-visao-geral`, e as decisoes que alteram arquitetura ou escopo ficam em `docs/10-decisoes`.
 
 ```text
 lavamais-crm/
 ├── src/
-│   ├── web/                    # Next.js e BFF
+│   ├── web/                         # Next.js, interface e BFF
 │   └── backend/
-│       ├── LavaMais.Crm.Api/
-│       ├── LavaMais.Crm.Worker/
-│       ├── Modulos/
-│       │   ├── Clientes/
-│       │   ├── Catalogo/
-│       │   ├── Segmentacao/
-│       │   ├── ModelosDeMensagem/
-│       │   ├── AcoesComerciais/
-│       │   ├── Importacoes/
-│       │   ├── Autorizacao/
-│       │   ├── Auditoria/
-│       │   └── Integracoes/
-│       └── BlocosDeConstrucao/
+│       ├── LavaMais.Crm.Api/        # API HTTP
+│       ├── LavaMais.Crm.Worker/     # outbox e integracoes
+│       ├── LavaMais.Crm.Migrador/   # migrations controladas
+│       ├── BlocosDeConstrucao/      # contratos e infraestrutura compartilhada
+│       └── Modulos/                 # monolito modular
 ├── testes/
-│   ├── backend/
-│   ├── frontend/
-│   └── ponta-a-ponta/
-├── infraestrutura/
-└── docs/
+│   ├── backend/                     # arquitetura, unidade e integracao .NET
+│   └── frontend/                    # componentes, integracao e Playwright
+├── infraestrutura/                  # Compose, Dockerfiles e scripts SQL
+├── scripts/backend/                 # backup e restauracao
+├── docs/                            # produto, tecnica, operacao e decisoes
+├── prototipo/                       # prototipo historico
+└── prototipo_v1/                    # prototipo historico
 ```
 
-A estrutura de codigo sera criada somente quando iniciarmos o scaffold. Alteracoes nessa organizacao exigem registro em ADR.
+## Aplicacoes implantaveis
+
+- `LavaMais.Crm.Api`: autenticacao, contratos HTTP e casos de uso do CRM;
+- `LavaMais.Crm.Worker`: processamento da outbox e comunicacao com o Notification Hub;
+- `LavaMais.Crm.Migrador`: aplicacao controlada das migrations;
+- `src/web`: interface e BFF, com sessoes server-side.
+
+## Modulos do backend
+
+- `Identidade`;
+- `Autorizacao`;
+- `Clientes`;
+- `Importacoes`;
+- `Catalogo`;
+- `ModelosDeMensagem`;
+- `Segmentacao`;
+- `AcoesComerciais`;
+- `Auditoria`;
+- `Integracoes`.
+
+Cada modulo organiza `Dominio`, `Aplicacao`, `Infraestrutura` e `Api` conforme sua necessidade. Os modulos usam contratos de aplicacao e nao acessam diretamente entidades, tabelas ou `DbContext` internos de outro modulo.
+
+## Documentacao
+
+O indice e a classificacao entre material vigente, roadmap, descoberta e historico estao em [`docs/README.md`](docs/README.md).
+
+## Testes
+
+Todos os testes ficam sob `testes/`. O backend usa xUnit e Testcontainers; o frontend usa Vitest e Playwright.

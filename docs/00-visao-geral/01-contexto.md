@@ -23,7 +23,7 @@ Cliente 360, oportunidades automaticas, inatividade, metas e indicadores permane
 
 ## Integracoes existentes
 
-- Identity Hub para autenticacao e tenant;
+- identidade local do CRM para autenticacao, tenant e papel;
 - Notification Hub para WhatsApp e futuros canais;
 - Essence GO Industrial como possivel fonte futura, sem integracao ativa nesta fase.
 

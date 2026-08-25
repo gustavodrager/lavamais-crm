@@ -8,21 +8,15 @@ import type { SessaoApresentacao } from "@/contratos/apresentacao";
 export interface SessaoServidor {
   apresentacao: SessaoApresentacao;
   accessToken: string;
-  refreshToken?: string;
-  idToken?: string;
   expiraEm: number;
 }
 
-export interface EstadoOidc { state: string; nonce: string; verificadorPkce: string; retorno: string; }
-
 declare global {
   var __lavamaisSessoes: Map<string, SessaoServidor> | undefined;
-  var __lavamaisEstadosOidc: Map<string, EstadoOidc> | undefined;
   var __lavamaisPoolSessoes: Pool | undefined;
 }
 
 const sessoesEmMemoria = globalThis.__lavamaisSessoes ??= new Map();
-const estadosEmMemoria = globalThis.__lavamaisEstadosOidc ??= new Map();
 const esquemaId = z.string().uuid();
 
 function configuracaoCompartilhada() {
@@ -51,14 +45,19 @@ function descriptografar<T>(valor: string, chave: Buffer): T {
 export async function salvarSessao(id: string, sessao: SessaoServidor, cliente?: PoolClient) {
   const configuracao = configuracaoCompartilhada(); if (!configuracao) { sessoesEmMemoria.set(id, sessao); return; }
   const executor = cliente ?? configuracao.pool;
-  const retencao = sessao.refreshToken ? Date.now() + 30 * 24 * 60 * 60 * 1000 : sessao.expiraEm;
-  await executor.query("INSERT INTO web.sessoes (id, conteudo, expira_em) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET conteudo = EXCLUDED.conteudo, expira_em = EXCLUDED.expira_em", [id, criptografar(sessao, configuracao.chave), new Date(retencao)]);
+  await executor.query("INSERT INTO web.sessoes (id, conteudo, expira_em) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET conteudo = EXCLUDED.conteudo, expira_em = EXCLUDED.expira_em", [id, criptografar(sessao, configuracao.chave), new Date(sessao.expiraEm)]);
   await executor.query("DELETE FROM web.sessoes WHERE expira_em <= NOW()");
 }
 
 export async function obterSessao(id: string, cliente?: PoolClient): Promise<SessaoServidor | undefined> {
   if (!esquemaId.safeParse(id).success) return undefined;
-  const configuracao = configuracaoCompartilhada(); if (!configuracao) return sessoesEmMemoria.get(id);
+  const configuracao = configuracaoCompartilhada();
+  if (!configuracao) {
+    const sessao = sessoesEmMemoria.get(id);
+    if (sessao && sessao.expiraEm > Date.now()) return sessao;
+    sessoesEmMemoria.delete(id);
+    return undefined;
+  }
   const resultado = await (cliente ?? configuracao.pool).query<{ conteudo: string }>("SELECT conteudo FROM web.sessoes WHERE id = $1 AND expira_em > NOW()", [id]);
   return resultado.rowCount ? descriptografar<SessaoServidor>(resultado.rows[0].conteudo, configuracao.chave) : undefined;
 }
@@ -67,26 +66,4 @@ export async function excluirSessao(id: string, cliente?: PoolClient) {
   if (!esquemaId.safeParse(id).success) return;
   const configuracao = configuracaoCompartilhada(); if (!configuracao) { sessoesEmMemoria.delete(id); return; }
   await (cliente ?? configuracao.pool).query("DELETE FROM web.sessoes WHERE id = $1", [id]);
-}
-
-export async function salvarEstadoOidc(id: string, estado: EstadoOidc) {
-  const configuracao = configuracaoCompartilhada(); if (!configuracao) { estadosEmMemoria.set(id, estado); return; }
-  await configuracao.pool.query("INSERT INTO web.estados_oidc (id, conteudo, expira_em) VALUES ($1, $2, NOW() + INTERVAL '10 minutes')", [id, criptografar(estado, configuracao.chave)]);
-  await configuracao.pool.query("DELETE FROM web.estados_oidc WHERE expira_em <= NOW()");
-}
-
-export async function consumirEstadoOidc(id: string): Promise<EstadoOidc | undefined> {
-  if (!esquemaId.safeParse(id).success) return undefined;
-  const configuracao = configuracaoCompartilhada();
-  if (!configuracao) { const estado = estadosEmMemoria.get(id); estadosEmMemoria.delete(id); return estado; }
-  const resultado = await configuracao.pool.query<{ conteudo: string }>("DELETE FROM web.estados_oidc WHERE id = $1 AND expira_em > NOW() RETURNING conteudo", [id]);
-  return resultado.rowCount ? descriptografar<EstadoOidc>(resultado.rows[0].conteudo, configuracao.chave) : undefined;
-}
-
-export async function comBloqueioDaSessao<T>(id: string, tarefa: (cliente?: PoolClient) => Promise<T>): Promise<T> {
-  const configuracao = configuracaoCompartilhada(); if (!configuracao) return tarefa();
-  const cliente = await configuracao.pool.connect();
-  try { await cliente.query("BEGIN"); await cliente.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [id]); const resultado = await tarefa(cliente); await cliente.query("COMMIT"); return resultado; }
-  catch (erro) { await cliente.query("ROLLBACK"); throw erro; }
-  finally { cliente.release(); }
 }

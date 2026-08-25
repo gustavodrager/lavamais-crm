@@ -1,5 +1,7 @@
 # Epicos da Versao 1.0
 
+> Status: backlog historico de descoberta. Validar cada item contra o escopo vigente e os ADRs antes de implementar. A identidade pelo Identity Hub foi substituida pelo ADR-011.
+
 ## EP01 — Fundacao tecnica
 
 Monorepo, ambientes, banco, observabilidade, CI/CD e estrutura do monolito modular.

@@ -1,5 +1,7 @@
 # Integracao com Identity Hub
 
+> Status: historico. Esta integracao deixou de ser o contrato vigente quando o ADR-011 adotou identidade local no CRM. O documento permanece como registro da arquitetura anterior e como referencia para uma eventual reavaliacao futura.
+
 > Historico: este contrato foi substituido pela identidade local definida na ADR-011 e nao representa a implementacao vigente.
 
 Verificado em: 2026-08-15.

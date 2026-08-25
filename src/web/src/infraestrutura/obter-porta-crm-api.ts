@@ -1,7 +1,7 @@
 import "server-only";
 
 import { CrmApiHttp } from "@/infraestrutura/crm-api-http";
-import { obterAccessToken } from "@/infraestrutura/sessao-oidc";
+import { obterAccessToken } from "@/infraestrutura/sessao-local";
 import type { PortaCrmApi } from "@/portas/crm-api";
 
 export function obterPortaCrmApi(): PortaCrmApi {
