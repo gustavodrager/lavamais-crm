@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Megaphone, Users, Upload, Settings } from "lucide-react";
+import { House, Megaphone, Users, Upload, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const itensNavegacao = [
+  { href: "/inicio", rotulo: "Início", icone: House },
   { href: "/acoes-comerciais", rotulo: "Ações Comerciais", icone: Megaphone },
   { href: "/clientes", rotulo: "Clientes", icone: Users },
   { href: "/importacao", rotulo: "Importação", icone: Upload },

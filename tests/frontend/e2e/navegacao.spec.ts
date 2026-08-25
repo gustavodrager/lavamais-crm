@@ -27,7 +27,7 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await page.getByRole("combobox", { name: "Cidade" }).click();
   await page.getByRole("option", { name: "Praia Grande" }).click();
   await page.getByRole("button", { name: "Ver clientes" }).click();
-  await expect(page.getByText("cliente pode receber a mensagem")).toBeVisible();
+  await expect(page.getByText(/cliente pode receber WhatsApp/)).toBeVisible();
   await page.getByRole("button", { name: "Continuar para a mensagem" }).click();
   await page.getByRole("combobox", { name: "Modelo de mensagem" }).click();
   await page.getByRole("option", { name: "Oferta de serviço · versão 1" }).click();

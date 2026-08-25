@@ -24,7 +24,7 @@ describe("DefinicaoPublico", () => {
     await usuario.click(screen.getByRole("option", { name: "Praia Grande" }));
     await usuario.click(screen.getByRole("button", { name: "Ver clientes" }));
     await waitFor(() => expect(screen.getByText("1")).toBeInTheDocument());
-    expect(screen.getByText("cliente pode receber a mensagem")).toBeInTheDocument();
+    expect(screen.getByText(/cliente pode receber WhatsApp/)).toBeInTheDocument();
     expect(screen.queryByText("Sem permissão")).not.toBeInTheDocument();
   });
 

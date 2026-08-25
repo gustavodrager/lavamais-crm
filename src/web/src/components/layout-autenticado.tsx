@@ -12,6 +12,7 @@ export async function LayoutAutenticado({ children }: { children: ReactNode }) {
   if (!sessao) redirect("/entrar");
   return (
     <div className="min-h-screen md:grid md:grid-cols-[16rem_1fr]">
+      <a href="#conteudo-principal" className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
       <aside className="fixed inset-y-0 hidden w-64 border-r border-sidebar-border bg-sidebar p-5 text-sidebar-foreground md:flex md:flex-col">
         <Marca />
         <div className="mt-8 flex-1"><Navegacao tema="escuro" /></div>
@@ -26,7 +27,7 @@ export async function LayoutAutenticado({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block"><p className="text-sm font-medium">{sessao.usuario.nome}</p><p className="text-xs text-muted-foreground">{sessao.papel ?? "Usuário autenticado"}</p></div>
             <Badge variant="secondary" className="grid size-9 place-items-center rounded-full p-0">{sessao.usuario.iniciais}</Badge>
-            {!sessao.autenticacaoDesabilitada && <form action="/api/autenticacao/sair" method="post"><Button type="submit" variant="ghost" size="sm">Sair</Button></form>}
+            {!sessao.autenticacaoDesabilitada && <form action="/api/autenticacao/sair" method="post"><Button type="submit" variant="ghost" size="sm" className="min-h-11">Sair</Button></form>}
           </div>
         </header>
         <main id="conteudo-principal" className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>

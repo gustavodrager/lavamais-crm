@@ -11,7 +11,7 @@ export function MenuMobile() {
   const [aberto, setAberto] = useState(false);
   return (
     <Sheet open={aberto} onOpenChange={setAberto}>
-      <SheetTrigger asChild><Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menu"><Menu /></Button></SheetTrigger>
+      <SheetTrigger asChild><Button variant="ghost" size="icon" className="size-11 md:hidden" aria-label="Abrir menu"><Menu /></Button></SheetTrigger>
       <SheetContent side="left" className="w-72 p-5">
         <SheetHeader className="sr-only"><SheetTitle>Menu principal</SheetTitle><SheetDescription>Navegue pelas áreas do CRM.</SheetDescription></SheetHeader>
         <Marca />
