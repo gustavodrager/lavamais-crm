@@ -13,7 +13,7 @@ describe("modelos padrão da LavaMais", () => {
     expect(modelosPadraoLavaMais).toHaveLength(6);
     for (const modelo of modelosPadraoLavaMais) {
       expect(modelo.conteudoPreVisualizacao).toContain("{{nomeCliente}}");
-      expect(modelo.conteudoPreVisualizacao).toContain("{{itemCatalogo}}");
+      expect(modelo.conteudoPreVisualizacao).not.toContain("{{itemCatalogo}}");
     }
   });
 
@@ -27,6 +27,6 @@ describe("modelos padrão da LavaMais", () => {
 
     expect(escopo.getByLabelText("Nome da mensagem")).toHaveValue("Coleta e entrega LavaMais");
     expect(escopo.getByLabelText("Mensagem que será conferida")).toHaveValue(modelosPadraoLavaMais[0].conteudoPreVisualizacao);
-    expect(escopo.getByLabelText("Chave na Central de Notificação")).toHaveValue("");
+    expect(escopo.getByLabelText("Chave na Central de Notificação")).toHaveValue("lavamais_coleta_entrega");
   });
 });

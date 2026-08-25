@@ -181,7 +181,8 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string; chaveTemplateNotificacao: string }) {
     const modelo = esquemaCriacao.parse(await this.requisitar("/api/v1/modelos-de-mensagem", { metodo: "POST", corpo: { nome: entrada.nome } }));
-    await this.requisitar(`/api/v1/modelos-de-mensagem/${modelo.id}/publicar`, { metodo: "POST", corpo: { conteudoPreVisualizacao: entrada.conteudoPreVisualizacao, variaveis: ["nomeCliente", "itemCatalogo"], chaveTemplateNotificacao: entrada.chaveTemplateNotificacao } });
+    const variaveis = ["nomeCliente", "itemCatalogo"].filter((variavel) => entrada.conteudoPreVisualizacao.includes(`{{${variavel}}}`));
+    await this.requisitar(`/api/v1/modelos-de-mensagem/${modelo.id}/publicar`, { metodo: "POST", corpo: { conteudoPreVisualizacao: entrada.conteudoPreVisualizacao, variaveis, chaveTemplateNotificacao: entrada.chaveTemplateNotificacao } });
     return modelo;
   }
 

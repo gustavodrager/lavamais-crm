@@ -39,8 +39,10 @@ function FormularioModelo({ modelos }: { modelos: OpcaoModeloDeMensagem[] }) {
     if (!formulario) return;
     const nome = formulario.elements.namedItem("nome");
     const conteudo = formulario.elements.namedItem("conteudoPreVisualizacao");
+    const chaveTemplate = formulario.elements.namedItem("chaveTemplateNotificacao");
     if (nome instanceof HTMLInputElement) nome.value = modelo.nome;
     if (conteudo instanceof HTMLTextAreaElement) conteudo.value = modelo.conteudoPreVisualizacao;
+    if (chaveTemplate instanceof HTMLInputElement) chaveTemplate.value = modelo.chaveTemplateNotificacao;
     if (nome instanceof HTMLInputElement) nome.focus();
   }
   function enviar(dados: FormData) { iniciar(async () => concluir(await criarModelo({ nome: String(dados.get("nome") ?? ""), conteudoPreVisualizacao: String(dados.get("conteudoPreVisualizacao") ?? ""), chaveTemplateNotificacao: String(dados.get("chaveTemplateNotificacao") ?? "") }), referencia.current, setMensagem)); }

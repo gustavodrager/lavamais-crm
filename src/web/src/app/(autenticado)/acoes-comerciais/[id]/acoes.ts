@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ResumoCliente, SimulacaoDePublico } from "@/contratos/apresentacao";
+import { modelosPadraoLavaMais } from "@/conteudo/modelos-padrao-lavamais";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
@@ -90,13 +91,25 @@ export async function alterarExclusaoDoPublico(entrada: { acaoId: string; client
 }
 
 export async function prepararAcao(entrada: { acaoId: string; versaoModeloId: string }): Promise<ResultadoPrepararAcao> {
-  const validacao = z.object({ acaoId: z.string().uuid(), versaoModeloId: z.string().uuid() }).safeParse(entrada);
+  const validacao = z.object({ acaoId: z.string().uuid(), versaoModeloId: z.union([z.string().uuid(), z.string().regex(/^padrao:[a-z0-9-]+$/)]) }).safeParse(entrada);
   if (!validacao.success) return { sucesso: false, mensagem: "Selecione um modelo de mensagem publicado." };
   const sessao = await obterPortaSessao().obterSessao();
   if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
   try {
     const porta = obterPortaCrmApi();
-    await porta.atualizarModelo(validacao.data.acaoId, validacao.data.versaoModeloId);
+    let versaoModeloId = validacao.data.versaoModeloId;
+    if (versaoModeloId.startsWith("padrao:")) {
+      const modeloPadrao = modelosPadraoLavaMais.find((modelo) => `padrao:${modelo.id}` === versaoModeloId);
+      if (!modeloPadrao) return { sucesso: false, mensagem: "A mensagem padrão selecionada não está disponível." };
+      let modeloPublicado = (await porta.listarModelosPublicados()).find((modelo) => modelo.nome === modeloPadrao.nome);
+      if (!modeloPublicado) {
+        await porta.criarEPublicarModelo({ nome: modeloPadrao.nome, conteudoPreVisualizacao: modeloPadrao.conteudoPreVisualizacao, chaveTemplateNotificacao: modeloPadrao.chaveTemplateNotificacao });
+        modeloPublicado = (await porta.listarModelosPublicados()).find((modelo) => modelo.nome === modeloPadrao.nome);
+      }
+      if (!modeloPublicado) return { sucesso: false, mensagem: "Não foi possível disponibilizar a mensagem padrão." };
+      versaoModeloId = modeloPublicado.versaoId;
+    }
+    await porta.atualizarModelo(validacao.data.acaoId, versaoModeloId);
     const acaoAtualizada = await porta.obter(validacao.data.acaoId);
     if (!acaoAtualizada) return { sucesso: false, mensagem: "A Ação Comercial não foi encontrada." };
     await porta.preparar(validacao.data.acaoId, acaoAtualizada.versao);
