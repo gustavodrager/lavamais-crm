@@ -28,7 +28,7 @@ export function FormularioCliente() {
     <Campo id="bairro" rotulo="Bairro" erro={errors.bairro?.message}><Select value={bairro} onValueChange={(valor) => setValue("bairro", valor)} disabled={!cidade}><SelectTrigger id="bairro"><SelectValue placeholder={cidade ? "Selecione o bairro" : "Selecione primeiro a cidade"} /></SelectTrigger><SelectContent>{cidade && bairrosAtendidosPorCidade[cidade].map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></Campo>
     <details className="rounded-xl border p-4 sm:col-span-2"><summary className="cursor-pointer text-sm font-medium">Informações opcionais</summary><div className="mt-4"><Campo id="tipo" rotulo="Tipo de cliente" erro={errors.tipo?.message}><Input id="tipo" placeholder="Ex.: Pessoa física" {...register("tipo")} /></Campo></div></details>
     <label className="flex min-h-11 items-start gap-3 text-sm sm:col-span-2"><input type="checkbox" className="mt-0.5 size-5 accent-primary" {...register("permiteMarketingWhatsapp")} /><span>Cliente permite o recebimento de mensagens comerciais pelo WhatsApp.</span></label>
-    <div className="flex justify-end border-t pt-5 sm:col-span-2"><Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Cadastrando..." : "Cadastrar cliente"}</Button></div>
+    <div className="flex justify-end border-t pt-5 sm:col-span-2"><Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>{isSubmitting ? "Cadastrando..." : "Cadastrar cliente"}</Button></div>
   </form>;
 }
 

@@ -38,8 +38,9 @@ export const repositorioDemonstracao: PortaCrmApi = {
       ],
     };
   },
-  async listarClientes() {
-    return { itens: clientesDemonstracao, pagina: 1, tamanhoPagina: 20, total: clientesDemonstracao.length };
+  async listarClientes(_busca, pagina = 1, tamanhoPagina = 20) {
+    const inicio = (pagina - 1) * tamanhoPagina;
+    return { itens: clientesDemonstracao.slice(inicio, inicio + tamanhoPagina), pagina, tamanhoPagina, total: clientesDemonstracao.length };
   },
   async criarCliente() { return { id: crypto.randomUUID() }; },
   async preVisualizarImportacao() {

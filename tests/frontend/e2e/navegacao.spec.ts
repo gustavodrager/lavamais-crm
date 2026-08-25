@@ -60,6 +60,7 @@ test("oferece acesso às demais areas pelo menu principal", async ({ page }, tes
 test("abre a navegacao em tela pequena", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile", "Fluxo especifico da navegacao compacta");
   await page.goto("/clientes");
-  await page.getByRole("button", { name: "Abrir menu" }).click();
+  await expect(page.getByRole("navigation", { name: "Navegação rápida" })).toBeVisible();
+  await page.getByRole("button", { name: "Mais" }).click();
   await expect(page.getByRole("navigation", { name: "Navegação principal" })).toBeVisible();
 });

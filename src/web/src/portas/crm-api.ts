@@ -18,7 +18,7 @@ export interface ConsultarAcoesComerciais {
 }
 
 export interface ConsultarClientes {
-  listarClientes(busca?: string): Promise<ResultadoPaginado<ResumoCliente>>;
+  listarClientes(busca?: string, pagina?: number, tamanhoPagina?: number): Promise<ResultadoPaginado<ResumoCliente>>;
   criarCliente(entrada: { nome: string; whatsapp: string; tipo: string | null; permiteMarketingWhatsapp: boolean; endereco: { bairro: string | null; cidade: string | null }; codigoExterno: string | null }): Promise<{ id: string }>;
 }
 
