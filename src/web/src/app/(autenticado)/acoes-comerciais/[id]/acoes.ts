@@ -3,32 +3,69 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { SimulacaoDePublico } from "@/contratos/apresentacao";
+import type { ResumoCliente, SimulacaoDePublico } from "@/contratos/apresentacao";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
 
-const esquema = z.object({ acaoId: z.string().uuid(), cidades: z.literal("Praia Grande"), bairros: z.string().trim().min(1).max(500) });
-export type EntradaSimularPublico = z.input<typeof esquema>;
+const esquemaAcaoId = z.string().uuid();
+const esquemaListaManual = z.object({ acaoId: esquemaAcaoId, clienteIds: z.array(z.string().uuid()).min(1).max(10) });
 export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoAlterarExclusao = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoPrepararAcao = { sucesso: false; mensagem: string };
 export type ResultadoEnviarMensagem = { sucesso: true } | { sucesso: false; mensagem: string };
 export type ResultadoRegistrarResultado = { sucesso: true } | { sucesso: false; mensagem: string };
-const lista = (valor: string) => { const itens = valor.split(",").map((item) => item.trim()).filter(Boolean); return itens.length ? itens : null; };
+const criteriosSemFiltros = { versaoSchema: 2 as const, modo: "Filtros" as const, tipoCliente: null, cidades: null, bairros: null, etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null };
 
-export async function salvarESimularPublico(entrada: EntradaSimularPublico): Promise<ResultadoSimularPublico> {
+export async function montarListaRapida(acaoId: string): Promise<ResultadoSimularPublico> {
+  const validacao = esquemaAcaoId.safeParse(acaoId);
+  if (!validacao.success) return { sucesso: false, mensagem: "A Ação Comercial informada é inválida." };
   const sessao = await obterPortaSessao().obterSessao();
-  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${entrada.acaoId}`);
-  const validacao = esquema.safeParse(entrada);
-  if (!validacao.success) return { sucesso: false, mensagem: validacao.error.issues[0]?.message ?? "Revise os filtros informados." };
-  const dados = validacao.data;
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${acaoId}`);
   try {
     const porta = obterPortaCrmApi();
-    await porta.atualizarCriterios(dados.acaoId, { versaoSchema: 2, modo: "Filtros", tipoCliente: null, cidades: lista(dados.cidades), bairros: lista(dados.bairros), etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null });
-    return { sucesso: true, simulacao: await porta.simularPublico(dados.acaoId) };
+    await porta.atualizarCriterios(acaoId, criteriosSemFiltros);
+    const candidatos = await porta.simularPublico(acaoId, 1, 100);
+    const clienteIds = candidatos.clientes.filter((cliente) => cliente.elegivel).slice(0, 10).map((cliente) => cliente.clienteId);
+    const totalPaginas = Math.ceil(candidatos.quantidadeEncontrada / 100);
+    for (let pagina = 2; pagina <= totalPaginas && clienteIds.length < 10; pagina += 1) {
+      const complemento = await porta.simularPublico(acaoId, pagina, 100);
+      clienteIds.push(...complemento.clientes.filter((cliente) => cliente.elegivel).slice(0, 10 - clienteIds.length).map((cliente) => cliente.clienteId));
+    }
+    if (clienteIds.length === 0) return { sucesso: true, simulacao: { ...candidatos, pagina: 1, tamanhoPagina: 10, clientes: [] } };
+    await porta.atualizarCriterios(acaoId, { ...criteriosSemFiltros, modo: "Manual", clienteIds });
+    return { sucesso: true, simulacao: await porta.simularPublico(acaoId, 1, 10) };
   } catch (erro) {
-    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para alterar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e tente novamente." : erro.status === 422 ? erro.message : "Não foi possível simular o público agora. Tente novamente." };
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para escolher clientes." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível montar a lista agora. Tente novamente." };
+    throw erro;
+  }
+}
+
+export async function buscarClientesParaLista(entrada: { acaoId: string; busca: string }): Promise<{ sucesso: true; clientes: ResumoCliente[] } | { sucesso: false; mensagem: string }> {
+  const validacao = z.object({ acaoId: esquemaAcaoId, busca: z.string().trim().min(2).max(120) }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Digite pelo menos 2 caracteres para buscar." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${entrada.acaoId}`);
+  try {
+    const resultado = await obterPortaCrmApi().listarClientes(validacao.data.busca, 1, 10);
+    return { sucesso: true, clientes: resultado.itens.filter((cliente) => cliente.permiteWhatsapp) };
+  } catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: "Não foi possível buscar clientes agora." };
+    throw erro;
+  }
+}
+
+export async function salvarListaManual(entrada: z.input<typeof esquemaListaManual>): Promise<ResultadoSimularPublico> {
+  const validacao = esquemaListaManual.safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Escolha de 1 a 10 clientes para continuar." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${entrada.acaoId}`);
+  try {
+    const porta = obterPortaCrmApi();
+    await porta.atualizarCriterios(validacao.data.acaoId, { ...criteriosSemFiltros, modo: "Manual", clienteIds: [...new Set(validacao.data.clienteIds)] });
+    return { sucesso: true, simulacao: await porta.simularPublico(validacao.data.acaoId, 1, 10) };
+  } catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 422 ? erro.message : "Não foi possível salvar os clientes escolhidos." };
     throw erro;
   }
 }

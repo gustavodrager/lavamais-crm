@@ -107,7 +107,7 @@ export function FormularioNovaAcao({
       <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
         <Button asChild type="button" variant="ghost"><Link href="/acoes-comerciais">Cancelar</Link></Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Criando rascunho..." : "Criar e definir público"}
+          {isSubmitting ? "Criando rascunho..." : "Criar e escolher clientes"}
         </Button>
       </div>
     </form>

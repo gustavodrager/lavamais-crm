@@ -21,29 +21,26 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await page.getByLabel("Objetivo").fill("Validar a criação integrada do rascunho");
   await page.getByRole("combobox", { name: "Item do catálogo" }).click();
   await page.getByRole("option", { name: "Lavagem de edredom · Casa" }).click();
-  await page.getByRole("button", { name: "Criar e definir público" }).click();
+  await page.getByRole("button", { name: "Criar e escolher clientes" }).click();
   await expect(page).toHaveURL(/\/acoes-comerciais\/7e4e1e75-b222-4cff-8db8-222222222222$/);
   await expect(page.getByRole("heading", { name: "Ação criada pelo frontend" })).toBeVisible();
-  await page.getByRole("combobox", { name: "Cidade" }).click();
-  await page.getByRole("option", { name: "Praia Grande" }).click();
-  await page.getByRole("button", { name: "Ver clientes" }).click();
-  await expect(page.getByText(/cliente pode receber WhatsApp/)).toBeVisible();
-  await page.getByRole("button", { name: "Continuar para a mensagem" }).click();
+  await page.getByRole("button", { name: /Trazer 10 clientes/ }).click();
+  await expect(page.getByText("Sua lista está pronta")).toBeVisible();
+  await page.getByRole("button", { name: "Escolher a mensagem" }).click();
   await page.getByRole("combobox", { name: "Modelo de mensagem" }).click();
   await page.getByRole("option", { name: "Oferta de serviço · versão 1" }).click();
   await expect(page.getByText("Olá, Ana Martins! Conheça o serviço selecionado.")).toBeVisible();
-  await page.getByRole("button", { name: "Confirmar público e mensagem" }).click();
+  await page.getByRole("button", { name: "Confirmar clientes e mensagem" }).click();
   await expect(page.getByRole("alertdialog")).toContainText("Esta ação ficará pronta com 1 cliente");
-  await page.getByRole("button", { name: "Sim, deixar ação pronta" }).click();
+  await page.getByRole("button", { name: "Sim, começar os atendimentos" }).click();
   await expect(page.getByText("Preparada", { exact: true })).toBeVisible();
-  await expect(page.getByRole("cell", { name: "Ana Martins" })).toBeVisible();
-  await page.getByRole("button", { name: "Conferir mensagem" }).click();
+  await page.getByRole("button", { name: /Ana Martins/ }).click();
   await expect(page.getByText("Olá, Ana Martins!")).toBeVisible();
-  await page.getByRole("button", { name: "Enviar esta mensagem" }).click();
+  await page.getByRole("button", { name: "Enviar mensagem para Ana Martins" }).click();
   await expect(page.getByRole("alertdialog")).toContainText("Será solicitada somente esta mensagem");
   await page.getByRole("button", { name: "Confirmar envio" }).click();
   await expect(page.getByText("Em processamento", { exact: true })).toBeVisible();
-  await expect(page.getByRole("table").getByText("Aguardando solicitação")).toBeVisible();
+  await expect(page.getByText("Aguardando envio", { exact: true })).toBeVisible();
 });
 
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {

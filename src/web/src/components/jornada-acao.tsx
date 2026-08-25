@@ -1,7 +1,7 @@
 import { Check, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const etapas = ["Informações", "Público", "Mensagem", "Revisão", "Execução"];
+const etapas = ["Informações", "Clientes", "Mensagem", "Revisão", "Envio"];
 
 export function JornadaAcao({ etapaAtual }: { etapaAtual: number }) {
   return (

@@ -20,7 +20,7 @@ export default async function DetalheAcao({ params }: { params: Promise<{ id: st
   const temFiltrosSalvos = Boolean(acao.criterios.tipoCliente || acao.criterios.cidades?.length || acao.criterios.bairros?.length || acao.criterios.cadastradoApartirDe || acao.criterios.clienteIds?.length || acao.criterios.clienteIdsExcluidos?.length);
   const [modelos, simulacaoInicial] = rascunho ? await Promise.all([
     obterPortaCrmApi().listarModelosPublicados(),
-    temFiltrosSalvos ? obterPortaCrmApi().simularPublico(acao.id) : Promise.resolve(null),
+    temFiltrosSalvos ? obterPortaCrmApi().simularPublico(acao.id, 1, 10) : Promise.resolve(null),
   ]) : [[], null];
   return <><CabecalhoPagina titulo={acao.nome} descricao={acao.objetivo ?? "Acompanhe a preparação, a entrega e o resultado comercial."} acao={<SituacaoAcao situacao={acao.situacao} />} />
     {acao.situacao === "EmProcessamento" && <AtualizacaoAutomatica />}
