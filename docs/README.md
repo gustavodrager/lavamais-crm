@@ -24,6 +24,7 @@ Leia nesta ordem:
 | `09-operacao` | implantacao, observabilidade, backup e incidentes |
 | `10-decisoes` | ADRs aceitos e substituicoes entre decisoes |
 | `11-implantacao-inicial` | fluxo, ordem, pronto e pendencias da Versao 1.0 |
+| `12-roadmap` | trabalho futuro compativel com as decisoes vigentes |
 
 ## Descoberta e roadmap
 

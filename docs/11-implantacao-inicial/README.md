@@ -8,6 +8,7 @@ Esta pasta e a referencia operacional para construir a Versao 1.0.
 - [Ordem de implementacao](02-ordem-de-implementacao.md)
 - [Definicao de pronto](03-definicao-de-pronto.md)
 - [Pendencias controladas](04-pendencias-controladas.md)
+- [Matriz de prontidao](09-matriz-prontidao.md)
 
 ## Resultado esperado
 

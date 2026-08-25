@@ -2,6 +2,13 @@
 
 Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-008.
 
+## Checklists
+
+- [Homologacao](01-checklist-homologacao.md)
+- [Producao](02-checklist-producao.md)
+- [Migrations e scripts PostgreSQL](03-migrations-e-scripts.md)
+- [Rollback e recuperacao](04-rollback.md)
+
 ## Implantacao
 
 1. fornecer segredos por variaveis do ambiente, sem arquivos versionados;
