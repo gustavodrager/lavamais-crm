@@ -3,20 +3,36 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { ResumoCliente, SimulacaoDePublico } from "@/contratos/apresentacao";
-import { modelosPadraoLavaMais } from "@/conteudo/modelos-padrao-lavamais";
+import type { CriteriosDeSegmentacao, ResumoCliente, SimulacaoDePublico } from "@/contratos/apresentacao";
+import { bairrosAtendidosPorCidade, cidadesAtendidas } from "@/conteudo/area-atendimento-lavamais";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
 
 const esquemaAcaoId = z.string().uuid();
 const esquemaListaManual = z.object({ acaoId: esquemaAcaoId, clienteIds: z.array(z.string().uuid()).min(1).max(10) });
+const esquemaListaPorRegiao = z.object({ acaoId: esquemaAcaoId, cidade: z.string().trim().min(1).max(80), bairros: z.array(z.string().trim().min(1).max(80)).max(20).default([]) });
 export type ResultadoSimularPublico = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoAlterarExclusao = { sucesso: true; simulacao: SimulacaoDePublico } | { sucesso: false; mensagem: string };
 export type ResultadoPrepararAcao = { sucesso: false; mensagem: string };
+export type ResultadoCancelarAcao = { sucesso: true } | { sucesso: false; mensagem: string };
 export type ResultadoEnviarMensagem = { sucesso: true } | { sucesso: false; mensagem: string };
 export type ResultadoRegistrarResultado = { sucesso: true } | { sucesso: false; mensagem: string };
 const criteriosSemFiltros = { versaoSchema: 2 as const, modo: "Filtros" as const, tipoCliente: null, cidades: null, bairros: null, etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null };
+
+async function montarListaComFiltros(porta: ReturnType<typeof obterPortaCrmApi>, acaoId: string, criterios: CriteriosDeSegmentacao): Promise<SimulacaoDePublico> {
+  await porta.atualizarCriterios(acaoId, criterios);
+  const candidatos = await porta.simularPublico(acaoId, 1, 100);
+  const clienteIds = candidatos.clientes.filter((cliente) => cliente.elegivel).slice(0, 10).map((cliente) => cliente.clienteId);
+  const totalPaginas = Math.ceil(candidatos.quantidadeEncontrada / 100);
+  for (let pagina = 2; pagina <= totalPaginas && clienteIds.length < 10; pagina += 1) {
+    const complemento = await porta.simularPublico(acaoId, pagina, 100);
+    clienteIds.push(...complemento.clientes.filter((cliente) => cliente.elegivel).slice(0, 10 - clienteIds.length).map((cliente) => cliente.clienteId));
+  }
+  if (clienteIds.length === 0) return { ...candidatos, pagina: 1, tamanhoPagina: 10, clientes: [] };
+  await porta.atualizarCriterios(acaoId, { ...criteriosSemFiltros, modo: "Manual", clienteIds });
+  return porta.simularPublico(acaoId, 1, 10);
+}
 
 export async function montarListaRapida(acaoId: string): Promise<ResultadoSimularPublico> {
   const validacao = esquemaAcaoId.safeParse(acaoId);
@@ -24,20 +40,27 @@ export async function montarListaRapida(acaoId: string): Promise<ResultadoSimula
   const sessao = await obterPortaSessao().obterSessao();
   if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${acaoId}`);
   try {
-    const porta = obterPortaCrmApi();
-    await porta.atualizarCriterios(acaoId, criteriosSemFiltros);
-    const candidatos = await porta.simularPublico(acaoId, 1, 100);
-    const clienteIds = candidatos.clientes.filter((cliente) => cliente.elegivel).slice(0, 10).map((cliente) => cliente.clienteId);
-    const totalPaginas = Math.ceil(candidatos.quantidadeEncontrada / 100);
-    for (let pagina = 2; pagina <= totalPaginas && clienteIds.length < 10; pagina += 1) {
-      const complemento = await porta.simularPublico(acaoId, pagina, 100);
-      clienteIds.push(...complemento.clientes.filter((cliente) => cliente.elegivel).slice(0, 10 - clienteIds.length).map((cliente) => cliente.clienteId));
-    }
-    if (clienteIds.length === 0) return { sucesso: true, simulacao: { ...candidatos, pagina: 1, tamanhoPagina: 10, clientes: [] } };
-    await porta.atualizarCriterios(acaoId, { ...criteriosSemFiltros, modo: "Manual", clienteIds });
-    return { sucesso: true, simulacao: await porta.simularPublico(acaoId, 1, 10) };
+    return { sucesso: true, simulacao: await montarListaComFiltros(obterPortaCrmApi(), acaoId, criteriosSemFiltros) };
   } catch (erro) {
     if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para escolher clientes." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível montar a lista agora. Tente novamente." };
+    throw erro;
+  }
+}
+
+export async function montarListaPorRegiao(entrada: z.input<typeof esquemaListaPorRegiao>): Promise<ResultadoSimularPublico> {
+  const validacao = esquemaListaPorRegiao.safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Selecione uma cidade e, se quiser, bairros válidos." };
+  const cidade = cidadesAtendidas.find((item) => item === validacao.data.cidade);
+  if (!cidade) return { sucesso: false, mensagem: "Escolha uma cidade atendida pela LavaMais." };
+  const bairrosPermitidos = bairrosAtendidosPorCidade[cidade] as readonly string[];
+  if (validacao.data.bairros.some((bairro) => !bairrosPermitidos.includes(bairro))) return { sucesso: false, mensagem: "Escolha apenas bairros da cidade selecionada." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
+  try {
+    const criterios: CriteriosDeSegmentacao = { ...criteriosSemFiltros, cidades: [cidade], bairros: validacao.data.bairros.length ? validacao.data.bairros : null };
+    return { sucesso: true, simulacao: await montarListaComFiltros(obterPortaCrmApi(), validacao.data.acaoId, criterios) };
+  } catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para escolher clientes." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível buscar clientes da região agora. Tente novamente." };
     throw erro;
   }
 }
@@ -90,26 +113,28 @@ export async function alterarExclusaoDoPublico(entrada: { acaoId: string; client
   }
 }
 
+export async function atualizarInformacoesAcao(entrada: { acaoId: string; nome: string; objetivo: string; itemDeCatalogoId: string | null }): Promise<{ sucesso: true } | { sucesso: false; mensagem: string }> {
+  const validacao = z.object({ acaoId: z.string().uuid(), nome: z.string().trim().min(3).max(160), objetivo: z.string().trim().min(10).max(500), itemDeCatalogoId: z.string().uuid().nullable() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Informe nome, objetivo e item válidos." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
+  try {
+    const porta = obterPortaCrmApi(); const acao = await porta.obter(validacao.data.acaoId);
+    if (!acao || acao.situacao !== "Rascunho") return { sucesso: false, mensagem: "Somente rascunhos podem ter as informações corrigidas." };
+    await porta.atualizarAcao(validacao.data.acaoId, { nome: validacao.data.nome, objetivo: validacao.data.objetivo, itemDeCatalogoId: validacao.data.itemDeCatalogoId, versaoModeloId: acao.versaoModeloId, criterios: acao.criterios });
+  } catch (erro) { if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 409 ? "O rascunho foi alterado. Atualize e tente novamente." : erro.status === 403 ? "Seu perfil não pode editar esta ação." : erro.status === 422 ? erro.message : "Não foi possível salvar as informações." }; throw erro; }
+  revalidatePath(`/acoes-comerciais/${validacao.data.acaoId}`);
+  return { sucesso: true };
+}
+
 export async function prepararAcao(entrada: { acaoId: string; versaoModeloId: string }): Promise<ResultadoPrepararAcao> {
-  const validacao = z.object({ acaoId: z.string().uuid(), versaoModeloId: z.union([z.string().uuid(), z.string().regex(/^padrao:[a-z0-9-]+$/)]) }).safeParse(entrada);
+  const validacao = z.object({ acaoId: z.string().uuid(), versaoModeloId: z.string().uuid() }).safeParse(entrada);
   if (!validacao.success) return { sucesso: false, mensagem: "Selecione um modelo de mensagem publicado." };
   const sessao = await obterPortaSessao().obterSessao();
   if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
   try {
     const porta = obterPortaCrmApi();
-    let versaoModeloId = validacao.data.versaoModeloId;
-    if (versaoModeloId.startsWith("padrao:")) {
-      const modeloPadrao = modelosPadraoLavaMais.find((modelo) => `padrao:${modelo.id}` === versaoModeloId);
-      if (!modeloPadrao) return { sucesso: false, mensagem: "A mensagem padrão selecionada não está disponível." };
-      let modeloPublicado = (await porta.listarModelosPublicados()).find((modelo) => modelo.nome === modeloPadrao.nome);
-      if (!modeloPublicado) {
-        await porta.criarEPublicarModelo({ nome: modeloPadrao.nome, conteudoPreVisualizacao: modeloPadrao.conteudoPreVisualizacao, chaveTemplateNotificacao: modeloPadrao.chaveTemplateNotificacao });
-        modeloPublicado = (await porta.listarModelosPublicados()).find((modelo) => modelo.nome === modeloPadrao.nome);
-      }
-      if (!modeloPublicado) return { sucesso: false, mensagem: "Não foi possível disponibilizar a mensagem padrão." };
-      versaoModeloId = modeloPublicado.versaoId;
-    }
-    await porta.atualizarModelo(validacao.data.acaoId, versaoModeloId);
+    await porta.atualizarModelo(validacao.data.acaoId, validacao.data.versaoModeloId);
     const acaoAtualizada = await porta.obter(validacao.data.acaoId);
     if (!acaoAtualizada) return { sucesso: false, mensagem: "A Ação Comercial não foi encontrada." };
     await porta.preparar(validacao.data.acaoId, acaoAtualizada.versao);
@@ -117,6 +142,22 @@ export async function prepararAcao(entrada: { acaoId: string; versaoModeloId: st
     if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para preparar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e revise os dados." : erro.status === 422 ? erro.message : "Não foi possível preparar a ação agora. Tente novamente." };
     throw erro;
   }
+  redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
+}
+
+export async function cancelarAcao(entrada: { acaoId: string; motivo: string; versao: number }): Promise<ResultadoCancelarAcao> {
+  const validacao = z.object({ acaoId: z.string().uuid(), motivo: z.string().trim().min(3).max(300), versao: z.number().int().nonnegative() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Informe um motivo para cancelar a ação." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
+  if (sessao?.papel === "Operador") return { sucesso: false, mensagem: "Somente gerentes podem cancelar uma ação." };
+  try {
+    await obterPortaCrmApi().cancelarAcao(validacao.data.acaoId, validacao.data.motivo, validacao.data.versao);
+  } catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 409 ? "A ação mudou enquanto você revisava. Atualize a página." : erro.status === 403 ? "Seu perfil não possui permissão para cancelar ações." : erro.status === 422 ? erro.message : "Não foi possível cancelar a ação agora." };
+    throw erro;
+  }
+  revalidatePath(`/acoes-comerciais/${validacao.data.acaoId}`);
   redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
 }
 

@@ -23,6 +23,74 @@ namespace LavaMais.Crm.Modulos.MovimentacoesComerciais.Infraestrutura.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio.LinhaDaMovimentacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ArtigoDeLavanderiaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("artigo_de_lavanderia_id");
+
+                    b.Property<Guid>("MovimentacaoComercialId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("movimentacao_comercial_id");
+
+                    b.Property<string>("NomeArtigoSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("nome_artigo_snapshot");
+
+                    b.Property<string>("NomeServicoSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("nome_servico_snapshot");
+
+                    b.Property<Guid>("OfertaDeServicoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("oferta_de_servico_id");
+
+                    b.Property<decimal>("PrecoTabelaSnapshot")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("preco_tabela_snapshot");
+
+                    b.Property<decimal>("PrecoUnitarioPraticado")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("preco_unitario_praticado");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantidade");
+
+                    b.Property<Guid>("ServicoDeLavanderiaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("servico_de_lavanderia_id");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("subtotal");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MovimentacaoComercialId");
+
+                    b.HasIndex("TenantId", "MovimentacaoComercialId", "OfertaDeServicoId")
+                        .IsUnique();
+
+                    b.ToTable("linhas_da_movimentacao", "movimentacoes_comerciais");
+                });
+
             modelBuilder.Entity("LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio.MovimentacaoComercial", b =>
                 {
                     b.Property<Guid>("Id")
@@ -51,10 +119,6 @@ namespace LavaMais.Crm.Modulos.MovimentacoesComerciais.Infraestrutura.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("data_movimentacao");
 
-                    b.Property<Guid>("ItemDeCatalogoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("item_de_catalogo_id");
-
                     b.Property<string>("MotivoCancelamento")
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)")
@@ -65,12 +129,6 @@ namespace LavaMais.Crm.Modulos.MovimentacoesComerciais.Infraestrutura.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("nome_cliente_snapshot");
-
-                    b.Property<string>("NomeItemSnapshot")
-                        .IsRequired()
-                        .HasMaxLength(160)
-                        .HasColumnType("character varying(160)")
-                        .HasColumnName("nome_item_snapshot");
 
                     b.Property<string>("Observacao")
                         .HasMaxLength(500)
@@ -126,6 +184,20 @@ namespace LavaMais.Crm.Modulos.MovimentacoesComerciais.Infraestrutura.Migrations
                     b.HasIndex("TenantId", "ClienteId", "DataMovimentacao");
 
                     b.ToTable("movimentacoes", "movimentacoes_comerciais");
+                });
+
+            modelBuilder.Entity("LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio.LinhaDaMovimentacao", b =>
+                {
+                    b.HasOne("LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio.MovimentacaoComercial", null)
+                        .WithMany("Linhas")
+                        .HasForeignKey("MovimentacaoComercialId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio.MovimentacaoComercial", b =>
+                {
+                    b.Navigation("Linhas");
                 });
 #pragma warning restore 612, 618
         }

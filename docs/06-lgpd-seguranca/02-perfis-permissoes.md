@@ -27,6 +27,7 @@ O CRM armazena somente senha protegida com PBKDF2-SHA256 e o hash SHA-256 dos to
 - consultar acoes;
 - acompanhar envios;
 - registrar resultados comerciais.
+- criar, ordenar, editar, remover e publicar o roteiro diario operacional.
 
 O Operador nao prepara nem inicia uma acao na configuracao inicial.
 

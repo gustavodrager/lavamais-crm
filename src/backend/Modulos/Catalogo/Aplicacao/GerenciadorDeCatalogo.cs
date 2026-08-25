@@ -77,9 +77,13 @@ public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco) : IConsultaDeCa
         return await banco.Itens.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo).Select(x => new ItemDeCatalogoDisponivel(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
     }
 
-    public async Task<ItemDeCatalogoDisponivelParaMovimentacao?> ObterServicoAtivo(Guid id, CancellationToken ct) =>
-        await banco.Itens.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoItemDeCatalogo.Ativo && x.Tipo == TipoDeItemDeCatalogo.Servico)
-            .Select(x => new ItemDeCatalogoDisponivelParaMovimentacao(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
+    public async Task<OfertaDisponivelParaMovimentacao?> ObterOfertaAtiva(Guid id, CancellationToken ct) =>
+        await banco.OfertasDeServico.AsNoTracking()
+            .Where(x => x.Id == id && x.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo
+                && x.Artigo.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo
+                && x.Servico.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo)
+            .Select(x => new OfertaDisponivelParaMovimentacao(x.Id, x.ArtigoDeLavanderiaId, x.Artigo.Nome, x.ServicoDeLavanderiaId, x.Servico.Nome, x.PrecoUnitario))
+            .SingleOrDefaultAsync(ct);
 }
 
 public sealed record ItemDeCatalogoDisponivel(Guid Id, string Nome);

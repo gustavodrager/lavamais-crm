@@ -85,6 +85,8 @@ Conforme ADR-012, a recepcao pode registrar uma `MovimentacaoComercial` minima p
 
 O detalhe do cliente apresenta o historico dessas movimentacoes e indicadores descritivos calculados somente sobre registros validos: quantidade, total movimentado, ticket medio, ultima movimentacao e quantidade de servicos distintos. Esses dados nao representam controle financeiro nem classificacao automatica do cliente.
 
+Conforme ADR-013, a homologacao tambem inclui um roteiro diario manual para organizar coletas e entregas. Essa extensao nao realiza roteirizacao automatica, rastreamento ou controle de pedidos.
+
 ## Criterios de sucesso
 
 - uma base real de clientes pode ser importada com seguranca;

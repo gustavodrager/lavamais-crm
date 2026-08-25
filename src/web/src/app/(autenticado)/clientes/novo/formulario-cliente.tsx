@@ -10,13 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { bairrosAtendidosPorCidade, cidadesAtendidas, type CidadeAtendida } from "@/conteudo/area-atendimento-lavamais";
 import { criarCliente, type EntradaCriarCliente } from "./acoes";
 
-export function FormularioCliente() {
+export function FormularioCliente({ retorno }: { retorno?: string }) {
   const [mensagem, setMensagem] = useState<string | null>(null);
-  const { register, handleSubmit, setError, setValue, control, formState: { errors, isSubmitting } } = useForm<EntradaCriarCliente>({ defaultValues: { nome: "", whatsapp: "", tipo: "", bairro: "", cidade: "", codigoExterno: "", permiteMarketingWhatsapp: true } });
+  const { register, handleSubmit, setError, setValue, control, formState: { errors, isSubmitting } } = useForm<EntradaCriarCliente>({ defaultValues: { nome: "", whatsapp: "", tipo: "", bairro: "", cidade: "", codigoExterno: "", permiteMarketingWhatsapp: false, retorno } });
   const cidade = useWatch({ control, name: "cidade" }) as CidadeAtendida | "";
   const bairro = useWatch({ control, name: "bairro" });
   async function enviar(dados: EntradaCriarCliente) {
-    setMensagem(null); const resultado = await criarCliente(dados); setMensagem(resultado.mensagem);
+    setMensagem(null); const resultado = await criarCliente({ ...dados, retorno }); setMensagem(resultado.mensagem);
     if (resultado.campos) for (const [campo, mensagemDoCampo] of Object.entries(resultado.campos)) if (mensagemDoCampo) setError(campo as keyof EntradaCriarCliente, { message: mensagemDoCampo });
   }
   return <form onSubmit={handleSubmit(enviar)} className="grid gap-5 sm:grid-cols-2">

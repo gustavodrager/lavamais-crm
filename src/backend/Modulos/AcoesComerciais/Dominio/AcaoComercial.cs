@@ -55,6 +55,16 @@ public sealed class AcaoComercial
         NomeItemSnapshot = nomeItem; QuantidadeDestinatarios = Destinatarios.Count; Situacao = SituacaoDaAcaoComercial.Preparada; DataPreparacao = agora; DataAtualizacao = agora;
     }
 
+    public void Cancelar(string motivo, string usuarioId, DateTimeOffset agora)
+    {
+        if (Situacao is not (SituacaoDaAcaoComercial.Rascunho or SituacaoDaAcaoComercial.Preparada))
+            throw new ExcecaoDeConflito("acao_nao_cancelavel", "Somente uma acao em rascunho ou preparada pode ser cancelada.");
+        if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length > 300)
+            throw new ExcecaoDeRegraDeNegocio("motivo_invalido", "Informe o motivo do cancelamento.");
+        Situacao = SituacaoDaAcaoComercial.Cancelada;
+        DataAtualizacao = agora;
+    }
+
     public DestinatarioDaAcao SolicitarEnvio(Guid destinatarioId, DateTimeOffset agora)
     {
         if (Situacao is not (SituacaoDaAcaoComercial.Preparada or SituacaoDaAcaoComercial.EmProcessamento))

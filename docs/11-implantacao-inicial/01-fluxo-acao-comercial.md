@@ -3,7 +3,7 @@
 ## Pre-condicoes
 
 - usuario autenticado no tenant correto;
-- usuario com papel `Administrador` ou `Gerente`;
+- usuario com papel `Administrador` ou `Gerente` para criar/preparar a acao; `Operador` pode consultar a acao e registrar resultados;
 - clientes ativos com WhatsApp e permissao de comunicacao;
 - item de catalogo ativo, quando informado ou exigido pelo modelo;
 - versao publicada de modelo vinculada a template tecnico existente.
@@ -14,7 +14,13 @@ O usuario informa nome, objetivo e item do catalogo. A acao recebe estado `Rascu
 
 ## 2. Definir publico
 
-O usuario combina filtros permitidos ou seleciona clientes manualmente. Os criterios sao salvos como estrutura tipada e versionada.
+Para agilizar o atendimento, a interface oferece tres formas de montar uma lista de ate 10 clientes:
+
+- trazer 10 clientes elegiveis automaticamente;
+- escolher pelo nome ou WhatsApp;
+- escolher por regiao, informando uma cidade atendida e, opcionalmente, bairros.
+
+Na opcao por regiao, o sistema simula os filtros, seleciona os primeiros 10 clientes elegiveis e salva essa lista como selecao manual. Os criterios sao salvos como estrutura tipada e versionada.
 
 ## 3. Simular
 

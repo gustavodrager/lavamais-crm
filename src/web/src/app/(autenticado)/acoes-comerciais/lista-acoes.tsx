@@ -11,17 +11,17 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-const filtros: Array<{ rotulo: string; valor: "Todas" | SituacaoAcaoComercial }> = [
-  { rotulo: "Todas", valor: "Todas" }, { rotulo: "Rascunhos", valor: "Rascunho" }, { rotulo: "Preparadas", valor: "Preparada" }, { rotulo: "Em andamento", valor: "EmProcessamento" }, { rotulo: "Concluídas", valor: "Concluida" },
+const filtros: Array<{ rotulo: string; valor: "Todas" | SituacaoAcaoComercial | "Falhas" }> = [
+  { rotulo: "Todas", valor: "Todas" }, { rotulo: "Rascunhos", valor: "Rascunho" }, { rotulo: "Preparadas", valor: "Preparada" }, { rotulo: "Em andamento", valor: "EmProcessamento" }, { rotulo: "Com falhas", valor: "Falhas" }, { rotulo: "Concluídas", valor: "Concluida" },
 ];
 
-const proximaAcao = (situacao: SituacaoAcaoComercial) => situacao === "Rascunho" ? "Continuar configuração" : situacao === "Preparada" ? "Revisar mensagens" : situacao === "EmProcessamento" ? "Acompanhar envios" : "Ver resultados";
+const proximaAcao = (situacao: SituacaoAcaoComercial) => situacao === "Rascunho" ? "Continuar configuração" : situacao === "Preparada" ? "Revisar mensagens" : situacao === "EmProcessamento" ? "Acompanhar envios" : situacao === "ConcluidaComFalhas" ? "Conferir falhas" : "Ver resultados";
 
 export function ListaAcoes({ acoes }: { acoes: ResumoAcaoComercial[] }) {
   const [filtro, setFiltro] = useState<(typeof filtros)[number]["valor"]>("Todas");
   const [busca, setBusca] = useState("");
   const termo = busca.trim().toLocaleLowerCase("pt-BR");
-  const visiveis = acoes.filter((acao) => (filtro === "Todas" || acao.situacao === filtro || (filtro === "Concluida" && acao.situacao === "ConcluidaComFalhas")) && (!termo || `${acao.nome} ${acao.objetivo ?? ""}`.toLocaleLowerCase("pt-BR").includes(termo)));
+  const visiveis = acoes.filter((acao) => (filtro === "Todas" || acao.situacao === filtro || (filtro === "Concluida" && acao.situacao === "ConcluidaComFalhas") || (filtro === "Falhas" && acao.situacao === "ConcluidaComFalhas")) && (!termo || `${acao.nome} ${acao.objetivo ?? ""}`.toLocaleLowerCase("pt-BR").includes(termo)));
   return <div className="space-y-4">
     <div className="relative max-w-xl"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" /><Input value={busca} onChange={(evento) => setBusca(evento.target.value)} className="h-11 pl-9" placeholder="Buscar ação por nome ou objetivo" aria-label="Buscar ações" /></div>
     <div className="flex gap-2 overflow-x-auto rounded-xl border bg-secondary/70 p-2 sm:flex-wrap sm:p-3" aria-label="Filtrar ações por situação">

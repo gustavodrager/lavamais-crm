@@ -14,6 +14,7 @@ const esquema = z.object({
   cidade: z.string().trim().max(120),
   codigoExterno: z.string().trim().max(100),
   permiteMarketingWhatsapp: z.boolean(),
+  retorno: z.string().trim().max(500).optional(),
 });
 
 export type EntradaCriarCliente = z.input<typeof esquema>;
@@ -28,11 +29,22 @@ export async function criarCliente(entrada: EntradaCriarCliente): Promise<Result
     return { sucesso: false, mensagem: "Revise os dados do cliente.", campos: Object.fromEntries(Object.entries(campos).map(([campo, erros]) => [campo, erros?.[0]])) };
   }
   const dados = validacao.data;
+  let criado: { id: string };
   try {
-    await obterPortaCrmApi().criarCliente({ nome: dados.nome, whatsapp: dados.whatsapp, tipo: dados.tipo || null, permiteMarketingWhatsapp: dados.permiteMarketingWhatsapp, endereco: { bairro: dados.bairro || null, cidade: dados.cidade || null }, codigoExterno: dados.codigoExterno || null });
+    criado = await obterPortaCrmApi().criarCliente({ nome: dados.nome, whatsapp: dados.whatsapp, tipo: dados.tipo || null, permiteMarketingWhatsapp: dados.permiteMarketingWhatsapp, endereco: { bairro: dados.bairro || null, cidade: dados.cidade || null }, codigoExterno: dados.codigoExterno || null });
   } catch (erro) {
     if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 409 || erro.status === 422 ? erro.message : erro.status === 403 ? "Seu perfil não possui permissão para cadastrar clientes." : "Não foi possível cadastrar o cliente agora." };
     throw erro;
   }
-  redirect("/clientes");
+  const retorno = normalizarRetorno(dados.retorno);
+  if (retorno?.startsWith("/movimentacoes")) {
+    const url = new URL(retorno, "http://lavamais.local");
+    url.searchParams.set("clienteId", criado.id);
+    redirect(`${url.pathname}${url.search}`);
+  }
+  redirect(retorno ?? "/clientes");
+}
+
+function normalizarRetorno(valor: string | undefined) {
+  return valor && valor.startsWith("/") && !valor.startsWith("//") ? valor : null;
 }

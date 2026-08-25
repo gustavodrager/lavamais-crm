@@ -2,6 +2,7 @@ import type {
   ResumoAcaoComercial,
   DetalheAcaoComercial,
   OpcaoItemDeCatalogo,
+  OfertaDoCatalogoDeLavanderia,
   OpcaoModeloDeMensagem,
   ResumoCliente,
   DetalheCliente,
@@ -12,6 +13,7 @@ import type {
   PreVisualizacaoImportacao,
   ResultadoImportacao,
   ResumoMovimentacaoComercial,
+  RoteiroDiario,
 } from "@/contratos/apresentacao";
 
 export interface ConsultarAcoesComerciais {
@@ -50,12 +52,13 @@ export interface CriarAcaoComercialEntrada {
   nome: string;
   objetivo: string;
   itemDeCatalogoId: string | null;
-  versaoModeloId: null;
+  versaoModeloId: string | null;
   criterios: CriteriosDeSegmentacao;
 }
 
 export interface CriarAcaoComercial {
   criar(entrada: CriarAcaoComercialEntrada): Promise<{ id: string }>;
+  atualizarAcao(id: string, entrada: CriarAcaoComercialEntrada): Promise<void>;
 }
 
 export interface AtualizarESimularPublico {
@@ -66,6 +69,7 @@ export interface AtualizarESimularPublico {
 export interface PrepararAcaoComercial {
   atualizarModelo(id: string, versaoModeloId: string): Promise<void>;
   preparar(id: string, versao: number): Promise<void>;
+  cancelarAcao(id: string, motivo: string, versao: number): Promise<void>;
 }
 
 export interface EnviarMensagemIndividual {
@@ -77,8 +81,23 @@ export interface RegistrarResultadoComercial {
 }
 
 export interface AdministrarMovimentacoesComerciais {
+  listarOfertasDoCatalogoDeLavanderia(): Promise<OfertaDoCatalogoDeLavanderia[]>;
   listarMovimentacoes(clienteId?: string, limite?: number): Promise<ResumoMovimentacaoComercial[]>;
-  registrarMovimentacao(entrada: { clienteId: string; itemDeCatalogoId: string; valorTotal: number; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }): Promise<{ id: string }>;
+  registrarMovimentacao(entrada: { clienteId: string; linhas: Array<{ ofertaDeServicoId: string; quantidade: number; precoUnitario: number | null }>; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }): Promise<{ id: string }>;
+  cancelarMovimentacao(id: string, motivo: string, versao: number): Promise<void>;
+}
+
+export interface AdministrarRoteiros {
+  obterRoteiro(data: string): Promise<RoteiroDiario | null>;
+  criarRoteiro(data: string, nomeMotorista: string): Promise<{ id: string }>;
+  adicionarParada(roteiroId: string, entrada: { clienteId: string; tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }): Promise<void>;
+  atualizarParada(roteiroId: string, paradaId: string, entrada: { tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }): Promise<void>;
+  removerParada(roteiroId: string, paradaId: string): Promise<void>;
+  reordenarParadas(roteiroId: string, paradaIds: string[]): Promise<void>;
+  publicarRoteiro(roteiroId: string): Promise<void>;
+  iniciarParada(id: string): Promise<void>;
+  concluirParada(id: string): Promise<void>;
+  naoRealizarParada(id: string, motivo: string): Promise<void>;
 }
 
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.
@@ -94,4 +113,5 @@ export interface PortaCrmApi
     PrepararAcaoComercial,
     EnviarMensagemIndividual,
     RegistrarResultadoComercial,
-    AdministrarMovimentacoesComerciais {}
+    AdministrarMovimentacoesComerciais,
+    AdministrarRoteiros {}

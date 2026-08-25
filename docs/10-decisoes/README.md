@@ -18,6 +18,9 @@ Esta pasta registra decisoes arquiteturais e de produto que orientam todas as co
 | [ADR-010](ADR-010-homologacao-incremental-sem-centrais.md) | Homologacao incremental; parte de identidade substituida pelo ADR-011 |
 | [ADR-011](ADR-011-identidade-local-do-crm.md) | Login local por telefone e senha definida no primeiro acesso |
 | [ADR-012](ADR-012-movimentacoes-comerciais-manuais.md) | Registro comercial minimo de pedidos sem substituir o Essence GO Industrial |
+| [ADR-013](ADR-013-roteiro-diario-operacional.md) | Roteiro diario simples para coletas e entregas |
+| [ADR-014](ADR-014-lista-assistida-de-clientes.md) | Lista assistida de ate dez clientes e envio individual em interface de conversa |
+| [ADR-015](ADR-015-catalogo-de-artigos-e-servicos.md) | Catalogo relacional e movimentacao comercial com uma ou mais linhas |
 
 ## Regra
 

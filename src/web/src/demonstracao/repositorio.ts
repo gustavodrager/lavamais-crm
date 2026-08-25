@@ -21,9 +21,11 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async criar() {
     return { id: crypto.randomUUID() };
   },
+  async atualizarAcao() {},
   async atualizarCriterios() {},
   async atualizarModelo() {},
   async preparar() {},
+  async cancelarAcao() {},
   async enviarDestinatario(_id, destinatarioId, versao) { return { id: destinatarioId, situacaoEnvio: "AguardandoSolicitacao", versao: versao + 1 }; },
   async registrarResultado() {},
   async simularPublico() {
@@ -57,6 +59,9 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async criarEtiqueta() { return { id: crypto.randomUUID() }; },
   async criarEPublicarModelo() { return { id: crypto.randomUUID() }; },
   async listarMovimentacoes() { return []; },
+  async listarOfertasDoCatalogoDeLavanderia() { return [{ id: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Camisa", categoria: "Vestuário", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem e passadoria", precoUnitario: 16.20 }]; },
   async registrarMovimentacao() { return { id: crypto.randomUUID() }; },
+  async cancelarMovimentacao() {},
+  async obterRoteiro() { return null; }, async criarRoteiro() { return { id: crypto.randomUUID() }; }, async adicionarParada() {}, async atualizarParada() {}, async removerParada() {}, async reordenarParadas() {}, async publicarRoteiro() {}, async iniciarParada() {}, async concluirParada() {}, async naoRealizarParada() {},
 };
 import "server-only";

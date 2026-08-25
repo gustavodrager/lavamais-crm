@@ -13,6 +13,7 @@
     <ProjectReference Include="../Modulos/Integracoes/LavaMais.Crm.Modulos.Integracoes.csproj" />
     <ProjectReference Include="../Modulos/ModelosDeMensagem/LavaMais.Crm.Modulos.ModelosDeMensagem.csproj" />
     <ProjectReference Include="../Modulos/MovimentacoesComerciais/LavaMais.Crm.Modulos.MovimentacoesComerciais.csproj" />
+    <ProjectReference Include="../Modulos/Roteiros/LavaMais.Crm.Modulos.Roteiros.csproj" />
     <ProjectReference Include="../Modulos/Segmentacao/LavaMais.Crm.Modulos.Segmentacao.csproj" />
   </ItemGroup>
 </Project>

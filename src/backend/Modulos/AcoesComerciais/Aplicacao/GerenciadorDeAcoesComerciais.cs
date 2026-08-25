@@ -68,6 +68,14 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         await transacao.CommitAsync(ct);
     }
 
+    public async Task Cancelar(Guid id, string motivo, uint versaoEsperada, CancellationToken ct)
+    {
+        var acao = await banco.Acoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
+        if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario.");
+        acao.Cancelar(motivo, usuario.UsuarioIdentidadeId, relogio.GetUtcNow());
+        await banco.SaveChangesAsync(ct);
+    }
+
     public Task<List<DestinatarioDaAcao>> ListarDestinatarios(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Where(x => x.Id == id).SelectMany(x => x.Destinatarios).OrderBy(x => x.NomeClienteSnapshot).ToListAsync(ct);
 
     public async Task<EnvioIndividualAceito> EnviarDestinatario(Guid acaoId, Guid destinatarioId, uint versaoEsperada, CancellationToken ct)

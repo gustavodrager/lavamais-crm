@@ -71,6 +71,14 @@ data_atualizacao
 
 `tipo` aceita inicialmente `Produto` ou `Servico`.
 
+### Catalogo de lavanderia
+
+- `catalogo.artigos_de_lavanderia` registra os bens recebidos, agrupados por categoria;
+- `catalogo.servicos_de_lavanderia` registra os trabalhos oferecidos;
+- `catalogo.ofertas_de_servico` associa artigo e servico e define o preco unitario por tenant.
+
+A combinacao `tenant_id + artigo_de_lavanderia_id + servico_de_lavanderia_id` e unica. O catalogo generico permanece enquanto for usado por Acoes Comerciais.
+
 ## Comunicacao
 
 ### `comunicacao.modelos_de_mensagem`
@@ -135,9 +143,9 @@ Restricao unica: `tenant_id + acao_comercial_id + cliente_id`.
 
 ## Movimentacoes comerciais
 
-### `movimentacoes_comerciais.movimentacoes`
+### `movimentacoes_comerciais.movimentacoes` e `linhas_da_movimentacao`
 
-Registra cliente e servico por identificador e snapshot, valor total, data da movimentacao, origem, codigo externo opcional e dados de cancelamento. O registro e informativo e nao representa caixa, pagamento, producao ou pedido operacional.
+Uma movimentacao representa uma visita comercial e registra cliente, valor total calculado, data, origem, codigo externo opcional e dados de cancelamento. Cada linha registra oferta, artigo, servico, quantidade, precos e snapshots comerciais. O registro e informativo e nao representa caixa, pagamento, producao ou pedido operacional.
 
 O codigo externo e unico dentro do tenant quando informado. O agregado usa `xmin` para concorrencia otimista e nunca e excluido fisicamente.
 

@@ -29,6 +29,8 @@ public static class ExtensoesDoModuloMovimentacoesComerciais
     }
 
     public sealed record CancelarMovimentacao(string Motivo, uint Versao);
-    public sealed record Resposta(Guid Id, Guid ClienteId, string NomeCliente, Guid ItemDeCatalogoId, string NomeItem, decimal ValorTotal, DateTimeOffset DataMovimentacao, string? CodigoExterno, string? Observacao, OrigemDaMovimentacao Origem, SituacaoDaMovimentacao Situacao, uint Versao)
-    { public static Resposta Criar(MovimentacaoComercial x) => new(x.Id, x.ClienteId, x.NomeClienteSnapshot, x.ItemDeCatalogoId, x.NomeItemSnapshot, x.ValorTotal, x.DataMovimentacao, x.CodigoExterno, x.Observacao, x.Origem, x.Situacao, x.Versao); }
+    public sealed record Resposta(Guid Id, Guid ClienteId, string NomeCliente, decimal ValorTotal, DateTimeOffset DataMovimentacao, string? CodigoExterno, string? Observacao, OrigemDaMovimentacao Origem, SituacaoDaMovimentacao Situacao, uint Versao, IReadOnlyCollection<RespostaDaLinha> Linhas)
+    { public static Resposta Criar(MovimentacaoComercial x) => new(x.Id, x.ClienteId, x.NomeClienteSnapshot, x.ValorTotal, x.DataMovimentacao, x.CodigoExterno, x.Observacao, x.Origem, x.Situacao, x.Versao, x.Linhas.Select(RespostaDaLinha.Criar).ToArray()); }
+    public sealed record RespostaDaLinha(Guid Id, Guid OfertaDeServicoId, Guid ArtigoDeLavanderiaId, string NomeArtigo, Guid ServicoDeLavanderiaId, string NomeServico, int Quantidade, decimal PrecoTabela, decimal PrecoUnitario, decimal Subtotal)
+    { public static RespostaDaLinha Criar(LinhaDaMovimentacao x) => new(x.Id, x.OfertaDeServicoId, x.ArtigoDeLavanderiaId, x.NomeArtigoSnapshot, x.ServicoDeLavanderiaId, x.NomeServicoSnapshot, x.Quantidade, x.PrecoTabelaSnapshot, x.PrecoUnitarioPraticado, x.Subtotal); }
 }

@@ -15,7 +15,7 @@ export async function LayoutAutenticado({ children }: { children: ReactNode }) {
       <a href="#conteudo-principal" className="sr-only z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
       <aside className="fixed inset-y-0 hidden w-64 border-r border-sidebar-border bg-sidebar p-5 text-sidebar-foreground md:flex md:flex-col">
         <Marca />
-        <div className="mt-8 flex-1"><Navegacao tema="escuro" /></div>
+        <div className="mt-8 flex-1"><Navegacao tema="escuro" papel={sessao.papel} /></div>
         <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-3">
           <p className="truncate text-sm font-medium">{sessao.tenant.nome}</p>
           <p className="mt-1 text-xs text-sidebar-foreground/70">Ambiente empresarial ativo</p>
@@ -32,7 +32,7 @@ export async function LayoutAutenticado({ children }: { children: ReactNode }) {
         </header>
         <main id="conteudo-principal" className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
-      <NavegacaoMobileInferior />
+      <NavegacaoMobileInferior papel={sessao.papel} />
     </div>
   );
 }

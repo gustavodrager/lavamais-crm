@@ -29,6 +29,19 @@ describe("CrmApiHttp", () => {
     expect(resultado).toEqual([{ id: "6d3d0d64-a111-4cff-8db8-111111111112", tipo: "Servico", nome: "Lavagem de edredom", categoria: "Casa" }]);
     expect(requisitar.mock.calls[0][0].toString()).toContain("situacao=Ativo");
   });
+  it("lista ofertas do catalogo de lavanderia e envia movimentacao com linhas", async () => {
+    const oferta = { id: "1d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "2d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Camisa", categoria: "Vestuario", servicoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem e passadoria", precoUnitario: 16.2, situacao: "Ativo", versao: 1 };
+    const requisitar = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify([oferta]), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: acao.id }), { status: 201 }));
+    vi.stubGlobal("fetch", requisitar);
+    const api = new CrmApiHttp("http://crm.test", async () => "token");
+
+    await expect(api.listarOfertasDoCatalogoDeLavanderia()).resolves.toEqual([{ id: oferta.id, artigoDeLavanderiaId: oferta.artigoDeLavanderiaId, nomeArtigo: oferta.nomeArtigo, categoria: oferta.categoria, servicoDeLavanderiaId: oferta.servicoDeLavanderiaId, nomeServico: oferta.nomeServico, precoUnitario: oferta.precoUnitario }]);
+    const entrada = { clienteId: "4d3d0d64-a111-4cff-8db8-111111111112", linhas: [{ ofertaDeServicoId: oferta.id, quantidade: 2, precoUnitario: null }], dataMovimentacao: null, codigoExterno: null, observacao: null };
+    await api.registrarMovimentacao(entrada);
+    expect(JSON.parse(requisitar.mock.calls[1][1].body)).toEqual(entrada);
+  });
   it("adapta o contrato real de clientes sem depender de etiquetas expandidas", async () => {
     const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ itens: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", nomeFantasia: null, whatsapp: "5513999999999", email: null, dataNascimento: null, tipo: "Residencial", situacao: "Ativo", permiteMarketingWhatsapp: true, endereco: { logradouro: null, numero: null, complemento: null, bairro: "Centro", cidade: "Praia Grande", estado: null, cep: null }, etiquetaIds: ["6d3d0d64-a111-4cff-8db8-111111111119"], codigoExterno: "CLI-1" }], pagina: 1, tamanhoPagina: 20, total: 1 }), { status: 200 }));
     vi.stubGlobal("fetch", requisitar);

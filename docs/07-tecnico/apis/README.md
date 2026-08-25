@@ -32,6 +32,10 @@ A confirmacao recebe uma referencia segura ao conteudo persistido da pre-visuali
 GET    /api/v1/itens-de-catalogo
 POST   /api/v1/itens-de-catalogo
 PUT    /api/v1/itens-de-catalogo/{id}
+GET    /api/v1/catalogo-lavanderia/artigos
+GET    /api/v1/catalogo-lavanderia/servicos
+GET    /api/v1/catalogo-lavanderia/ofertas
+POST   /api/v1/catalogo-lavanderia/carga-inicial
 GET    /api/v1/modelos-de-mensagem
 POST   /api/v1/modelos-de-mensagem
 POST   /api/v1/modelos-de-mensagem/{id}/publicar
@@ -92,7 +96,7 @@ POST   /api/v1/movimentacoes-comerciais
 POST   /api/v1/movimentacoes-comerciais/{id}/cancelar
 ```
 
-O registro recebe um cliente ativo, um item ativo do tipo `Servico`, valor total, data opcional, codigo externo opcional e observacao. O tenant, o usuario e a origem `Recepcao` sao derivados no servidor. O cancelamento exige `Administrador` ou `Gerente`, motivo e a versao atual do agregado; concorrencia retorna `409`.
+O registro representa uma visita comercial. Recebe um cliente ativo e uma ou mais linhas com `ofertaDeServicoId`, quantidade e preco unitario praticado opcional. A oferta associa um artigo ao servico aplicavel e fornece o preco de tabela; o total e calculado no servidor. Data, codigo externo e observacao sao opcionais. O tenant, o usuario e a origem `Recepcao` sao derivados no servidor. O cancelamento exige `Administrador` ou `Gerente`, motivo e a versao atual do agregado; concorrencia retorna `409`.
 
 ## Autorizacao
 

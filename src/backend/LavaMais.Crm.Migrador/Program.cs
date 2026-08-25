@@ -10,6 +10,7 @@ using LavaMais.Crm.Modulos.Integracoes.Infraestrutura;
 using LavaMais.Crm.Modulos.Identidade.Infraestrutura;
 using LavaMais.Crm.Modulos.ModelosDeMensagem.Infraestrutura;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Infraestrutura;
+using LavaMais.Crm.Modulos.Roteiros.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -23,6 +24,7 @@ await Migrar(new ContextoDeCatalogo(Opcoes<ContextoDeCatalogo>(conexao, Contexto
 await Migrar(new ContextoDeModelos(Opcoes<ContextoDeModelos>(conexao, ContextoDeModelos.Historico, ContextoDeModelos.Schema), usuario));
 await Migrar(new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Historico, ContextoDeAcoesComerciais.Schema), usuario));
 await Migrar(new ContextoDeMovimentacoesComerciais(Opcoes<ContextoDeMovimentacoesComerciais>(conexao, ContextoDeMovimentacoesComerciais.Historico, ContextoDeMovimentacoesComerciais.Schema), usuario));
+await Migrar(new ContextoDeRoteiros(Opcoes<ContextoDeRoteiros>(conexao, ContextoDeRoteiros.Historico, ContextoDeRoteiros.Schema), usuario));
 await Migrar(new ContextoDeImportacoes(Opcoes<ContextoDeImportacoes>(conexao, ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema), usuario));
 await Migrar(new ContextoDeAuditoria(Opcoes<ContextoDeAuditoria>(conexao, ContextoDeAuditoria.Historico, ContextoDeAuditoria.Schema), usuario));
 await Migrar(new ContextoDeIntegracoes(Opcoes<ContextoDeIntegracoes>(conexao, ContextoDeIntegracoes.Historico, ContextoDeIntegracoes.Schema), usuario));

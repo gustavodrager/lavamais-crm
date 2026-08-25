@@ -14,8 +14,7 @@ test("lista e abre uma Ação Comercial obtida da CRM API", async ({ page }) => 
   await expect(page.getByText("R$ 150,00")).toBeVisible();
 });
 
-test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === "mobile", "O fluxo funcional completo é coberto uma vez no desktop");
+test("cria, simula e prepara uma ação com modelo publicado", async ({ page }) => {
   await page.getByRole("link", { name: "Nova ação comercial" }).click();
   await page.getByLabel("Nome da ação").fill("Ação criada pelo frontend");
   await page.getByLabel("Objetivo").fill("Validar a criação integrada do rascunho");
@@ -27,9 +26,8 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await page.getByRole("button", { name: /Trazer 10 clientes/ }).click();
   await expect(page.getByText("Sua lista está pronta")).toBeVisible();
   await page.getByRole("button", { name: "Escolher a mensagem" }).click();
-  await page.getByRole("combobox", { name: "Modelo de mensagem" }).click();
-  await page.getByRole("option", { name: "Oferta de serviço · versão 1" }).click();
-  await expect(page.getByText("Olá, Ana Martins! Conheça o serviço selecionado.")).toBeVisible();
+  await page.getByRole("radio", { name: /Oferta de serviço/ }).click();
+  await expect(page.getByText("Olá, Ana Martins! Conheça Lavagem de edredom.")).toBeVisible();
   await page.getByRole("button", { name: "Confirmar clientes e mensagem" }).click();
   await expect(page.getByRole("alertdialog")).toContainText("Esta ação ficará pronta com 1 cliente");
   await page.getByRole("button", { name: "Sim, começar os atendimentos" }).click();
@@ -40,7 +38,7 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }, 
   await expect(page.getByRole("alertdialog")).toContainText("Será solicitada somente esta mensagem");
   await page.getByRole("button", { name: "Confirmar envio" }).click();
   await expect(page.getByText("Em processamento", { exact: true })).toBeVisible();
-  await expect(page.getByText("Aguardando envio", { exact: true })).toBeVisible();
+  await expect(page.getByText("Mensagem solicitada", { exact: true })).toBeVisible();
 });
 
 test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {
@@ -52,6 +50,14 @@ test("oferece acesso às demais areas pelo menu principal", async ({ page }, tes
   await expect(page.getByRole("heading", { name: "Importação de clientes" })).toBeVisible();
   await page.getByRole("link", { name: "Configurações" }).click();
   await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
+});
+
+test("mostra o painel operacional para a recepção", async ({ context, page }) => {
+  await context.addCookies([{ name: "lavamais-sessao-teste", value: "sessao-controlada-operador-e2e", url: "http://127.0.0.1:3000", httpOnly: true, sameSite: "Lax" }]);
+  await page.goto("/inicio");
+  await expect(page.getByRole("heading", { name: "Atendimento de hoje" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Importação" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Registrar movimentação" }).first()).toBeVisible();
 });
 
 test("abre a navegacao em tela pequena", async ({ page }, testInfo) => {

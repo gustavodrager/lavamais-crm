@@ -25,19 +25,20 @@ public static class ExtensoesDoModuloAcoesComerciais
 
     public static IEndpointRouteBuilder MapearModuloAcoesComerciais(this IEndpointRouteBuilder endpoints)
     {
-        var grupo = endpoints.MapGroup("/api/v1/acoes-comerciais").RequireAuthorization(PoliticasDeAutorizacao.Gestor).WithTags("Acoes comerciais");
+        var grupo = endpoints.MapGroup("/api/v1/acoes-comerciais").RequireAuthorization(PoliticasDeAutorizacao.UsuarioAtivo).WithTags("Acoes comerciais");
         grupo.MapGet("/", async (GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.Listar(ct)).Select(Resposta.Criar));
         grupo.MapGet("/{id:guid}", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => DetalheResposta.Criar(await g.ObterDetalhe(id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.")));
-        grupo.MapPost("/", async (DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { var acao = await g.Criar(dados, ct); return Results.Created($"/api/v1/acoes-comerciais/{acao.Id}", Resposta.Criar(acao)); });
-        grupo.MapPut("/{id:guid}", async (Guid id, DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); });
-        grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct)));
-        grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); });
+        grupo.MapPost("/", async (DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { var acao = await g.Criar(dados, ct); return Results.Created($"/api/v1/acoes-comerciais/{acao.Id}", Resposta.Criar(acao)); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        grupo.MapPut("/{id:guid}", async (Guid id, DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct))).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        grupo.MapPost("/{id:guid}/cancelar", async (Guid id, CancelarAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Cancelar(id, dados.Motivo, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/enviar", async (Guid acaoId, Guid destinatarioId, EnviarDestinatario dados, GerenciadorDeAcoesComerciais g, IOptions<OpcoesDeEnvioDeNotificacoes> envio, CancellationToken ct) =>
         {
             if (!envio.Value.Habilitado)
                 return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Envio de notificacoes indisponivel", detail: "A Central de Notificacao ainda nao esta habilitada neste ambiente.");
             return Results.Accepted((string?)null, await g.EnviarDestinatario(acaoId, destinatarioId, dados.Versao, ct));
-        });
+        }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapGet("/{id:guid}/destinatarios", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.ListarDestinatarios(id, ct)).Select(DestinatarioResposta.Criar));
 
         endpoints.MapPut("/api/v1/acoes-comerciais/{id:guid}/destinatarios/{destinatarioId:guid}/resultado", async (Guid id, Guid destinatarioId, RegistrarResultado dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
@@ -47,6 +48,7 @@ public static class ExtensoesDoModuloAcoesComerciais
     }
 
     public sealed record PrepararAcao(uint Versao);
+    public sealed record CancelarAcao(string Motivo, uint Versao);
     public sealed record EnviarDestinatario(uint Versao);
     public sealed record RegistrarResultado(ResultadoComercial Resultado, decimal? ValorConvertido, uint Versao);
 
@@ -64,10 +66,10 @@ public static class ExtensoesDoModuloAcoesComerciais
         }
     }
 
-    public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid? ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao, uint Versao)
+    public sealed record Resposta(Guid Id, string Nome, string? Objetivo, Guid? ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios, SituacaoDaAcaoComercial Situacao, DateTimeOffset DataAtualizacao, uint Versao, int QuantidadeDestinatarios)
     {
         private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
         public static Resposta Criar(AcaoComercial acao) => new(acao.Id, acao.Nome, acao.Objetivo, acao.ItemDeCatalogoId, acao.VersaoModeloId,
-            JsonSerializer.Deserialize<CriteriosDeSegmentacao>(acao.CriteriosSegmentacaoJson, OpcoesJson)!, acao.Situacao, acao.DataAtualizacao, acao.Versao);
+            JsonSerializer.Deserialize<CriteriosDeSegmentacao>(acao.CriteriosSegmentacaoJson, OpcoesJson)!, acao.Situacao, acao.DataAtualizacao, acao.Versao, acao.QuantidadeDestinatarios);
     }
 }

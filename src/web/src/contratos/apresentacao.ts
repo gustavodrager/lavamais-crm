@@ -15,6 +15,7 @@ export interface ResumoAcaoComercial {
   criterios: CriteriosDeSegmentacao;
   situacao: SituacaoAcaoComercial;
   totalDestinatarios: number | null;
+  quantidadeDestinatarios?: number | null;
   dataAtualizacao: string;
   versao: number;
 }
@@ -149,6 +150,16 @@ export interface OpcaoItemDeCatalogo {
   categoria: string | null;
 }
 
+export interface OfertaDoCatalogoDeLavanderia {
+  id: string;
+  artigoDeLavanderiaId: string;
+  nomeArtigo: string;
+  categoria: string;
+  servicoDeLavanderiaId: string;
+  nomeServico: string;
+  precoUnitario: number;
+}
+
 export interface OpcaoModeloDeMensagem {
   modeloId: string;
   versaoId: string;
@@ -177,8 +188,6 @@ export interface ResumoMovimentacaoComercial {
   id: string;
   clienteId: string;
   nomeCliente: string;
-  itemDeCatalogoId: string;
-  nomeItem: string;
   valorTotal: number;
   dataMovimentacao: string;
   codigoExterno: string | null;
@@ -186,4 +195,29 @@ export interface ResumoMovimentacaoComercial {
   origem: "Recepcao" | "ImportacaoEssence" | "IntegracaoEssence";
   situacao: "Registrada" | "Cancelada";
   versao: number;
+  linhas: Array<{
+    id: string;
+    ofertaDeServicoId: string;
+    artigoDeLavanderiaId: string;
+    nomeArtigo: string;
+    servicoDeLavanderiaId: string;
+    nomeServico: string;
+    quantidade: number;
+    precoTabela: number;
+    precoUnitario: number;
+    subtotal: number;
+  }>;
+}
+
+export interface RoteiroDiario {
+  id: string;
+  data: string;
+  nomeMotorista: string;
+  situacao: "EmPreparacao" | "Publicado" | "EmAndamento" | "Finalizado";
+  versao: number;
+  paradas: Array<{
+    id: string; clienteId: string; nomeCliente: string; whatsapp: string; enderecoCompleto: string;
+    tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null; ordem: number;
+    situacao: "Pendente" | "EmDeslocamento" | "Concluida" | "NaoRealizada"; motivoNaoRealizacao: string | null;
+  }>;
 }

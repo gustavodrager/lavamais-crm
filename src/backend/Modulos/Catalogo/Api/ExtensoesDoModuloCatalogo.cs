@@ -17,7 +17,7 @@ public static class ExtensoesDoModuloCatalogo
     public static IServiceCollection AdicionarModuloCatalogo(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeCatalogo>(configuracao, ContextoDeCatalogo.Historico, ContextoDeCatalogo.Schema);
-        servicos.AddScoped<GerenciadorDeCatalogo>(); servicos.AddScoped<ConsultaDeCatalogo>(); servicos.AddScoped<IConsultaDeCatalogoParaMovimentacao>(provedor => provedor.GetRequiredService<ConsultaDeCatalogo>()); return servicos;
+        servicos.AddScoped<GerenciadorDeCatalogo>(); servicos.AddScoped<GerenciadorDoCatalogoDeLavanderia>(); servicos.AddScoped<ConsultaDeCatalogo>(); servicos.AddScoped<IConsultaDeCatalogoParaMovimentacao>(provedor => provedor.GetRequiredService<ConsultaDeCatalogo>()); return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloCatalogo(this IEndpointRouteBuilder endpoints)
@@ -28,6 +28,12 @@ public static class ExtensoesDoModuloCatalogo
             .RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPut("/{id:guid}", async (Guid id, DadosDoItemDeCatalogo dados, GerenciadorDeCatalogo g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); })
             .RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+
+        var lavanderia = endpoints.MapGroup("/api/v1/catalogo-lavanderia").RequireAuthorization(PoliticasDeAutorizacao.UsuarioAtivo).WithTags("Catalogo de lavanderia");
+        lavanderia.MapGet("/artigos", async (GerenciadorDoCatalogoDeLavanderia g, CancellationToken ct) => (await g.ListarArtigos(ct)).Select(x => new { x.Id, x.Nome, x.Categoria, x.Situacao, x.Versao }));
+        lavanderia.MapGet("/servicos", async (GerenciadorDoCatalogoDeLavanderia g, CancellationToken ct) => (await g.ListarServicos(ct)).Select(x => new { x.Id, x.Nome, x.Descricao, x.Situacao, x.Versao }));
+        lavanderia.MapGet("/ofertas", async (GerenciadorDoCatalogoDeLavanderia g, CancellationToken ct) => (await g.ListarOfertas(ct)).Select(x => new { x.Id, x.ArtigoDeLavanderiaId, nomeArtigo = x.Artigo.Nome, categoria = x.Artigo.Categoria, x.ServicoDeLavanderiaId, nomeServico = x.Servico.Nome, x.PrecoUnitario, x.Situacao, x.Versao }));
+        lavanderia.MapPost("/carga-inicial", async (GerenciadorDoCatalogoDeLavanderia g, CancellationToken ct) => Results.Ok(await g.CarregarCatalogoInicial(ct))).RequireAuthorization(PoliticasDeAutorizacao.Administrador);
         return endpoints;
     }
 

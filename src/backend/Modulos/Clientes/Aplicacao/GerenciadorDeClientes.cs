@@ -1,6 +1,7 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Roteiros;
 using LavaMais.Crm.Modulos.Clientes.Dominio;
 using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
@@ -163,4 +164,18 @@ public sealed class ConsultaDeClienteParaMovimentacao(ContextoDeClientes banco) 
     public Task<ClienteDisponivelParaMovimentacao?> ObterAtivo(Guid id, CancellationToken ct) =>
         banco.Clientes.AsNoTracking().Where(x => x.Id == id && x.Situacao == SituacaoDoCliente.Ativo)
             .Select(x => new ClienteDisponivelParaMovimentacao(x.Id, x.Nome)).SingleOrDefaultAsync(ct);
+}
+
+public sealed class ConsultaDeClienteParaRoteiro(ContextoDeClientes banco) : IConsultaDeClienteParaRoteiro
+{
+    public async Task<ClienteDisponivelParaRoteiro?> ObterAtivo(Guid id, CancellationToken ct)
+    {
+        var cliente = await banco.Clientes.AsNoTracking().Include(x => x.Contatos).Include(x => x.Endereco).SingleOrDefaultAsync(x => x.Id == id && x.Situacao == SituacaoDoCliente.Ativo, ct);
+        if (cliente?.Endereco is null) return null;
+        var partes = new[] { cliente.Endereco.Logradouro, cliente.Endereco.Numero, cliente.Endereco.Complemento, cliente.Endereco.Bairro, cliente.Endereco.Cidade, cliente.Endereco.Estado, cliente.Endereco.Cep }.Where(x => !string.IsNullOrWhiteSpace(x));
+        var endereco = string.Join(", ", partes);
+        if (string.IsNullOrWhiteSpace(endereco)) return null;
+        var whatsapp = cliente.Contatos.Single(x => x.Tipo == TipoDeContato.Whatsapp).ValorNormalizado;
+        return new(cliente.Id, cliente.Nome, whatsapp, endereco);
+    }
 }

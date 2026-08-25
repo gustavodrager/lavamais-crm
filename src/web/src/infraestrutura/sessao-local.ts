@@ -9,12 +9,12 @@ export const NOME_COOKIE_SESSAO = process.env.LAVAMAIS_AMBIENTE_TESTE === "1" ? 
 
 async function obterRegistro() {
   const id = (await cookies()).get(NOME_COOKIE_SESSAO)?.value;
-  if (process.env.LAVAMAIS_AMBIENTE_TESTE === "1" && id === "sessao-controlada-e2e") {
+  if (process.env.LAVAMAIS_AMBIENTE_TESTE === "1" && (id === "sessao-controlada-e2e" || id === "sessao-controlada-operador-e2e")) {
     return {
       apresentacao: {
         usuario: { nome: "Teste Automatizado", iniciais: "TA" },
         tenant: { nome: "Tenant de teste" },
-        papel: "Gerente" as const,
+        papel: id === "sessao-controlada-operador-e2e" ? "Operador" as const : "Gerente" as const,
       },
       accessToken: "token-controlado-e2e",
       expiraEm: Date.now() + 3_600_000,

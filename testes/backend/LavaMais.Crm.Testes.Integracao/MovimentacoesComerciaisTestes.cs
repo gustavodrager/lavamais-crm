@@ -13,7 +13,7 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
     {
         var agora = DateTimeOffset.UtcNow;
         Assert.Throws<ExcecaoDeRegraDeNegocio>(() => MovimentacaoComercial.Registrar(
-            Guid.NewGuid(), Guid.NewGuid(), "Cliente", Guid.NewGuid(), "Servico", -0.01m,
+            Guid.NewGuid(), Guid.NewGuid(), "Cliente", [CriarLinha(1, -0.01m)],
             agora, null, null, OrigemDaMovimentacao.Recepcao, "usuario", agora));
 
         var movimentacao = CriarMovimentacao(Guid.NewGuid(), agora);
@@ -63,15 +63,16 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
             tenantId,
             Guid.NewGuid(),
             "Cliente de teste",
-            Guid.NewGuid(),
-            "Lavagem de tapete",
-            120.50m,
+            [CriarLinha(1, 120.50m)],
             agora,
             $"teste-{Guid.NewGuid():N}",
             null,
             OrigemDaMovimentacao.Recepcao,
             "usuario-de-teste",
             agora);
+
+    private static LinhaPreparada CriarLinha(int quantidade, decimal preco) =>
+        new(Guid.NewGuid(), Guid.NewGuid(), "Tapete", Guid.NewGuid(), "Lavagem", quantidade, 125m, preco);
 
     private sealed record UsuarioDeTeste(Guid TenantId) : IContextoDoUsuario
     {

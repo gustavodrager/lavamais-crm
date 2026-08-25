@@ -23,6 +23,63 @@ namespace LavaMais.Crm.Modulos.Catalogo.Infraestrutura.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LavaMais.Crm.Modulos.Catalogo.Dominio.ArtigoDeLavanderia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("categoria");
+
+                    b.Property<DateTimeOffset>("DataAtualizacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_atualizacao");
+
+                    b.Property<DateTimeOffset>("DataCriacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("NomeNormalizado")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("nome_normalizado");
+
+                    b.Property<string>("Situacao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("situacao");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "NomeNormalizado")
+                        .IsUnique();
+
+                    b.ToTable("artigos_de_lavanderia", "catalogo");
+                });
+
             modelBuilder.Entity("LavaMais.Crm.Modulos.Catalogo.Dominio.ItemDeCatalogo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -106,6 +163,137 @@ namespace LavaMais.Crm.Modulos.Catalogo.Infraestrutura.Migrations
                         .IsUnique();
 
                     b.ToTable("itens_de_catalogo", "catalogo");
+                });
+
+            modelBuilder.Entity("LavaMais.Crm.Modulos.Catalogo.Dominio.OfertaDeServico", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ArtigoDeLavanderiaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("artigo_de_lavanderia_id");
+
+                    b.Property<DateTimeOffset>("DataAtualizacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_atualizacao");
+
+                    b.Property<DateTimeOffset>("DataCriacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<decimal>("PrecoUnitario")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("preco_unitario");
+
+                    b.Property<Guid>("ServicoDeLavanderiaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("servico_de_lavanderia_id");
+
+                    b.Property<string>("Situacao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("situacao");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtigoDeLavanderiaId");
+
+                    b.HasIndex("ServicoDeLavanderiaId");
+
+                    b.HasIndex("TenantId", "ArtigoDeLavanderiaId", "ServicoDeLavanderiaId")
+                        .IsUnique();
+
+                    b.ToTable("ofertas_de_servico", "catalogo");
+                });
+
+            modelBuilder.Entity("LavaMais.Crm.Modulos.Catalogo.Dominio.ServicoDeLavanderia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("DataAtualizacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_atualizacao");
+
+                    b.Property<DateTimeOffset>("DataCriacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("descricao");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("NomeNormalizado")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("nome_normalizado");
+
+                    b.Property<string>("Situacao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("situacao");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "NomeNormalizado")
+                        .IsUnique();
+
+                    b.ToTable("servicos_de_lavanderia", "catalogo");
+                });
+
+            modelBuilder.Entity("LavaMais.Crm.Modulos.Catalogo.Dominio.OfertaDeServico", b =>
+                {
+                    b.HasOne("LavaMais.Crm.Modulos.Catalogo.Dominio.ArtigoDeLavanderia", "Artigo")
+                        .WithMany()
+                        .HasForeignKey("ArtigoDeLavanderiaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LavaMais.Crm.Modulos.Catalogo.Dominio.ServicoDeLavanderia", "Servico")
+                        .WithMany()
+                        .HasForeignKey("ServicoDeLavanderiaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Artigo");
+
+                    b.Navigation("Servico");
                 });
 #pragma warning restore 612, 618
         }

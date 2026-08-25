@@ -11,6 +11,7 @@ using LavaMais.Crm.Modulos.Integracoes.Api;
 using LavaMais.Crm.Modulos.Identidade.Api;
 using LavaMais.Crm.Modulos.ModelosDeMensagem.Api;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Api;
+using LavaMais.Crm.Modulos.Roteiros.Api;
 using LavaMais.Crm.Modulos.Segmentacao.Api;
 using System.Text.Json.Serialization;
 
@@ -31,6 +32,7 @@ construtor.Services.AdicionarModuloModelos(construtor.Configuration);
 construtor.Services.AdicionarModuloSegmentacao();
 construtor.Services.AdicionarModuloAcoesComerciais(construtor.Configuration);
 construtor.Services.AdicionarModuloMovimentacoesComerciais(construtor.Configuration);
+construtor.Services.AdicionarModuloRoteiros(construtor.Configuration);
 construtor.Services.AdicionarModuloIdentidade(construtor.Configuration);
 construtor.Services.AddOpenApi();
 construtor.Services.ConfigureHttpJsonOptions(opcoes =>
@@ -52,6 +54,7 @@ aplicacao.MapearModuloImportacoes();
 aplicacao.MapearModuloModelos();
 aplicacao.MapearModuloAcoesComerciais();
 aplicacao.MapearModuloMovimentacoesComerciais();
+aplicacao.MapearModuloRoteiros();
 
 await aplicacao.RunAsync();
 

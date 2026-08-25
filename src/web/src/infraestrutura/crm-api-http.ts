@@ -24,7 +24,7 @@ const esquemaAcaoApi = z.object({
   itemDeCatalogoId: z.string().uuid().nullable(), versaoModeloId: z.string().uuid().nullable(),
   criterios: esquemaCriterios, situacao: esquemaSituacao,
   dataAtualizacao: z.string().datetime({ offset: true }),
-  versao: z.number().int().nonnegative(),
+  versao: z.number().int().nonnegative(), quantidadeDestinatarios: z.number().int().nonnegative().optional(),
 });
 const esquemaTotais = z.object({
   destinatarios: z.number().int().nonnegative(), pendentes: z.number().int().nonnegative(), aguardandoSolicitacao: z.number().int().nonnegative(), solicitados: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
@@ -97,10 +97,24 @@ const esquemaModelo = z.object({
   })),
 });
 const esquemaMovimentacao = z.object({
-  id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), itemDeCatalogoId: z.string().uuid(), nomeItem: z.string(),
+  id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(),
   valorTotal: z.number().nonnegative(), dataMovimentacao: z.string().datetime({ offset: true }), codigoExterno: z.string().nullable(), observacao: z.string().nullable(),
   origem: z.enum(["Recepcao", "ImportacaoEssence", "IntegracaoEssence"]), situacao: z.enum(["Registrada", "Cancelada"]),
   versao: z.number().int().nonnegative(),
+  linhas: z.array(z.object({
+    id: z.string().uuid(), ofertaDeServicoId: z.string().uuid(), artigoDeLavanderiaId: z.string().uuid(), nomeArtigo: z.string(),
+    servicoDeLavanderiaId: z.string().uuid(), nomeServico: z.string(), quantidade: z.number().int().positive(),
+    precoTabela: z.number().nonnegative(), precoUnitario: z.number().nonnegative(), subtotal: z.number().nonnegative(),
+  })),
+});
+const esquemaOfertaDoCatalogoDeLavanderia = z.object({
+  id: z.string().uuid(), artigoDeLavanderiaId: z.string().uuid(), nomeArtigo: z.string(), categoria: z.string(),
+  servicoDeLavanderiaId: z.string().uuid(), nomeServico: z.string(), precoUnitario: z.number().nonnegative(),
+  situacao: z.literal("Ativo"), versao: z.number().int().nonnegative(),
+});
+const esquemaRoteiro = z.object({
+  id: z.string().uuid(), data: z.string(), nomeMotorista: z.string(), situacao: z.enum(["EmPreparacao", "Publicado", "EmAndamento", "Finalizado"]), versao: z.number().int().nonnegative(),
+  paradas: z.array(z.object({ id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), whatsapp: z.string(), enderecoCompleto: z.string(), tipo: z.enum(["Coleta", "Entrega"]), periodo: z.string(), observacao: z.string().nullable(), ordem: z.number().int().positive(), situacao: z.enum(["Pendente", "EmDeslocamento", "Concluida", "NaoRealizada"]), motivoNaoRealizacao: z.string().nullable() })),
 });
 
 interface ProblemDetails {
@@ -124,7 +138,7 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async listarAcoes() {
     const itens = z.array(esquemaAcaoApi).parse(await this.requisitar("/api/v1/acoes-comerciais"));
-    return { itens: itens.map((acao) => ({ ...acao, totalDestinatarios: null })), pagina: 1, tamanhoPagina: itens.length, total: itens.length };
+    return { itens: itens.map((acao) => ({ ...acao, totalDestinatarios: acao.quantidadeDestinatarios ?? null })), pagina: 1, tamanhoPagina: itens.length, total: itens.length };
   }
 
   async obter(id: string) {
@@ -172,9 +186,28 @@ export class CrmApiHttp implements PortaCrmApi {
     return z.array(esquemaMovimentacao).parse(await this.requisitar(`/api/v1/movimentacoes-comerciais?${parametros}`));
   }
 
-  async registrarMovimentacao(entrada: { clienteId: string; itemDeCatalogoId: string; valorTotal: number; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }) {
+  async listarOfertasDoCatalogoDeLavanderia() {
+    const ofertas = z.array(esquemaOfertaDoCatalogoDeLavanderia).parse(await this.requisitar("/api/v1/catalogo-lavanderia/ofertas"));
+    return ofertas.map(({ id, artigoDeLavanderiaId, nomeArtigo, categoria, servicoDeLavanderiaId, nomeServico, precoUnitario }) => ({ id, artigoDeLavanderiaId, nomeArtigo, categoria, servicoDeLavanderiaId, nomeServico, precoUnitario }));
+  }
+
+  async registrarMovimentacao(entrada: { clienteId: string; linhas: Array<{ ofertaDeServicoId: string; quantidade: number; precoUnitario: number | null }>; dataMovimentacao: string | null; codigoExterno: string | null; observacao: string | null }) {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/movimentacoes-comerciais", { metodo: "POST", corpo: entrada }));
   }
+  async cancelarMovimentacao(id: string, motivo: string, versao: number) {
+    await this.requisitar(`/api/v1/movimentacoes-comerciais/${encodeURIComponent(id)}/cancelar`, { metodo: "POST", corpo: { motivo, versao } });
+  }
+
+  async obterRoteiro(data: string) { const resposta = await this.requisitar(`/api/v1/roteiros?data=${encodeURIComponent(data)}`, { aceitarNaoEncontrado: true }); return resposta === null ? null : esquemaRoteiro.parse(resposta); }
+  async criarRoteiro(data: string, nomeMotorista: string) { return esquemaCriacao.parse(await this.requisitar("/api/v1/roteiros", { metodo: "POST", corpo: { data, nomeMotorista } })); }
+  async adicionarParada(roteiroId: string, entrada: { clienteId: string; tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas`, { metodo: "POST", corpo: entrada }); }
+  async atualizarParada(roteiroId: string, paradaId: string, entrada: { tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas/${encodeURIComponent(paradaId)}`, { metodo: "PUT", corpo: entrada }); }
+  async removerParada(roteiroId: string, paradaId: string) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas/${encodeURIComponent(paradaId)}`, { metodo: "DELETE" }); }
+  async reordenarParadas(roteiroId: string, paradaIds: string[]) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/ordem`, { metodo: "PUT", corpo: { paradaIds } }); }
+  async publicarRoteiro(roteiroId: string) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/publicar`, { metodo: "POST" }); }
+  async iniciarParada(id: string) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/iniciar`, { metodo: "POST" }); }
+  async concluirParada(id: string) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/concluir`, { metodo: "POST" }); }
+  async naoRealizarParada(id: string, motivo: string) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/nao-realizar`, { metodo: "POST", corpo: { motivo } }); }
 
   async listarEtiquetas() { return z.array(esquemaEtiqueta).parse(await this.requisitar("/api/v1/etiquetas")); }
   async criarEtiqueta(nome: string) { return esquemaCriacao.parse(await this.requisitar("/api/v1/etiquetas", { metodo: "POST", corpo: { nome } })); }
@@ -208,6 +241,9 @@ export class CrmApiHttp implements PortaCrmApi {
   async criar(entrada: CriarAcaoComercialEntrada) {
     return esquemaCriacao.parse(await this.requisitar("/api/v1/acoes-comerciais", { metodo: "POST", corpo: entrada }));
   }
+  async atualizarAcao(id: string, entrada: CriarAcaoComercialEntrada) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}`, { metodo: "PUT", corpo: entrada });
+  }
 
   async atualizarCriterios(id: string, criterios: CriteriosDeSegmentacao) {
     const acao = await this.obter(id);
@@ -233,6 +269,9 @@ export class CrmApiHttp implements PortaCrmApi {
   async preparar(id: string, versao: number) {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/preparar`, { metodo: "POST", corpo: { versao } });
   }
+  async cancelarAcao(id: string, motivo: string, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/cancelar`, { metodo: "POST", corpo: { motivo, versao } });
+  }
 
   async enviarDestinatario(id: string, destinatarioId: string, versao: number) {
     return esquemaEnvioIndividual.parse(await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/destinatarios/${encodeURIComponent(destinatarioId)}/enviar`, { metodo: "POST", corpo: { versao } }));
@@ -250,7 +289,7 @@ export class CrmApiHttp implements PortaCrmApi {
     ));
   }
 
-  private async requisitar(caminho: string, opcoes: { metodo?: "GET" | "POST" | "PUT"; corpo?: unknown; aceitarNaoEncontrado?: boolean } = {}) {
+  private async requisitar(caminho: string, opcoes: { metodo?: "GET" | "POST" | "PUT" | "DELETE"; corpo?: unknown; aceitarNaoEncontrado?: boolean } = {}) {
     const token = await this.obterAccessToken();
     if (!token) throw new ErroCrmApi(401, "Sessao indisponivel para acessar a CRM API.");
     let resposta: Response;

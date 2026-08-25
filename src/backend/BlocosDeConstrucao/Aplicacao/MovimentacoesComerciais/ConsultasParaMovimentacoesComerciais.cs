@@ -7,9 +7,15 @@ public interface IConsultaDeClienteParaMovimentacao
 
 public interface IConsultaDeCatalogoParaMovimentacao
 {
-    Task<ItemDeCatalogoDisponivelParaMovimentacao?> ObterServicoAtivo(Guid id, CancellationToken cancellationToken);
+    Task<OfertaDisponivelParaMovimentacao?> ObterOfertaAtiva(Guid id, CancellationToken cancellationToken);
 }
 
 public sealed record ClienteDisponivelParaMovimentacao(Guid Id, string Nome);
 
-public sealed record ItemDeCatalogoDisponivelParaMovimentacao(Guid Id, string Nome);
+public sealed record OfertaDisponivelParaMovimentacao(
+    Guid Id,
+    Guid ArtigoId,
+    string NomeArtigo,
+    Guid ServicoId,
+    string NomeServico,
+    decimal PrecoUnitario);

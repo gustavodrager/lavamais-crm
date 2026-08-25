@@ -2,23 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Megaphone, Users, Upload, Settings, ReceiptText } from "lucide-react";
+import { House, Megaphone, Users, Upload, Settings, ReceiptText, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { SessaoApresentacao } from "@/contratos/apresentacao";
 
+const todosPapeis: Array<NonNullable<SessaoApresentacao["papel"]>> = ["Administrador", "Gerente", "Operador"];
+const gestores: Array<NonNullable<SessaoApresentacao["papel"]>> = ["Administrador", "Gerente"];
 export const itensNavegacao = [
-  { href: "/inicio", rotulo: "Início", icone: House },
-  { href: "/acoes-comerciais", rotulo: "Ações Comerciais", icone: Megaphone },
-  { href: "/clientes", rotulo: "Clientes", icone: Users },
-  { href: "/movimentacoes", rotulo: "Movimentações", icone: ReceiptText },
-  { href: "/importacao", rotulo: "Importação", icone: Upload },
-  { href: "/configuracoes", rotulo: "Configurações", icone: Settings },
+  { href: "/inicio", rotulo: "Início", icone: House, papeis: todosPapeis },
+  { href: "/acoes-comerciais", rotulo: "Ações Comerciais", icone: Megaphone, papeis: todosPapeis },
+  { href: "/clientes", rotulo: "Clientes", icone: Users, papeis: todosPapeis },
+  { href: "/movimentacoes", rotulo: "Movimentações", icone: ReceiptText, papeis: todosPapeis },
+  { href: "/roteiros", rotulo: "Roteiros", icone: Route, papeis: todosPapeis },
+  { href: "/importacao", rotulo: "Importação", icone: Upload, papeis: gestores },
+  { href: "/configuracoes", rotulo: "Configurações", icone: Settings, papeis: gestores },
 ];
 
-export function Navegacao({ aoNavegar, tema = "claro" }: { aoNavegar?: () => void; tema?: "claro" | "escuro" }) {
+export function Navegacao({ aoNavegar, tema = "claro", papel }: { aoNavegar?: () => void; tema?: "claro" | "escuro"; papel?: SessaoApresentacao["papel"] }) {
   const caminho = usePathname();
+  const itensVisiveis = itensNavegacao.filter((item) => item.papeis.includes(papel ?? "Gerente"));
   return (
     <nav aria-label="Navegação principal" className="space-y-1">
-      {itensNavegacao.map(({ href, rotulo, icone: Icone }) => {
+      {itensVisiveis.map(({ href, rotulo, icone: Icone }) => {
         const ativo = caminho === href || caminho.startsWith(`${href}/`);
         return (
           <Link key={href} href={href} onClick={aoNavegar} aria-current={ativo ? "page" : undefined}

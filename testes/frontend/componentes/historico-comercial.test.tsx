@@ -4,8 +4,9 @@ import type { ResumoMovimentacaoComercial } from "../../../src/web/src/contratos
 
 const base: ResumoMovimentacaoComercial = {
   id: "6d3d0d64-a111-4cff-8db8-111111111121", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana",
-  itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", nomeItem: "Lavagem de edredom", valorTotal: 100,
+  valorTotal: 100,
   dataMovimentacao: "2026-08-24T15:00:00Z", codigoExterno: null, observacao: null, origem: "Recepcao", situacao: "Registrada", versao: 1,
+  linhas: [{ id: "1d3d0d64-a111-4cff-8db8-111111111112", ofertaDeServicoId: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom casal", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", quantidade: 1, precoTabela: 100, precoUnitario: 100, subtotal: 100 }],
 };
 
 describe("HistoricoComercial", () => {
