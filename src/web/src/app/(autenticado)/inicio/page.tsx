@@ -1,4 +1,5 @@
 import type { DetalheAcaoComercial } from "@/contratos/apresentacao";
+import { redirect } from "next/navigation";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
 import {
@@ -13,6 +14,7 @@ import { PainelOperador } from "./painel-operador";
 
 export default async function Inicio() {
   const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect("/entrar");
   const api = obterPortaCrmApi();
   const agora = new Date();
   const dataHoje = dataLocalAtual(agora);
