@@ -172,6 +172,7 @@ public sealed class ConsultaDeClienteParaRoteiro(ContextoDeClientes banco) : ICo
     {
         var cliente = await banco.Clientes.AsNoTracking().Include(x => x.Contatos).Include(x => x.Endereco).SingleOrDefaultAsync(x => x.Id == id && x.Situacao == SituacaoDoCliente.Ativo, ct);
         if (cliente?.Endereco is null) return null;
+        if (string.IsNullOrWhiteSpace(cliente.Endereco.Logradouro) || string.IsNullOrWhiteSpace(cliente.Endereco.Numero) || string.IsNullOrWhiteSpace(cliente.Endereco.Cidade)) return null;
         var partes = new[] { cliente.Endereco.Logradouro, cliente.Endereco.Numero, cliente.Endereco.Complemento, cliente.Endereco.Bairro, cliente.Endereco.Cidade, cliente.Endereco.Estado, cliente.Endereco.Cep }.Where(x => !string.IsNullOrWhiteSpace(x));
         var endereco = string.Join(", ", partes);
         if (string.IsNullOrWhiteSpace(endereco)) return null;

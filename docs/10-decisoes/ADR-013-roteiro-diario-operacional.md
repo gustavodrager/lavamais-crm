@@ -12,7 +12,7 @@ A LavaMais possui inicialmente um motorista que realiza coletas e entregas sem u
 
 Adicionar o modulo isolado `Roteiros`, como extensao operacional controlada. Um roteiro pertence a uma data e possui nome do motorista, situacao e paradas ordenadas. Cada parada congela nome, telefone e endereco do cliente e registra tipo (`Coleta` ou `Entrega`), periodo, observacao e situacao.
 
-A recepcao organiza e publica. Qualquer usuario ativo autenticado pode consultar e executar o roteiro no celular. Nesta etapa nao existem GPS, rastreamento continuo, calculo de transito, otimizacao automatica, prova de entrega, controle de pedido ou integracao com o Essence.
+A recepcao organiza e publica. Qualquer usuario ativo autenticado pode consultar e executar o roteiro no celular. Paradas pendentes podem ser replanejadas durante o dia; paradas ja iniciadas, concluidas ou nao realizadas permanecem imutaveis. Nesta etapa nao existem GPS, rastreamento continuo, calculo de transito, otimizacao automatica, prova de entrega, controle de pedido ou integracao com o Essence.
 
 ## Consequencias
 
@@ -20,3 +20,4 @@ A recepcao organiza e publica. Qualquer usuario ativo autenticado pode consultar
 - a ordenacao e manual e previsivel;
 - a estrutura aceita identificar um motorista por roteiro, permitindo evolucao futura para varios roteiros no mesmo dia mediante nova decisao e migration;
 - dados pessoais exibidos ficam limitados ao necessario para realizar a parada.
+- publicacao, replanejamento e execucao usam concorrencia otimista e auditoria; falhas permanecem visiveis para reagendamento operacional.

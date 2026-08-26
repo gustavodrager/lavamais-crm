@@ -39,7 +39,7 @@ function InicioOperador() {
     <section className="grid gap-4 sm:grid-cols-3" aria-label="Atalhos de atendimento">
       <Atalho titulo="Buscar cliente" descricao="Localize pelo nome ou WhatsApp." href="/clientes" icone={Users} />
       <Atalho titulo="Registrar movimentação" descricao="Anote um serviço realizado." href="/movimentacoes" icone={ReceiptText} />
-      <Atalho titulo="Roteiro do dia" descricao="Consulte as coletas e entregas." href="/roteiros" icone={Route} />
+      <Atalho titulo="Roteiro do dia" descricao="Execute as coletas e entregas." href="/meu-roteiro" icone={Route} />
     </section>
     <Card className="mt-6"><CardHeader><CardTitle>Quando chegarem vários clientes</CardTitle><CardDescription>Use a busca rápida, selecione o cliente e registre o essencial. O sistema mantém os dados no formulário até confirmar.</CardDescription></CardHeader><CardContent><Button asChild variant="outline"><Link href="/clientes">Abrir busca de clientes<ArrowRight /></Link></Button></CardContent></Card>
   </>;

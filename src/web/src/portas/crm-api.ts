@@ -91,14 +91,17 @@ export interface AdministrarMovimentacoesComerciais {
 export interface AdministrarRoteiros {
   obterRoteiro(data: string): Promise<RoteiroDiario | null>;
   criarRoteiro(data: string, nomeMotorista: string): Promise<{ id: string }>;
-  adicionarParada(roteiroId: string, entrada: { clienteId: string; tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }): Promise<void>;
-  atualizarParada(roteiroId: string, paradaId: string, entrada: { tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }): Promise<void>;
-  removerParada(roteiroId: string, paradaId: string): Promise<void>;
-  reordenarParadas(roteiroId: string, paradaIds: string[]): Promise<void>;
-  publicarRoteiro(roteiroId: string): Promise<void>;
-  iniciarParada(id: string): Promise<void>;
-  concluirParada(id: string): Promise<void>;
-  naoRealizarParada(id: string, motivo: string): Promise<void>;
+  atualizarMotorista(roteiroId: string, nomeMotorista: string, versao: number): Promise<void>;
+  excluirRoteiro(roteiroId: string, versao: number): Promise<void>;
+  adicionarParada(roteiroId: string, entrada: { clienteId: string; tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null; versao: number }): Promise<void>;
+  atualizarParada(roteiroId: string, paradaId: string, entrada: { tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null; versao: number }): Promise<void>;
+  removerParada(roteiroId: string, paradaId: string, versao: number): Promise<void>;
+  reordenarParadas(roteiroId: string, paradaIds: string[], versao: number): Promise<void>;
+  publicarRoteiro(roteiroId: string, versao: number): Promise<void>;
+  iniciarParada(id: string, versao: number): Promise<void>;
+  concluirParada(id: string, versao: number): Promise<void>;
+  adiarParada(id: string, versao: number): Promise<void>;
+  naoRealizarParada(id: string, motivo: string, versao: number): Promise<void>;
 }
 
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.

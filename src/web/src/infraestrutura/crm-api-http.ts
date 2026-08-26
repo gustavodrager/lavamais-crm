@@ -114,7 +114,7 @@ const esquemaOfertaDoCatalogoDeLavanderia = z.object({
 });
 const esquemaRoteiro = z.object({
   id: z.string().uuid(), data: z.string(), nomeMotorista: z.string(), situacao: z.enum(["EmPreparacao", "Publicado", "EmAndamento", "Finalizado"]), versao: z.number().int().nonnegative(),
-  paradas: z.array(z.object({ id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), whatsapp: z.string(), enderecoCompleto: z.string(), tipo: z.enum(["Coleta", "Entrega"]), periodo: z.string(), observacao: z.string().nullable(), ordem: z.number().int().positive(), situacao: z.enum(["Pendente", "EmDeslocamento", "Concluida", "NaoRealizada"]), motivoNaoRealizacao: z.string().nullable() })),
+  paradas: z.array(z.object({ id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), whatsapp: z.string(), enderecoCompleto: z.string(), tipo: z.enum(["Coleta", "Entrega"]), periodo: z.string(), observacao: z.string().nullable(), ordem: z.number().int().positive(), situacao: z.enum(["Pendente", "EmDeslocamento", "Concluida", "NaoRealizada"]), motivoNaoRealizacao: z.string().nullable(), dataInicio: z.string().datetime({ offset: true }).nullable(), dataConclusao: z.string().datetime({ offset: true }).nullable() })),
 });
 
 interface ProblemDetails {
@@ -204,14 +204,17 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async obterRoteiro(data: string) { const resposta = await this.requisitar(`/api/v1/roteiros?data=${encodeURIComponent(data)}`, { aceitarNaoEncontrado: true }); return resposta === null ? null : esquemaRoteiro.parse(resposta); }
   async criarRoteiro(data: string, nomeMotorista: string) { return esquemaCriacao.parse(await this.requisitar("/api/v1/roteiros", { metodo: "POST", corpo: { data, nomeMotorista } })); }
-  async adicionarParada(roteiroId: string, entrada: { clienteId: string; tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas`, { metodo: "POST", corpo: entrada }); }
-  async atualizarParada(roteiroId: string, paradaId: string, entrada: { tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null }) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas/${encodeURIComponent(paradaId)}`, { metodo: "PUT", corpo: entrada }); }
-  async removerParada(roteiroId: string, paradaId: string) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas/${encodeURIComponent(paradaId)}`, { metodo: "DELETE" }); }
-  async reordenarParadas(roteiroId: string, paradaIds: string[]) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/ordem`, { metodo: "PUT", corpo: { paradaIds } }); }
-  async publicarRoteiro(roteiroId: string) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/publicar`, { metodo: "POST" }); }
-  async iniciarParada(id: string) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/iniciar`, { metodo: "POST" }); }
-  async concluirParada(id: string) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/concluir`, { metodo: "POST" }); }
-  async naoRealizarParada(id: string, motivo: string) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/nao-realizar`, { metodo: "POST", corpo: { motivo } }); }
+  async atualizarMotorista(roteiroId: string, nomeMotorista: string, versao: number) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}`, { metodo: "PUT", corpo: { nomeMotorista, versao } }); }
+  async excluirRoteiro(roteiroId: string, versao: number) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}`, { metodo: "DELETE", corpo: { versao } }); }
+  async adicionarParada(roteiroId: string, entrada: { clienteId: string; tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null; versao: number }) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas`, { metodo: "POST", corpo: entrada }); }
+  async atualizarParada(roteiroId: string, paradaId: string, entrada: { tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null; versao: number }) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas/${encodeURIComponent(paradaId)}`, { metodo: "PUT", corpo: entrada }); }
+  async removerParada(roteiroId: string, paradaId: string, versao: number) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/paradas/${encodeURIComponent(paradaId)}`, { metodo: "DELETE", corpo: { versao } }); }
+  async reordenarParadas(roteiroId: string, paradaIds: string[], versao: number) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/ordem`, { metodo: "PUT", corpo: { paradaIds, versao } }); }
+  async publicarRoteiro(roteiroId: string, versao: number) { await this.requisitar(`/api/v1/roteiros/${encodeURIComponent(roteiroId)}/publicar`, { metodo: "POST", corpo: { versao } }); }
+  async iniciarParada(id: string, versao: number) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/iniciar`, { metodo: "POST", corpo: { versao } }); }
+  async concluirParada(id: string, versao: number) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/concluir`, { metodo: "POST", corpo: { versao } }); }
+  async adiarParada(id: string, versao: number) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/adiar`, { metodo: "POST", corpo: { versao } }); }
+  async naoRealizarParada(id: string, motivo: string, versao: number) { await this.requisitar(`/api/v1/roteiros/paradas/${encodeURIComponent(id)}/nao-realizar`, { metodo: "POST", corpo: { motivo, versao } }); }
 
   async listarEtiquetas() { return z.array(esquemaEtiqueta).parse(await this.requisitar("/api/v1/etiquetas")); }
   async criarEtiqueta(nome: string) { return esquemaCriacao.parse(await this.requisitar("/api/v1/etiquetas", { metodo: "POST", corpo: { nome } })); }

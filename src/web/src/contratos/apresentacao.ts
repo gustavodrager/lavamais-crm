@@ -221,5 +221,6 @@ export interface RoteiroDiario {
     id: string; clienteId: string; nomeCliente: string; whatsapp: string; enderecoCompleto: string;
     tipo: "Coleta" | "Entrega"; periodo: string; observacao: string | null; ordem: number;
     situacao: "Pendente" | "EmDeslocamento" | "Concluida" | "NaoRealizada"; motivoNaoRealizacao: string | null;
+    dataInicio: string | null; dataConclusao: string | null;
   }>;
 }

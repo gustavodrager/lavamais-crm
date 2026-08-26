@@ -63,6 +63,6 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async carregarCatalogoInicialDeLavanderia() { return { artigosCriados: 0, servicosCriados: 0, ofertasCriadas: 0 }; },
   async registrarMovimentacao() { return { id: crypto.randomUUID() }; },
   async cancelarMovimentacao() {},
-  async obterRoteiro() { return null; }, async criarRoteiro() { return { id: crypto.randomUUID() }; }, async adicionarParada() {}, async atualizarParada() {}, async removerParada() {}, async reordenarParadas() {}, async publicarRoteiro() {}, async iniciarParada() {}, async concluirParada() {}, async naoRealizarParada() {},
+  async obterRoteiro() { return null; }, async criarRoteiro() { return { id: crypto.randomUUID() }; }, async atualizarMotorista() {}, async excluirRoteiro() {}, async adicionarParada() {}, async atualizarParada() {}, async removerParada() {}, async reordenarParadas() {}, async publicarRoteiro() {}, async iniciarParada() {}, async concluirParada() {}, async adiarParada() {}, async naoRealizarParada() {},
 };
 import "server-only";

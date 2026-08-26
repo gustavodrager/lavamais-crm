@@ -48,8 +48,8 @@ namespace LavaMais.Crm.Modulos.Roteiros.Infraestrutura.Migrations
 
                     b.Property<string>("EnderecoCompleto")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasMaxLength(800)
+                        .HasColumnType("character varying(800)")
                         .HasColumnName("endereco_completo");
 
                     b.Property<string>("MotivoNaoRealizacao")
@@ -108,8 +108,7 @@ namespace LavaMais.Crm.Modulos.Roteiros.Infraestrutura.Migrations
 
                     b.HasIndex("RoteiroId");
 
-                    b.HasIndex("TenantId", "RoteiroId", "Ordem")
-                        .IsUnique();
+                    b.HasIndex("TenantId", "RoteiroId", "Ordem");
 
                     b.ToTable("paradas", "roteiros");
                 });

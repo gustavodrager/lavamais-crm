@@ -25,34 +25,50 @@ public sealed class RoteiroDiario
     public uint Versao { get; private set; }
     public IReadOnlyCollection<ParadaDoRoteiro> Paradas => _paradas;
     public static RoteiroDiario Criar(Guid tenantId, DateOnly data, string motorista, DateTimeOffset agora) => new(tenantId, data, motorista, agora);
+    public void AlterarMotorista(string motorista, DateTimeOffset agora) { if (Situacao == SituacaoDoRoteiro.Finalizado) throw new ExcecaoDeConflito("roteiro_finalizado", "Nao e possivel alterar um roteiro finalizado."); NomeMotorista = Limpar(motorista, 120, "motorista_invalido"); DataAtualizacao = agora; }
     public ParadaDoRoteiro Adicionar(Guid clienteId, string nome, string whatsapp, string endereco, TipoDaParada tipo, string periodo, string? observacao, DateTimeOffset agora)
     {
-        if (Situacao != SituacaoDoRoteiro.EmPreparacao) throw new ExcecaoDeConflito("roteiro_publicado", "Nao e possivel adicionar paradas depois da publicacao.");
+        if (Situacao == SituacaoDoRoteiro.Finalizado) throw new ExcecaoDeConflito("roteiro_finalizado", "Nao e possivel adicionar paradas em um roteiro finalizado.");
         if (_paradas.Any(x => x.ClienteId == clienteId && x.Tipo == tipo && x.Situacao == SituacaoDaParada.Pendente)) throw new ExcecaoDeConflito("parada_duplicada", "Este cliente ja possui uma parada pendente deste tipo.");
         var parada = ParadaDoRoteiro.Criar(TenantId, Id, clienteId, nome, whatsapp, endereco, tipo, periodo, observacao, _paradas.Count + 1, agora); _paradas.Add(parada); DataAtualizacao = agora; return parada;
     }
     public void Reordenar(IReadOnlyList<Guid> ids, DateTimeOffset agora)
     {
-        if (Situacao != SituacaoDoRoteiro.EmPreparacao) throw new ExcecaoDeConflito("roteiro_publicado", "Nao e possivel reordenar depois da publicacao.");
+        if (Situacao == SituacaoDoRoteiro.Finalizado) throw new ExcecaoDeConflito("roteiro_finalizado", "Nao e possivel reordenar um roteiro finalizado.");
         if (ids.Count != _paradas.Count || ids.Distinct().Count() != ids.Count || ids.Any(id => _paradas.All(x => x.Id != id))) throw new ExcecaoDeRegraDeNegocio("ordem_invalida", "A ordem deve conter todas as paradas uma unica vez.");
+        var executadasAtuais = _paradas.Where(x => x.Situacao != SituacaoDaParada.Pendente).Select(x => x.Id).ToArray();
+        var executadasNovas = ids.Select(id => _paradas.Single(x => x.Id == id)).Where(x => x.Situacao != SituacaoDaParada.Pendente).Select(x => x.Id).ToArray();
+        if (!executadasAtuais.SequenceEqual(executadasNovas)) throw new ExcecaoDeRegraDeNegocio("ordem_executada_invalida", "Paradas ja executadas nao podem mudar de posicao.");
+        if (!ids.Take(executadasAtuais.Length).SequenceEqual(executadasAtuais)) throw new ExcecaoDeRegraDeNegocio("ordem_executada_invalida", "Paradas pendentes nao podem passar a frente de paradas ja executadas.");
         for (var i = 0; i < ids.Count; i++) _paradas.Single(x => x.Id == ids[i]).DefinirOrdem(i + 1); DataAtualizacao = agora;
     }
     public void AtualizarParada(Guid paradaId, TipoDaParada tipo, string periodo, string? observacao, DateTimeOffset agora)
     {
-        if (Situacao != SituacaoDoRoteiro.EmPreparacao) throw new ExcecaoDeConflito("roteiro_publicado", "Nao e possivel editar depois da publicacao.");
+        if (Situacao == SituacaoDoRoteiro.Finalizado) throw new ExcecaoDeConflito("roteiro_finalizado", "Nao e possivel editar um roteiro finalizado.");
         var parada = _paradas.SingleOrDefault(x => x.Id == paradaId) ?? throw new ExcecaoDeRecursoNaoEncontrado("Parada nao encontrada.");
+        if (parada.Situacao != SituacaoDaParada.Pendente) throw new ExcecaoDeConflito("parada_executada", "Somente paradas pendentes podem ser alteradas.");
         if (_paradas.Any(x => x.Id != paradaId && x.ClienteId == parada.ClienteId && x.Tipo == tipo && x.Situacao == SituacaoDaParada.Pendente)) throw new ExcecaoDeConflito("parada_duplicada", "Este cliente ja possui uma parada pendente deste tipo.");
         parada.Atualizar(tipo, periodo, observacao); DataAtualizacao = agora;
     }
     public void RemoverParada(Guid paradaId, DateTimeOffset agora)
     {
-        if (Situacao != SituacaoDoRoteiro.EmPreparacao) throw new ExcecaoDeConflito("roteiro_publicado", "Nao e possivel remover depois da publicacao.");
+        if (Situacao == SituacaoDoRoteiro.Finalizado) throw new ExcecaoDeConflito("roteiro_finalizado", "Nao e possivel remover uma parada de roteiro finalizado.");
         var parada = _paradas.SingleOrDefault(x => x.Id == paradaId) ?? throw new ExcecaoDeRecursoNaoEncontrado("Parada nao encontrada.");
+        if (parada.Situacao != SituacaoDaParada.Pendente) throw new ExcecaoDeConflito("parada_executada", "Somente paradas pendentes podem ser removidas.");
         _paradas.Remove(parada);
         for (var i = 0; i < _paradas.Count; i++) _paradas[i].DefinirOrdem(i + 1);
         DataAtualizacao = agora;
     }
     public void Publicar(DateTimeOffset agora) { if (_paradas.Count == 0) throw new ExcecaoDeRegraDeNegocio("roteiro_vazio", "Inclua ao menos uma parada antes de publicar."); if (Situacao != SituacaoDoRoteiro.EmPreparacao) throw new ExcecaoDeConflito("roteiro_ja_publicado", "O roteiro ja foi publicado."); Situacao = SituacaoDoRoteiro.Publicado; DataAtualizacao = agora; }
+    public void Adiar(Guid paradaId, DateTimeOffset agora)
+    {
+        if (Situacao == SituacaoDoRoteiro.Finalizado) throw new ExcecaoDeConflito("roteiro_finalizado", "Nao e possivel adiar paradas em um roteiro finalizado.");
+        var parada = _paradas.SingleOrDefault(x => x.Id == paradaId) ?? throw new ExcecaoDeRecursoNaoEncontrado("Parada nao encontrada.");
+        if (parada.Situacao != SituacaoDaParada.Pendente) throw new ExcecaoDeConflito("parada_indisponivel", "Somente paradas pendentes podem ser adiadas.");
+        parada.DefinirOrdem(_paradas.Max(x => x.Ordem) + 1); NormalizarOrdens(); DataAtualizacao = agora;
+    }
+    public void OrdenarParadasPorOrdem() => _paradas.Sort((a, b) => a.Ordem.CompareTo(b.Ordem));
+    private void NormalizarOrdens() { var ordenadas = _paradas.OrderBy(x => x.Ordem).ToArray(); for (var i = 0; i < ordenadas.Length; i++) ordenadas[i].DefinirOrdem(i + 1); }
     public void AtualizarSituacao(DateTimeOffset agora) { if (_paradas.Count > 0 && _paradas.All(x => x.Situacao is SituacaoDaParada.Concluida or SituacaoDaParada.NaoRealizada)) Situacao = SituacaoDoRoteiro.Finalizado; else if (_paradas.Any(x => x.Situacao != SituacaoDaParada.Pendente)) Situacao = SituacaoDoRoteiro.EmAndamento; DataAtualizacao = agora; }
     private static string Limpar(string? valor, int limite, string codigo) { var x = valor?.Trim(); if (string.IsNullOrWhiteSpace(x) || x.Length > limite) throw new ExcecaoDeRegraDeNegocio(codigo, $"O valor deve possuir entre 1 e {limite} caracteres."); return x; }
 }
