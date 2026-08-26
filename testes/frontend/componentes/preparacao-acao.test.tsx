@@ -19,6 +19,7 @@ describe("PreparacaoAcao", () => {
 
     await usuario.click(screen.getByRole("radio", { name: /Oferta de serviço/ }));
     expect(screen.getByText(/Olá, Ana Martins! Conheça Lavagem de edredom/)).toBeInTheDocument();
+    expect(screen.getByText("1 cliente")).toBeInTheDocument();
     await usuario.click(screen.getByRole("button", { name: "Confirmar clientes e mensagem" }));
     await usuario.click(screen.getByRole("button", { name: "Sim, começar os atendimentos" }));
 

@@ -2,10 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { DefinicaoPublico } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/definicao-publico";
-import { alterarExclusaoDoPublico, buscarClientesParaLista, montarListaPorRegiao, montarListaRapida, salvarListaManual } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
+import { alterarExclusaoDoPublico, buscarClientesParaLista, montarListaRapida, salvarListaManual } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
 import type { SimulacaoDePublico } from "../../../src/web/src/contratos/apresentacao";
 
-vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({ montarListaRapida: vi.fn(), montarListaPorRegiao: vi.fn(), buscarClientesParaLista: vi.fn(), salvarListaManual: vi.fn(), alterarExclusaoDoPublico: vi.fn() }));
+vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({ montarListaRapida: vi.fn(), buscarClientesParaLista: vi.fn(), salvarListaManual: vi.fn(), alterarExclusaoDoPublico: vi.fn() }));
 const criterios = { versaoSchema: 2 as const, modo: "Filtros" as const, tipoCliente: null, cidades: null, bairros: null, etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null };
 const simulacao: SimulacaoDePublico = { quantidadeEncontrada: 2, quantidadeElegivel: 2, pagina: 1, tamanhoPagina: 10, clientes: [
   { clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", elegivel: true, motivoExclusao: null },
@@ -25,22 +25,14 @@ describe("DefinicaoPublico", () => {
     vi.mocked(montarListaRapida).mockResolvedValue({ sucesso: true, simulacao });
     render(<DefinicaoControlada />);
     expect(screen.queryByRole("combobox", { name: "Cidade" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Escolher por região/ })).not.toBeInTheDocument();
     await usuario.click(screen.getByRole("button", { name: /Trazer 10 clientes/ }));
     await waitFor(() => expect(screen.getByText("Sua lista está pronta")).toBeInTheDocument());
     expect(screen.getByText("Ana Martins")).toBeInTheDocument();
     expect(screen.getByText(/confirmará uma cliente por vez/)).toBeInTheDocument();
-  });
-
-  it("permite escolher uma cidade e bairros para montar a lista", async () => {
-    const usuario = userEvent.setup();
-    vi.mocked(montarListaPorRegiao).mockResolvedValue({ sucesso: true, simulacao });
-    render(<DefinicaoControlada />);
-    await usuario.click(screen.getByRole("button", { name: /Escolher por região/ }));
-    await usuario.selectOptions(screen.getByRole("combobox", { name: "Cidade" }), "Praia Grande");
-    await usuario.click(screen.getByRole("checkbox", { name: "Aviação" }));
-    await usuario.click(screen.getByRole("button", { name: /Buscar clientes da região/ }));
-    await waitFor(() => expect(montarListaPorRegiao).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", cidade: "Praia Grande", bairros: ["Aviação"] }));
-    expect(await screen.findByText("Sua lista está pronta")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Trazer 10 clientes/ })).not.toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: "Alterar escolha" }));
+    expect(screen.getByRole("button", { name: /Trazer 10 clientes/ })).toBeInTheDocument();
   });
 
   it("permite buscar e confirmar uma escolha manual", async () => {
@@ -54,6 +46,7 @@ describe("DefinicaoPublico", () => {
     await usuario.click(await screen.findByRole("button", { name: /Adicionar Ana Martins/ }));
     await usuario.click(screen.getByRole("button", { name: "Confirmar 1 cliente" }));
     await waitFor(() => expect(salvarListaManual).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", clienteIds: ["6d3d0d64-a111-4cff-8db8-111111111113"] }));
+    expect(screen.getByRole("button", { name: "Alterar escolha" })).toBeInTheDocument();
   });
 
   it("permite retirar uma cliente da fila", async () => {

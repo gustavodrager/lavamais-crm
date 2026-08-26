@@ -10,7 +10,7 @@ export function ConfiguracaoAcao({ acaoId, criterios, modelos, versaoModeloAtual
   const [simulacao, setSimulacao] = useState(simulacaoInicial);
   const [modeloSelecionado, setModeloSelecionado] = useState(versaoModeloAtualId ?? "");
   const [telaAtual, setTelaAtual] = useState<"publico" | "mensagem">("publico");
-  const etapaAtual = telaAtual === "publico" ? 2 : modeloSelecionado ? 4 : 3;
+  const etapaAtual = telaAtual === "publico" ? 2 : 3;
   return <>
     <JornadaAcao etapaAtual={etapaAtual} />
     {telaAtual === "publico" ? <DefinicaoPublico acaoId={acaoId} criterios={criterios} simulacao={simulacao} aoSimular={setSimulacao} aoAlterarFiltros={() => setSimulacao(null)} aoContinuar={() => setTelaAtual("mensagem")} /> : <PreparacaoAcao acaoId={acaoId} modelos={modelos} versaoModeloId={modeloSelecionado} aoSelecionarModelo={setModeloSelecionado} simulacao={simulacao} nomeItemCatalogo={nomeItemCatalogo} aoVoltar={() => setTelaAtual("publico")} />}

@@ -32,9 +32,16 @@ export default async function DetalheAcao({ params }: { params: Promise<{ id: st
   ]) : [[], null, []];
   const nomeItemCatalogo = itensCatalogo.find((item) => item.id === acao.itemDeCatalogoId)?.nome ?? null;
   const podeCancelar = (acao.situacao === "Rascunho" || acao.situacao === "Preparada") && sessao?.papel !== "Operador";
+  const exibeExecucao = acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada";
+  const priorizaEnvio = acao.situacao === "Preparada" || acao.situacao === "EmProcessamento";
+  const blocoExecucao = exibeExecucao ? <ExecucaoAcao acaoId={acao.id} situacao={acao.situacao} destinatarios={acao.destinatarios} envioHabilitado={process.env.LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO === "1"} /> : null;
+  const conteudo = rascunho && sessao?.papel === "Operador"
+    ? <Card><CardContent className="p-5"><Alert><AlertTitle>Ação em rascunho</AlertTitle><AlertDescription>O gerente ainda está preparando esta ação. Você poderá acompanhar os destinatários e registrar resultados quando ela estiver pronta.</AlertDescription></Alert></CardContent></Card>
+    : rascunho
+      ? <><EditarInformacoesAcao acaoId={acao.id} nomeInicial={acao.nome} objetivoInicial={acao.objetivo} itemInicial={acao.itemDeCatalogoId} itens={itensCatalogo} /><ConfiguracaoAcao acaoId={acao.id} criterios={acao.criterios} modelos={modelos} versaoModeloAtualId={acao.versaoModeloId} simulacaoInicial={simulacaoInicial} nomeItemCatalogo={nomeItemCatalogo} /></>
+      : <><JornadaAcao etapaAtual={4} />{priorizaEnvio && blocoExecucao}<ResumoAcao acao={acao} />{!priorizaEnvio && blocoExecucao}</>;
   return <><CabecalhoPagina titulo={acao.nome} descricao={acao.objetivo ?? "Acompanhe a preparação, a entrega e o resultado comercial."} acao={<div className="flex items-center gap-2"><SituacaoAcao situacao={acao.situacao} />{podeCancelar && <CancelarAcao acaoId={acao.id} versao={acao.versao} />}</div>} />
     {acao.situacao === "EmProcessamento" && <AtualizacaoAutomatica />}
-    {rascunho && sessao?.papel === "Operador" ? <Card><CardContent className="p-5"><Alert><AlertTitle>Ação em rascunho</AlertTitle><AlertDescription>O gerente ainda está preparando esta ação. Você poderá acompanhar os destinatários e registrar resultados quando ela estiver pronta.</AlertDescription></Alert></CardContent></Card> : rascunho ? <><EditarInformacoesAcao acaoId={acao.id} nomeInicial={acao.nome} objetivoInicial={acao.objetivo} itemInicial={acao.itemDeCatalogoId} itens={itensCatalogo} /><ConfiguracaoAcao acaoId={acao.id} criterios={acao.criterios} modelos={modelos} versaoModeloAtualId={acao.versaoModeloId} simulacaoInicial={simulacaoInicial} nomeItemCatalogo={nomeItemCatalogo} /></> : <><JornadaAcao etapaAtual={5} /><ResumoAcao acao={acao} /></>}
-    {acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada" && <ExecucaoAcao acaoId={acao.id} situacao={acao.situacao} destinatarios={acao.destinatarios} envioHabilitado={process.env.LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO === "1"} />}
+    {conteudo}
   </>;
 }
