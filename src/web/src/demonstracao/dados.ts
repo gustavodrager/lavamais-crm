@@ -21,7 +21,7 @@ export const acoesDemonstracao: ResumoAcaoComercial[] = [
 ];
 
 export const clientesDemonstracao: ResumoCliente[] = [
-  { id: "1", nome: "Ana Martins", whatsapp: "+55 13 99123-4567", localidade: "Boqueirao, Praia Grande", quantidadeEtiquetas: 2, permiteWhatsapp: true, codigoExterno: "1001" },
-  { id: "2", nome: "Carlos Almeida", whatsapp: "+55 13 98845-2201", localidade: "Guilhermina, Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: true, codigoExterno: "1002" },
-  { id: "3", nome: "Patricia Souza", whatsapp: "+55 13 99774-8032", localidade: "Canto do Forte, Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: false, codigoExterno: null },
+  { id: "1", nome: "Ana Martins", whatsapp: "+55 13 99123-4567", localidade: "Boqueirao, Praia Grande", quantidadeEtiquetas: 2, permiteWhatsapp: true, situacao: "Ativo", codigoExterno: "1001" },
+  { id: "2", nome: "Carlos Almeida", whatsapp: "+55 13 98845-2201", localidade: "Guilhermina, Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: true, situacao: "Ativo", codigoExterno: "1002" },
+  { id: "3", nome: "Patricia Souza", whatsapp: "+55 13 99774-8032", localidade: "Canto do Forte, Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: false, situacao: "Ativo", codigoExterno: null },
 ];

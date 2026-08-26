@@ -16,7 +16,7 @@ describe("HistoricoComercial", () => {
       { ...base, id: "6d3d0d64-a111-4cff-8db8-111111111122", valorTotal: 50, dataMovimentacao: "2026-08-25T12:00:00Z" },
       { ...base, id: "6d3d0d64-a111-4cff-8db8-111111111123", valorTotal: 900, situacao: "Cancelada" },
     ];
-    render(<HistoricoComercial movimentacoes={movimentacoes} />);
+    render(<HistoricoComercial movimentacoes={movimentacoes} podeCancelar />);
     expect(screen.getByText("Total movimentado").parentElement).toHaveTextContent("150,00");
     expect(screen.getByText("Movimentações").parentElement).toHaveTextContent("2");
     expect(screen.getByText("Ticket médio").parentElement).toHaveTextContent("75,00");

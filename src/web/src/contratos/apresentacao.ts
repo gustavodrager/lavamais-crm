@@ -101,6 +101,8 @@ export interface ResumoCliente {
   localidade: string;
   quantidadeEtiquetas: number;
   permiteWhatsapp: boolean;
+  temEnderecoOperacional?: boolean;
+  situacao: "Ativo" | "Inativo";
   codigoExterno: string | null;
 }
 

@@ -45,7 +45,7 @@ describe("DefinicaoPublico", () => {
 
   it("permite buscar e confirmar uma escolha manual", async () => {
     const usuario = userEvent.setup();
-    vi.mocked(buscarClientesParaLista).mockResolvedValue({ sucesso: true, clientes: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", localidade: "Praia Grande", quantidadeEtiquetas: 0, permiteWhatsapp: true, codigoExterno: null }] });
+    vi.mocked(buscarClientesParaLista).mockResolvedValue({ sucesso: true, clientes: [{ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", localidade: "Praia Grande", quantidadeEtiquetas: 0, permiteWhatsapp: true, situacao: "Ativo", codigoExterno: null }] });
     vi.mocked(salvarListaManual).mockResolvedValue({ sucesso: true, simulacao: { ...simulacao, quantidadeEncontrada: 1, quantidadeElegivel: 1, clientes: [simulacao.clientes[0]] } });
     render(<DefinicaoControlada />);
     await usuario.click(screen.getByRole("button", { name: /Escolher pelo nome/ }));

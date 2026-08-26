@@ -151,7 +151,7 @@ export class CrmApiHttp implements PortaCrmApi {
   async listarClientes(busca?: string, pagina = 1, tamanhoPagina = 20) {
     const parametros = new URLSearchParams({ pagina: String(pagina), tamanhoPagina: String(tamanhoPagina) }); if (busca) parametros.set("busca", busca);
     const resultado = esquemaPaginado(esquemaClienteApi).parse(await this.requisitar(`/api/v1/clientes?${parametros}`));
-    return { ...resultado, itens: resultado.itens.map((cliente) => ({ id: cliente.id, nome: cliente.nome, whatsapp: cliente.whatsapp, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp, codigoExterno: cliente.codigoExterno })) };
+    return { ...resultado, itens: resultado.itens.map((cliente) => ({ id: cliente.id, nome: cliente.nome, whatsapp: cliente.whatsapp, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp, temEnderecoOperacional: Boolean(cliente.endereco?.logradouro && cliente.endereco?.numero && cliente.endereco?.cidade), situacao: cliente.situacao, codigoExterno: cliente.codigoExterno })) };
   }
 
   async obterCliente(id: string) {
@@ -183,7 +183,8 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async listarMovimentacoes(clienteId?: string, limite = 30) {
     const parametros = new URLSearchParams({ limite: String(limite) }); if (clienteId) parametros.set("clienteId", clienteId);
-    return z.array(esquemaMovimentacao).parse(await this.requisitar(`/api/v1/movimentacoes-comerciais?${parametros}`));
+    const movimentacoes = z.array(esquemaMovimentacao).parse(await this.requisitar(`/api/v1/movimentacoes-comerciais?${parametros}`));
+    return [...movimentacoes].sort((a, b) => new Date(b.dataMovimentacao).getTime() - new Date(a.dataMovimentacao).getTime());
   }
 
   async listarOfertasDoCatalogoDeLavanderia() {
