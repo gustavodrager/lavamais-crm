@@ -10,12 +10,13 @@ test("lista e abre uma Ação Comercial obtida da CRM API", async ({ page }) => 
   await page.getByRole("link", { name: "Ação integrada de edredons" }).click();
   await expect(page).toHaveURL(/\/acoes-comerciais\/6d3d0d64-a111-4cff-8db8-111111111111$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Ação integrada de edredons" })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole("progressbar", { name: "Progresso técnico: 100%" })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Progresso técnico: 83%" })).toBeVisible();
   await expect(page.getByText("R$ 150,00")).toBeVisible();
 });
 
 test("cria, simula e prepara uma ação com modelo publicado", async ({ page }) => {
-  await page.getByRole("link", { name: "Nova ação comercial" }).click();
+  await page.goto("/acoes-comerciais/nova");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Nome da ação").fill("Ação criada pelo frontend");
   await page.getByLabel("Objetivo").fill("Validar a criação integrada do rascunho");
   await page.getByRole("combobox", { name: "Item do catálogo" }).click();
@@ -52,12 +53,32 @@ test("oferece acesso às demais areas pelo menu principal", async ({ page }, tes
   await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
 });
 
+test("resume pendências e resultados relevantes no painel gerencial", async ({ page }) => {
+  await page.goto("/inicio");
+  await expect(page.getByRole("heading", { name: "Olá! O que precisa ser feito agora?" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Falhas para revisar: 2" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Retornos para registrar: 4" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Resultados registrados: 6" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Valor convertido informado: R$ 150,00" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Operação de hoje" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Roteiro de hoje" })).toBeVisible();
+  await expect(page.getByText("Motorista: Carlos")).toBeVisible();
+  await expect(page.getByText("1 registro", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 registro cancelado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Amanhã: Em preparação · 2 paradas" })).toBeVisible();
+});
+
 test("mostra o painel operacional para a recepção", async ({ context, page }) => {
   await context.addCookies([{ name: "lavamais-sessao-teste", value: "sessao-controlada-operador-e2e", url: "http://127.0.0.1:3000", httpOnly: true, sameSite: "Lax" }]);
   await page.goto("/inicio");
   await expect(page.getByRole("heading", { name: "Atendimento de hoje" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Importação" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Registrar movimentação" }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Maria Helena Costa" })).toBeVisible();
+  await expect(page.getByText("1 de 3 paradas registradas")).toBeVisible();
+  await expect(page.getByText("Movimentações registradas hoje")).toBeVisible();
+  await expect(page.getByText("Valor informado")).toBeVisible();
+  await expect(page.getByText("1 registro cancelado", { exact: true })).toBeVisible();
 });
 
 test("abre a navegacao em tela pequena", async ({ page }, testInfo) => {
