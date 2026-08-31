@@ -13,11 +13,14 @@ describe("NavegacaoMobileInferior", () => {
     expect(within(navegacao).getByRole("button", { name: "Mais" })).toBeInTheDocument();
   });
 
-  it("mostra o atalho de atendimento para o operador", () => {
+  it("deixa as cinco tarefas principais diretas para o operador", () => {
     render(<NavegacaoMobileInferior papel="Operador" />);
 
     const navegacao = screen.getByRole("navigation", { name: "Navegação rápida" });
-    expect(within(navegacao).getByRole("link", { name: "Atender" })).toBeInTheDocument();
-    expect(within(navegacao).queryByRole("link", { name: "Ações" })).not.toBeInTheDocument();
+    expect(within(navegacao).getAllByRole("link")).toHaveLength(5);
+    expect(within(navegacao).getByRole("link", { name: "Atender" })).toHaveAttribute("href", "/movimentacoes");
+    expect(within(navegacao).getByRole("link", { name: "Mensagens" })).toHaveAttribute("href", "/acoes-comerciais");
+    expect(within(navegacao).getByRole("link", { name: "Roteiro" })).toHaveAttribute("href", "/meu-roteiro");
+    expect(within(navegacao).queryByRole("button", { name: "Mais" })).not.toBeInTheDocument();
   });
 });

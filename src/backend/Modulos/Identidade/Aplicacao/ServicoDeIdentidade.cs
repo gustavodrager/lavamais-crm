@@ -16,22 +16,35 @@ public sealed class OpcoesDeIdentidadeLocal
     public Guid TenantId { get; set; }
     public string NomeTenant { get; set; } = "LavaMais";
     public string NomeUsuario { get; set; } = "Administrador LavaMais";
+    public List<UsuarioInicialDeIdentidade> UsuariosIniciais { get; set; } = [];
+}
+public sealed class UsuarioInicialDeIdentidade
+{
+    public string Telefone { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string Papel { get; set; } = "Administrador";
 }
 public sealed record ResultadoDaSessao(string Token, DateTimeOffset ExpiraEm, string Nome, string NomeTenant, string Papel);
 
 public sealed class ServicoDeIdentidade(ContextoDeIdentidade banco, IAutorizacaoDaIdentidade autorizacao, IOptions<OpcoesDeIdentidadeLocal> opcoes, TimeProvider relogio)
 {
-    public async Task<bool> PrimeiroAcessoDisponivel(CancellationToken ct) => !await banco.Usuarios.AnyAsync(ct);
+    public async Task<bool> PrimeiroAcessoDisponivel(CancellationToken ct)
+    {
+        var telefonesAtivados = await banco.Usuarios.AsNoTracking().Select(usuario => usuario.Telefone).ToListAsync(ct);
+        return UsuariosPermitidos().Any(usuario => !telefonesAtivados.Contains(Normalizar(usuario.Telefone)));
+    }
+
     public async Task<ResultadoDaSessao> PrimeiroAcesso(string telefone, string senha, CancellationToken ct)
     {
-        var normalizado = Normalizar(telefone); ValidarTelefonePermitido(normalizado); ValidarSenha(senha);
-        if (await banco.Usuarios.AnyAsync(ct)) throw new ExcecaoDeRegraDeNegocio("primeiro_acesso_indisponivel", "O primeiro acesso ja foi concluido.");
+        var normalizado = Normalizar(telefone); var usuarioInicial = ObterUsuarioPermitido(normalizado); ValidarSenha(senha);
+        if (await banco.Usuarios.AnyAsync(usuario => usuario.Telefone == normalizado, ct))
+            throw new ExcecaoDeRegraDeNegocio("primeiro_acesso_indisponivel", "A senha deste usuario ja foi definida.");
         var agora = relogio.GetUtcNow();
         await using var transacao = await banco.Database.BeginTransactionAsync(ct);
-        var usuario = UsuarioDeIdentidade.Ativar(opcoes.Value.TenantId, normalizado, opcoes.Value.NomeUsuario, ProtegerSenha(senha), agora);
+        var usuario = UsuarioDeIdentidade.Ativar(opcoes.Value.TenantId, normalizado, usuarioInicial.Nome, usuarioInicial.Papel, ProtegerSenha(senha), agora);
         banco.Add(usuario);
         await banco.SaveChangesAsync(ct);
-        await autorizacao.ProvisionarAdministradorInicial(usuario.TenantId, usuario.Id.ToString(), transacao.GetDbTransaction(), agora, ct);
+        await autorizacao.ProvisionarUsuarioInicial(usuario.TenantId, usuario.Id.ToString(), usuarioInicial.Papel, transacao.GetDbTransaction(), agora, ct);
         var resultado = await CriarSessao(usuario, agora, ct);
         await transacao.CommitAsync(ct);
         return resultado;
@@ -53,7 +66,24 @@ public sealed class ServicoDeIdentidade(ContextoDeIdentidade banco, IAutorizacao
         await banco.SaveChangesAsync(ct);
         return new(token, expira, usuario.Nome, opcoes.Value.NomeTenant, papel);
     }
-    private void ValidarTelefonePermitido(string telefone) { if (telefone != Normalizar(opcoes.Value.TelefonePermitido)) throw new ExcecaoDeRegraDeNegocio("telefone_nao_permitido", "Este telefone nao possui acesso ao CRM."); }
+    private UsuarioInicialDeIdentidade ObterUsuarioPermitido(string telefone)
+    {
+        var usuarios = UsuariosPermitidos();
+        var usuario = usuarios.SingleOrDefault(item => Normalizar(item.Telefone) == telefone);
+        return usuario ?? throw new ExcecaoDeRegraDeNegocio("telefone_nao_permitido", "Este telefone nao possui acesso ao CRM.");
+    }
+
+    private IReadOnlyList<UsuarioInicialDeIdentidade> UsuariosPermitidos()
+    {
+        var usuarios = opcoes.Value.UsuariosIniciais.Where(usuario => !string.IsNullOrWhiteSpace(usuario.Telefone)).ToList();
+        if (usuarios.Count == 0)
+            usuarios.Add(new UsuarioInicialDeIdentidade { Telefone = opcoes.Value.TelefonePermitido, Nome = opcoes.Value.NomeUsuario, Papel = "Administrador" });
+
+        var duplicado = usuarios.GroupBy(usuario => Normalizar(usuario.Telefone)).FirstOrDefault(grupo => grupo.Count() > 1);
+        if (duplicado is not null) throw new ExcecaoDeRegraDeNegocio("telefone_duplicado", "A configuracao possui usuarios iniciais com telefone duplicado.");
+        return usuarios;
+    }
+
     private static string Normalizar(string valor) => new(valor.Where(char.IsDigit).ToArray());
     private static void ValidarSenha(string senha) { if (senha.Length < 10) throw new ExcecaoDeRegraDeNegocio("senha_fraca", "A senha deve possuir pelo menos 10 caracteres."); }
     private static string ProtegerSenha(string senha) { var salt = RandomNumberGenerator.GetBytes(16); var hash = Rfc2898DeriveBytes.Pbkdf2(senha, salt, 210_000, HashAlgorithmName.SHA256, 32); return $"210000.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}"; }

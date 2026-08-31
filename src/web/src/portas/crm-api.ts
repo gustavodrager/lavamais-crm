@@ -24,7 +24,30 @@ export interface ConsultarAcoesComerciais {
 export interface ConsultarClientes {
   listarClientes(busca?: string, pagina?: number, tamanhoPagina?: number): Promise<ResultadoPaginado<ResumoCliente>>;
   obterCliente(id: string): Promise<DetalheCliente | null>;
-  criarCliente(entrada: { nome: string; whatsapp: string; tipo: string | null; permiteMarketingWhatsapp: boolean; endereco: { bairro: string | null; cidade: string | null }; codigoExterno: string | null }): Promise<{ id: string }>;
+  criarCliente(entrada: DadosMutaveisCliente): Promise<{ id: string }>;
+  atualizarCliente(id: string, entrada: DadosMutaveisCliente): Promise<void>;
+}
+
+export interface DadosMutaveisCliente {
+  nome: string;
+  whatsapp: string;
+  nomeFantasia: string | null;
+  tipo: string | null;
+  email: string | null;
+  dataNascimento: string | null;
+  permiteMarketingWhatsapp: boolean;
+  endereco: {
+    logradouro: string | null;
+    numero: string | null;
+    complemento: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    estado: string | null;
+    cep: string | null;
+  } | null;
+  etiquetaIds: string[];
+  codigoExterno: string | null;
+  dataCadastroOrigem: string | null;
 }
 
 export interface ImportarClientes {
@@ -37,6 +60,9 @@ export interface AdministrarConfiguracoes {
   criarServico(entrada: { nome: string; categoria: string | null; valorReferencia: number | null; codigoExterno: string | null }): Promise<{ id: string }>;
   listarEtiquetas(): Promise<Array<{ id: string; nome: string }>>;
   criarEtiqueta(nome: string): Promise<{ id: string }>;
+}
+
+export interface AdministrarModelosDeMensagem {
   criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string; chaveTemplateNotificacao: string }): Promise<{ id: string }>;
 }
 
@@ -76,6 +102,10 @@ export interface EnviarMensagemIndividual {
   enviarDestinatario(id: string, destinatarioId: string, versao: number): Promise<{ id: string; situacaoEnvio: "AguardandoSolicitacao"; versao: number }>;
 }
 
+export interface ConsultarCapacidades {
+  obterCapacidades(): Promise<{ envioNotificacoesHabilitado: boolean }>;
+}
+
 export interface RegistrarResultadoComercial {
   registrarResultado(id: string, destinatarioId: string, resultado: Exclude<ResultadoComercial, "NaoInformado">, valorConvertido: number | null, versao: number): Promise<void>;
 }
@@ -110,11 +140,13 @@ export interface PortaCrmApi
     ConsultarClientes,
     ImportarClientes,
     AdministrarConfiguracoes,
+    AdministrarModelosDeMensagem,
     ConsultarCatalogo,
     ConsultarModelosDeMensagem,
     CriarAcaoComercial,
     AtualizarESimularPublico,
     PrepararAcaoComercial,
+    ConsultarCapacidades,
     EnviarMensagemIndividual,
     RegistrarResultadoComercial,
     AdministrarMovimentacoesComerciais,

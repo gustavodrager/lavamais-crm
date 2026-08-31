@@ -2,8 +2,8 @@
 
 Isola efeitos externos do CRM e mantem a outbox transacional usada pelo Worker.
 
-Cada solicitacao individual de envio recebe chave de idempotencia deterministica. O Worker reutiliza essa chave em novas tentativas, controla leases interrompidos e delega ao Notification Hub o envio tecnico, retries de provedor e estados de entrega.
+Cada solicitacao individual de envio recebe chave de idempotencia deterministica por tenant. O Worker reutiliza essa chave, controla leases interrompidos e resolve uma porta neutra para o modo `Local` ou `Central`.
 
-Credenciais externas ficam somente na API ou no Worker. O CRM registra o estado comercial e o identificador da notificacao; o Notification Hub permanece responsavel pelo estado tecnico detalhado.
+No modo `Local`, `integracoes.notificacoes_locais` guarda o snapshot, o identificador do WhatsMiau e os estados tecnicos recebidos por `messages.update`. Essa tabela nao e uma segunda fila. No modo `Central`, o servico externo volta a ser responsavel pelo estado tecnico detalhado.
 
-Enquanto `EnvioNotificacoes__Habilitado=false`, nenhuma mudanca de destinatario ou mensagem de outbox e criada pelo endpoint de envio.
+Credenciais externas ficam somente na API ou no Worker. Enquanto `Notificacoes__Modo=Desabilitado`, nenhuma mudanca de destinatario ou mensagem de outbox e criada pelo endpoint de envio. A API publica essa capacidade ao BFF sem expor qual credencial esta configurada.

@@ -39,9 +39,10 @@ O primeiro administrador e ativado por procedimento controlado. Recuperacao de s
 - logs nao incluem tokens, corpos ou dados pessoais;
 - conexoes de banco usam configuracao externa nos ambientes compartilhados;
 - migrations sao executadas por etapa controlada, nunca no startup;
-- credenciais do Notification Hub ficam somente na API ou no Worker;
-- o envio permanece desabilitado enquanto a integracao segura com o Notification Hub nao estiver pronta.
+- credenciais do WhatsMiau e da futura Central ficam somente na API ou no Worker;
+- o segredo do webhook e mascarado em logs e traces;
+- o envio permanece `Desabilitado` enquanto o canal selecionado nao estiver homologado.
 
 ## Historico da decisao
 
-A arquitetura anterior previa OIDC pelo Identity Hub. O ADR-011 substituiu essa parte das ADR-003, ADR-004 e ADR-010. O documento de integracao com o Identity Hub permanece marcado como historico.
+A arquitetura anterior previa OIDC pelo Identity Hub. O ADR-011 substituiu essa parte das ADR-003, ADR-004 e ADR-010. O ADR-017 substituiu a parte de notificacoes das ADR-003 e ADR-010. O documento de integracao com o Identity Hub permanece marcado como historico.

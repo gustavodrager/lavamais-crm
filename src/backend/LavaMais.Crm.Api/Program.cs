@@ -51,6 +51,7 @@ aplicacao.MapearModuloAuditoria();
 aplicacao.MapearModuloCatalogo();
 aplicacao.MapearModuloClientes();
 aplicacao.MapearModuloImportacoes();
+aplicacao.MapearModuloIntegracoes();
 aplicacao.MapearModuloModelos();
 aplicacao.MapearModuloAcoesComerciais();
 aplicacao.MapearModuloMovimentacoesComerciais();

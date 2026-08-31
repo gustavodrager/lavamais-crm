@@ -10,6 +10,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <ProjectReference Include="../../../src/backend/BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+    <ProjectReference Include="../../../src/backend/LavaMais.Crm.ImportadorEssence/LavaMais.Crm.ImportadorEssence.csproj" />
+    <ProjectReference Include="../../../src/backend/Modulos/Integracoes/LavaMais.Crm.Modulos.Integracoes.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/MovimentacoesComerciais/LavaMais.Crm.Modulos.MovimentacoesComerciais.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Roteiros/LavaMais.Crm.Modulos.Roteiros.csproj" />
   </ItemGroup>

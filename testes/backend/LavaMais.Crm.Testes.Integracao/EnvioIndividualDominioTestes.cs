@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
 namespace LavaMais.Crm.Testes.Integracao;
@@ -51,14 +52,14 @@ public sealed class EnvioIndividualDominioTestes
         var segundo = acao.Destinatarios.Last();
         var agora = DateTimeOffset.UtcNow;
         acao.SolicitarEnvio(primeiro.Id, agora);
-        primeiro.RegistrarSolicitacao("notificacao-1");
+        primeiro.RegistrarSolicitacao(new(ServicoDeNotificacao.Local, "notificacao-1"));
         primeiro.AtualizarEstado(SituacaoDoEnvio.Entregue, null, agora);
 
         acao.RecalcularConclusao(agora);
 
         Assert.Equal(SituacaoDaAcaoComercial.EmProcessamento, acao.Situacao);
         acao.SolicitarEnvio(segundo.Id, agora);
-        segundo.RegistrarSolicitacao("notificacao-2");
+        segundo.RegistrarSolicitacao(new(ServicoDeNotificacao.Local, "notificacao-2"));
         segundo.AtualizarEstado(SituacaoDoEnvio.Falhou, "falha_teste", agora);
         acao.RecalcularConclusao(agora);
         Assert.Equal(SituacaoDaAcaoComercial.ConcluidaComFalhas, acao.Situacao);

@@ -24,6 +24,8 @@ public sealed class ArtigoDeLavanderia
     public uint Versao { get; private set; }
     public static ArtigoDeLavanderia Criar(Guid tenantId, string nome, string categoria, DateTimeOffset agora)
     { if (tenantId == Guid.Empty) throw new ExcecaoDeRegraDeNegocio("tenant_invalido", "O tenant e obrigatorio."); return new(tenantId, nome, categoria, agora); }
+    public void AlterarSituacao(SituacaoDoCatalogoDeLavanderia situacao, DateTimeOffset agora)
+    { if (!Enum.IsDefined(situacao)) throw new ExcecaoDeRegraDeNegocio("situacao_invalida", "A situacao do artigo e invalida."); Situacao = situacao; DataAtualizacao = agora; }
     private static string Limpar(string? valor, int limite, string codigo)
     { var limpo = valor?.Trim(); if (string.IsNullOrWhiteSpace(limpo) || limpo.Length > limite) throw new ExcecaoDeRegraDeNegocio(codigo, $"O valor deve possuir entre 1 e {limite} caracteres."); return limpo; }
 }
@@ -47,6 +49,8 @@ public sealed class ServicoDeLavanderia
     public uint Versao { get; private set; }
     public static ServicoDeLavanderia Criar(Guid tenantId, string nome, string? descricao, DateTimeOffset agora)
     { if (tenantId == Guid.Empty) throw new ExcecaoDeRegraDeNegocio("tenant_invalido", "O tenant e obrigatorio."); return new(tenantId, nome, descricao, agora); }
+    public void AlterarSituacao(SituacaoDoCatalogoDeLavanderia situacao, DateTimeOffset agora)
+    { if (!Enum.IsDefined(situacao)) throw new ExcecaoDeRegraDeNegocio("situacao_invalida", "A situacao do servico e invalida."); Situacao = situacao; DataAtualizacao = agora; }
     private static string Limpar(string? valor, int limite, string codigo)
     { var limpo = valor?.Trim(); if (string.IsNullOrWhiteSpace(limpo) || limpo.Length > limite) throw new ExcecaoDeRegraDeNegocio(codigo, $"O valor deve possuir entre 1 e {limite} caracteres."); return limpo; }
 }
@@ -73,4 +77,6 @@ public sealed class OfertaDeServico
     public ArtigoDeLavanderia Artigo { get; private set; } = null!;
     public ServicoDeLavanderia Servico { get; private set; } = null!;
     public static OfertaDeServico Criar(Guid tenantId, Guid artigoId, Guid servicoId, decimal precoUnitario, DateTimeOffset agora) => new(tenantId, artigoId, servicoId, precoUnitario, agora);
+    public void AlterarSituacao(SituacaoDoCatalogoDeLavanderia situacao, DateTimeOffset agora)
+    { if (!Enum.IsDefined(situacao)) throw new ExcecaoDeRegraDeNegocio("situacao_invalida", "A situacao da oferta e invalida."); Situacao = situacao; DataAtualizacao = agora; }
 }

@@ -11,12 +11,20 @@
 | `IdentidadeLocal__TenantId` | sim | nao | tenant associado ao usuario inicial |
 | `IdentidadeLocal__NomeTenant` | sim | nao | nome apresentado do tenant |
 | `IdentidadeLocal__NomeUsuario` | sim | dado pessoal | nome apresentado do administrador inicial |
-| `EnvioNotificacoes__Habilitado` | sim | nao | libera ou bloqueia a criacao da intencao de envio |
+| `Notificacoes__Modo` | API | nao | seleciona `Desabilitado`, `Local` ou `Central` |
+| `Notificacoes__WhatsMiau__BaseUrl` | API no modo local | nao | base da Evolution API v2 do WhatsMiau |
+| `Notificacoes__WhatsMiau__ApiKey` | API no modo local | sim | autentica chamadas do servidor ao WhatsMiau |
+| `Notificacoes__WhatsMiau__NomeInstancia` | API no modo local | nao | identifica a instancia autorizada |
+| `Notificacoes__WhatsMiau__SegredoWebhook` | API no modo local | sim | autentica `messages.update` pela rota secreta |
+| `Notificacoes__Central__BaseUrl` | API no modo central | nao | endereco da futura Central de Notificacao |
+| `Notificacoes__Central__ApiKey` | API no modo central | sim | autentica o CRM na Central |
+| `Notificacoes__Central__Origem` | API no modo central | nao | origem exclusiva `lavamais-crm` |
 
 ## Regras
 
 - o telefone e o tenant nunca sao recebidos do navegador;
-- `EnvioNotificacoes__Habilitado` permanece `false` ate a validacao completa do Notification Hub;
+- `Notificacoes__Modo` permanece `Desabilitado` ate validar credenciais, instancia e webhook no ambiente;
+- API e Worker devem usar o mesmo modo e a mesma configuracao de notificacoes;
 - API e Migrador usam a mesma conexao apenas dentro do mesmo ambiente;
 - migrations sao executadas pelo Migrador em etapa unica e controlada;
 - a conexao local versionada existe somente para desenvolvimento.

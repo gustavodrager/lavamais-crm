@@ -21,6 +21,7 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
     {
         var item = ItemDeCatalogo.Criar(usuario.TenantId, dados.Tipo, dados.Nome, dados.Descricao, dados.Categoria, dados.ValorReferencia, relogio.GetUtcNow());
         AplicarDadosDeOrigem(item, dados);
+        item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow());
         await ValidarNome(item.NomeNormalizado, null, ct);
         await ValidarCodigoExterno(item.CodigoExterno, null, ct);
         banco.Add(item); await banco.SaveChangesAsync(ct); return item;
@@ -47,6 +48,8 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
         item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow()); AplicarDadosDeOrigem(item, dados);
         await ValidarCodigoExterno(item.CodigoExterno, item.Id, ct); await banco.SaveChangesAsync(ct); return new(item, true);
     }
+
+    public void DescartarAlteracoesPendentes() => banco.ChangeTracker.Clear();
 
     private void AplicarDadosDeOrigem(ItemDeCatalogo item, DadosDoItemDeCatalogo dados)
     {
@@ -82,6 +85,12 @@ public sealed class ConsultaDeCatalogo(ContextoDeCatalogo banco) : IConsultaDeCa
             .Where(x => x.Id == id && x.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo
                 && x.Artigo.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo
                 && x.Servico.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo)
+            .Select(x => new OfertaDisponivelParaMovimentacao(x.Id, x.ArtigoDeLavanderiaId, x.Artigo.Nome, x.ServicoDeLavanderiaId, x.Servico.Nome, x.PrecoUnitario))
+            .SingleOrDefaultAsync(ct);
+
+    public async Task<OfertaDisponivelParaMovimentacao?> ObterOfertaParaImportacao(Guid id, CancellationToken ct) =>
+        await banco.OfertasDeServico.AsNoTracking()
+            .Where(x => x.Id == id)
             .Select(x => new OfertaDisponivelParaMovimentacao(x.Id, x.ArtigoDeLavanderiaId, x.Artigo.Nome, x.ServicoDeLavanderiaId, x.Servico.Nome, x.PrecoUnitario))
             .SingleOrDefaultAsync(ct);
 }

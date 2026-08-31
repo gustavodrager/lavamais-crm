@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Api.Observabilidade;
 using LavaMais.Crm.BlocosDeConstrucao.Dominio;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ public sealed class TratadorGlobalDeExcecoes(
             Status = status,
             Title = titulo,
             Detail = status >= 500 ? "Ocorreu um erro inesperado." : excecao.Message,
-            Instance = contexto.Request.Path,
+            Instance = CaminhoSeguroDaRequisicao.Obter(contexto.Request.Path),
             Type = $"https://httpstatuses.com/{status}"
         };
         detalhes.Extensions["codigo"] = codigo;

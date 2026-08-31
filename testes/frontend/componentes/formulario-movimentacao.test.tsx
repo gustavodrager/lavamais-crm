@@ -22,7 +22,7 @@ describe("FormularioMovimentacao", () => {
     await usuario.type(screen.getByLabelText("Quantidade"), "2");
     expect(screen.getAllByText("R$ 32,40").length).toBeGreaterThanOrEqual(2);
 
-    await usuario.click(screen.getByRole("button", { name: "Adicionar linha" }));
+    await usuario.click(screen.getByRole("button", { name: "Adicionar item" }));
     const seletores = screen.getAllByLabelText("Artigo e serviço");
     await usuario.selectOptions(seletores[1], ofertas[1].id);
     expect(screen.getByText("R$ 111,60")).toBeVisible();
@@ -37,9 +37,9 @@ describe("FormularioMovimentacao", () => {
     render(<FormularioMovimentacao clienteId="7d3d0d64-a111-4cff-8db8-111111111112" nomeCliente="Ana" ofertas={ofertas} agoraLocal="2026-08-25T17:00" />);
 
     await usuario.selectOptions(screen.getByLabelText("Artigo e serviço"), ofertas[0].id);
-    await usuario.click(screen.getByRole("button", { name: "Registrar movimentação" }));
+    await usuario.click(screen.getByRole("button", { name: "Registrar atendimento" }));
 
-    expect(screen.getByRole("alertdialog")).toHaveTextContent("Confirme o registro comercial");
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("Confirmar este atendimento?");
     expect(screen.getByRole("alertdialog")).toHaveTextContent("Ana");
     expect(screen.getByRole("alertdialog")).toHaveTextContent("R$ 16,20 por unidade");
     await usuario.click(screen.getByRole("button", { name: "Voltar e revisar" }));

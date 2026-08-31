@@ -6,12 +6,14 @@ import type { PreVisualizacaoImportacao, ResultadoImportacao } from "@/contratos
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
+import { papelDaVisao } from "@/lib/sessao-apresentacao";
 
 export type ResultadoPreVisualizar = { sucesso: true; preVisualizacao: PreVisualizacaoImportacao } | { sucesso: false; mensagem: string };
 export type ResultadoConfirmar = { sucesso: true; resultado: ResultadoImportacao } | { sucesso: false; mensagem: string };
 
 export async function preVisualizarClientes(dados: FormData): Promise<ResultadoPreVisualizar> {
   const sessao = await obterPortaSessao().obterSessao(); if (!sessao) redirect("/entrar?retorno=/importacao");
+  if (papelDaVisao(sessao) !== "Administrador") return { sucesso: false, mensagem: "Somente administradores podem importar clientes." };
   const arquivo = dados.get("arquivo");
   if (!(arquivo instanceof File) || arquivo.size === 0) return { sucesso: false, mensagem: "Selecione um arquivo CSV com dados." };
   if (!arquivo.name.toLowerCase().endsWith(".csv")) return { sucesso: false, mensagem: "Converta a planilha para CSV antes de enviar." };
@@ -22,6 +24,7 @@ export async function preVisualizarClientes(dados: FormData): Promise<ResultadoP
 
 export async function confirmarClientes(referenciaArquivo: string): Promise<ResultadoConfirmar> {
   const sessao = await obterPortaSessao().obterSessao(); if (!sessao) redirect("/entrar?retorno=/importacao");
+  if (papelDaVisao(sessao) !== "Administrador") return { sucesso: false, mensagem: "Somente administradores podem confirmar a importação." };
   const validacao = z.string().uuid().safeParse(referenciaArquivo); if (!validacao.success) return { sucesso: false, mensagem: "A pré-visualização expirou. Envie o arquivo novamente." };
   try { return { sucesso: true, resultado: await obterPortaCrmApi().confirmarImportacao(validacao.data) }; }
   catch (erro) { if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Somente administradores podem confirmar a importação." : erro.status === 404 ? "A pré-visualização não está mais disponível." : erro.status === 409 || erro.status === 422 ? erro.message : "Não foi possível concluir a importação agora." }; throw erro; }

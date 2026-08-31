@@ -38,8 +38,3 @@ export async function criarEtiqueta(entrada: { nome: string }): Promise<Resultad
   await validarSessao(); const validacao = z.object({ nome: z.string().trim().min(2).max(80) }).safeParse(entrada); if (!validacao.success) return { sucesso: false, mensagem: "Informe um nome válido para a etiqueta." };
   try { await obterPortaCrmApi().criarEtiqueta(validacao.data.nome); revalidatePath("/configuracoes"); return { sucesso: true }; } catch (erro) { return falha(erro); }
 }
-
-export async function criarModelo(entrada: { nome: string; conteudoPreVisualizacao: string; chaveTemplateNotificacao: string }): Promise<ResultadoConfiguracao> {
-  await validarSessao(); const validacao = z.object({ nome: z.string().trim().min(2).max(160), conteudoPreVisualizacao: z.string().trim().min(5).max(2000), chaveTemplateNotificacao: z.string().trim().min(2).max(200) }).safeParse(entrada); if (!validacao.success) return { sucesso: false, mensagem: "Revise o nome, o texto de pré-visualização e a chave do template." };
-  try { await obterPortaCrmApi().criarEPublicarModelo(validacao.data); revalidatePath("/configuracoes"); return { sucesso: true }; } catch (erro) { return falha(erro); }
-}

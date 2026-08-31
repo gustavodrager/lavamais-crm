@@ -35,7 +35,7 @@ Status: aceita. Consulte [ADR-002](../../10-decisoes/ADR-002-stack-e-monolito-mo
 
 - autenticacao local por telefone e senha definida no primeiro acesso;
 - sessao opaca validada pela API e mantida no BFF;
-- HTTP com `X-Api-Key` para o Notification Hub;
+- HTTP com `apikey` para o WhatsMiau e adaptador `X-Api-Key` preservado para a futura Central de Notificacao;
 - importacao CSV como primeira entrada de dados externa.
 
 ## Operacao

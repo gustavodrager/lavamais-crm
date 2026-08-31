@@ -1,7 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
-import type { CriarAcaoComercialEntrada, PortaCrmApi } from "@/portas/crm-api";
+import type { CriarAcaoComercialEntrada, DadosMutaveisCliente, PortaCrmApi } from "@/portas/crm-api";
 import type { CriteriosDeSegmentacao } from "@/contratos/apresentacao";
 import type { ResultadoComercial } from "@/contratos/apresentacao";
 
@@ -25,6 +25,10 @@ const esquemaAcaoApi = z.object({
   criterios: esquemaCriterios, situacao: esquemaSituacao,
   dataAtualizacao: z.string().datetime({ offset: true }),
   versao: z.number().int().nonnegative(), quantidadeDestinatarios: z.number().int().nonnegative().optional(),
+  mensagensParaEnviar: z.number().int().nonnegative().default(0),
+  falhasParaRevisar: z.number().int().nonnegative().default(0),
+  retornosParaRegistrar: z.number().int().nonnegative().default(0),
+  resultadosRegistrados: z.number().int().nonnegative().default(0),
 });
 const esquemaTotais = z.object({
   destinatarios: z.number().int().nonnegative(), pendentes: z.number().int().nonnegative(), aguardandoSolicitacao: z.number().int().nonnegative(), solicitados: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
@@ -42,7 +46,8 @@ const esquemaDetalhe = z.object({ acao: esquemaAcaoApi, totais: esquemaTotais, d
 const esquemaClienteApi = z.object({
   id: z.string().uuid(), nome: z.string(), nomeFantasia: z.string().nullable(), whatsapp: z.string(), email: z.string().nullable(), dataNascimento: z.string().nullable(), tipo: z.string().nullable(), situacao: z.enum(["Ativo", "Inativo"]), permiteMarketingWhatsapp: z.boolean(),
   endereco: z.object({ logradouro: z.string().nullable(), numero: z.string().nullable(), complemento: z.string().nullable(), bairro: z.string().nullable(), cidade: z.string().nullable(), estado: z.string().nullable(), cep: z.string().nullable() }).nullable(),
-  etiquetaIds: z.array(z.string().uuid()), codigoExterno: z.string().nullable(),
+  etiquetaIds: z.array(z.string().uuid()), codigoExterno: z.string().nullable(), dataCadastroOrigem: z.string().datetime({ offset: true }).nullable(),
+  dataCriacao: z.string().datetime({ offset: true }), dataAtualizacao: z.string().datetime({ offset: true }),
 }).passthrough();
 const esquemaItemDeCatalogo = z.object({
   id: z.string().uuid(),
@@ -72,6 +77,7 @@ const esquemaResultadoImportacao = z.object({
 }).passthrough();
 const esquemaEtiqueta = z.object({ id: z.string().uuid(), nome: z.string() });
 const esquemaEnvioIndividual = z.object({ id: z.string().uuid(), situacaoEnvio: z.literal("AguardandoSolicitacao"), versao: z.number().int().nonnegative() });
+const esquemaCapacidades = z.object({ envioNotificacoesHabilitado: z.boolean() });
 const esquemaSimulacao = z.object({
   quantidadeEncontrada: z.number().int().nonnegative(),
   quantidadeElegivel: z.number().int().nonnegative(),
@@ -136,6 +142,10 @@ type ObterAccessToken = () => Promise<string | null>;
 export class CrmApiHttp implements PortaCrmApi {
   constructor(private readonly urlBase: string, private readonly obterAccessToken: ObterAccessToken) {}
 
+  async obterCapacidades() {
+    return esquemaCapacidades.parse(await this.requisitar("/api/v1/capacidades"));
+  }
+
   async listarAcoes() {
     const itens = z.array(esquemaAcaoApi).parse(await this.requisitar("/api/v1/acoes-comerciais"));
     return { itens: itens.map((acao) => ({ ...acao, totalDestinatarios: acao.quantidadeDestinatarios ?? null })), pagina: 1, tamanhoPagina: itens.length, total: itens.length };
@@ -161,8 +171,12 @@ export class CrmApiHttp implements PortaCrmApi {
     return { ...cliente, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp };
   }
 
-  async criarCliente(entrada: { nome: string; whatsapp: string; tipo: string | null; permiteMarketingWhatsapp: boolean; endereco: { bairro: string | null; cidade: string | null }; codigoExterno: string | null }) {
-    return esquemaCriacao.parse(await this.requisitar("/api/v1/clientes", { metodo: "POST", corpo: { ...entrada, nomeFantasia: null, email: null, dataNascimento: null, etiquetaIds: [] } }));
+  async criarCliente(entrada: DadosMutaveisCliente) {
+    return esquemaCriacao.parse(await this.requisitar("/api/v1/clientes", { metodo: "POST", corpo: entrada }));
+  }
+
+  async atualizarCliente(id: string, entrada: DadosMutaveisCliente) {
+    await this.requisitar(`/api/v1/clientes/${encodeURIComponent(id)}`, { metodo: "PUT", corpo: entrada });
   }
 
   async listarItensDeCatalogoAtivos() {

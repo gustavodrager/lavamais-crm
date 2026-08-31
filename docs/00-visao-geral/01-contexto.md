@@ -24,7 +24,7 @@ Cliente 360, oportunidades automaticas, inatividade, metas e indicadores permane
 ## Integracoes existentes
 
 - identidade local do CRM para autenticacao, tenant e papel;
-- Notification Hub para WhatsApp e futuros canais;
+- WhatsMiau para o envio local de WhatsApp, com porta preparada para a futura Central de Notificacao;
 - Essence GO Industrial como possivel fonte futura, sem integracao ativa nesta fase.
 
 ## Comunicacao externa

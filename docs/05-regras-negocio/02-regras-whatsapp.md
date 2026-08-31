@@ -1,42 +1,43 @@
 # Regras de WhatsApp
 
-## Canal e provedor
+## Canal e adaptador
 
-- A Versao 1.0 usa o canal `Whatsapp` do Notification Hub.
-- O CRM nao armazena credenciais da Meta.
-- O navegador nunca chama o Notification Hub diretamente.
-- Comunicacao proativa usa template aprovado e parametros controlados.
+- A Versao 1.0 usa o WhatsMiau no modo `Local`.
+- O navegador nunca chama o WhatsMiau ou a Central diretamente.
+- Comunicacao proativa usa modelo revisado, parametros controlados e conteudo congelado.
+- O adaptador pode migrar de `Local` para `Central` sem mudar a Acao Comercial.
 
 ## Identificacao
 
-- `source`: identificador configurado para o LavaMais CRM.
-- `templateKey`: chave tecnica vinculada a versao do modelo comercial.
-- `idempotencyKey`: `acao:{acaoId}:destinatario:{destinatarioId}:v1`.
-- `recipientPhone`: telefone normalizado e congelado no destinatario da acao.
+- `chaveModelo`: chave tecnica estavel vinculada a versao do modelo comercial;
+- `chaveIdempotencia`: `acao:{acaoId}:destinatario:{destinatarioId}:v1`;
+- `telefoneDestinatario`: telefone normalizado e congelado no destinatario da acao;
+- `referencia`: origem `Local` ou `Central` junto ao identificador retornado.
 
 ## Estados
 
-O CRM converte os estados do hub para sua projecao de apresentacao:
+O CRM converte os estados do WhatsMiau para sua projecao de apresentacao:
 
-| Notification Hub | CRM |
+| WhatsMiau | CRM |
 |---|---|
-| `Pending` | `Solicitado` |
-| `Processing` | `Solicitado` |
-| `Sent` | `Enviado` |
-| `Failed` | `Falhou` |
-| `DeliveryStatus.Delivered` | `Entregue` |
-| `DeliveryStatus.Read` | `Lido` |
-| `DeliveryStatus.Undeliverable` | `Falhou` |
+| resposta com `key.id` ou `SERVER_ACK` | `Enviado` |
+| `DELIVERY_ACK` | `Entregue` |
+| `READ` ou `PLAYED` | `Lido` |
+| `ERROR`, `ERROR_ACK` ou `FAILED` | `Falhou` |
+
+No modo `Central`, `deliveryStatus` prevalece sobre o estado de processamento: `Delivered` vira `Entregue`, `Read` vira `Lido` e `Undeliverable` vira `Falhou`.
 
 ## Confiabilidade
 
-- A outbox do CRM registra a intencao de envio na mesma transacao da mudanca de estado do destinatario.
-- Cada intencao nasce de uma confirmacao individual depois da conferencia da mensagem montada.
+- A outbox registra a intencao na mesma transacao da mudanca do destinatario.
+- Cada intencao nasce de uma confirmacao individual depois da conferencia da mensagem.
 - Um comando nunca cria intencoes para varios destinatarios.
-- O Worker pode repetir a chamada com a mesma chave.
-- O Notification Hub e responsavel por lease, retry e tentativa tecnica.
-- O Worker reconcilia periodicamente notificacoes ainda nao finalizadas.
+- A chave de idempotencia e unica por tenant.
+- A tabela de notificacoes locais guarda estado tecnico e nao constitui uma segunda fila.
+- Respostas HTTP temporarias do WhatsMiau podem reagendar a outbox.
+- Timeout ou falha de rede com resultado incerto termina em falha para evitar duplicidade automatica.
+- Atualizacoes de entrega sao idempotentes e nao regridem `Entregue` ou `Lido`.
 
 ## Limites
 
-Agendamento, mensagens livres, e-mail e SMS nao aparecem na interface inicial, mesmo que o Notification Hub possua essas capacidades.
+Agendamento, mensagens livres, e-mail e SMS nao aparecem na interface inicial. A integracao local nao autoriza edicao do texto depois da preparacao nem disparo coletivo.

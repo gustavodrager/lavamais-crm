@@ -55,7 +55,8 @@
 
 - outbox;
 - Worker;
-- cliente do Notification Hub;
+- porta de notificacoes e adaptadores `Local/WhatsMiau` e `Central`;
+- persistencia tecnica local e webhook `messages.update`;
 - idempotencia;
 - reconciliacao.
 

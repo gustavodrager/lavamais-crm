@@ -25,7 +25,8 @@ flowchart LR
     S --> A
     M[ModelosDeMensagem] --> A
     A --> P[Porta de Notificacoes]
-    P --> H[Notification Hub]
+    P --> W[WhatsMiau]
+    P -. migracao futura .-> H[Central de Notificacao]
     AU[Autorizacao] -. protege .-> A
     AU -. protege .-> C
     AD[Auditoria] -. observa eventos .-> A

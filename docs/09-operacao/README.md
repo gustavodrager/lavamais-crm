@@ -14,12 +14,13 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF 
 1. fornecer segredos por variaveis do ambiente, sem arquivos versionados;
 2. executar migrations e os scripts de `infraestrutura/postgresql/` em ordem numerica como etapa unica e controlada antes de liberar a nova versao;
 3. iniciar a API e validar `/saude/vivo` e `/saude/pronto`;
-4. iniciar uma unica instancia do Worker e confirmar processamento da outbox;
-5. executar uma acao de homologacao com destinatario autorizado e conferir idempotencia e reconciliacao.
+4. configurar o mesmo `Notificacoes__Modo` na API e no Worker e, no modo local, cadastrar o webhook do WhatsMiau;
+5. iniciar uma unica instancia do Worker e confirmar processamento da outbox;
+6. executar uma acao de homologacao com destinatario autorizado e conferir idempotencia, webhook e reconciliacao.
 
-Em 20 de agosto de 2026, a homologacao foi publicada no Railway com componentes separados. A API responde em `https://lavamais-crm-api-homologacao.up.railway.app` e o BFF em `https://lavamais-crm-web-homologacao.up.railway.app`. O migrador concluiu e encerrou com sucesso. O Worker foi validado contra o banco e mantido com zero replicas ate existir um Notification Hub compativel e credenciado.
+Em 20 de agosto de 2026, a homologacao foi publicada no Railway com componentes separados. A API responde em `https://lavamais-crm-api-homologacao.up.railway.app` e o BFF em `https://lavamais-crm-web-homologacao.up.railway.app`. O migrador concluiu e encerrou com sucesso. O Worker foi validado contra o banco e permaneceu com zero replicas. Depois do ADR-017, ele pode ser ativado com uma replica quando instancia, credenciais e webhook do WhatsMiau forem homologados.
 
-O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige login local validado, contrato seguro da Central de Notificacao e ensaio de restauracao.
+O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige login local validado, canal de notificacoes seguro e homologado e ensaio de restauracao.
 
 Rollback de aplicacao deve reutilizar uma versao compatível com o schema já aplicado. Migrations destrutivas exigem plano específico e backup validado; não se executa `database update` automaticamente no startup.
 
@@ -40,7 +41,8 @@ Alertar ao menos para:
 - `/saude/pronto` indisponível;
 - aumento de respostas 5xx;
 - mensagens da outbox sem conclusão ou com lease expirando repetidamente;
-- destinatários em estado não final por período superior ao acordado com o Notification Hub;
+- destinatários em estado não final por período superior ao acordado com o canal configurado;
+- falhas ou ausência de eventos `messages.update` do WhatsMiau no modo local;
 - falhas recorrentes do ciclo do Worker.
 
 ## Backup e restauração

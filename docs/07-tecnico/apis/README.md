@@ -1,6 +1,15 @@
 # Superficie Inicial da API
 
-Todos os endpoints empresariais usam `/api/v1`, exigem access token valido e derivam o tenant do claim `tenant_id`.
+Todos os endpoints empresariais usam `/api/v1`, exigem access token valido e derivam o tenant da sessao. O webhook tecnico e a unica excecao anonima e usa segredo proprio.
+
+## Capacidades e webhook
+
+```text
+GET    /api/v1/capacidades
+POST   /api/v1/webhooks/whatsmiau/{segredo}
+```
+
+`capacidades` informa ao BFF se o envio de notificacoes esta habilitado, sem expor modo ou credenciais. O webhook nao aparece no OpenAPI, limita o corpo, mascara o segredo em observabilidade e responde sempre HTTP 200.
 
 ## Clientes
 
@@ -58,6 +67,8 @@ PUT    /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/resultado
 
 Comandos de transicao validam estado e versao do agregado. Conflitos de concorrencia retornam `409`.
 
+A listagem retorna contadores derivados dos destinatarios para montar filas sem uma consulta adicional por acao: `mensagensParaEnviar`, `falhasParaRevisar`, `retornosParaRegistrar` e `resultadosRegistrados`.
+
 Nos contratos de criacao e alteracao do rascunho, `itemDeCatalogoId` e opcional. Quando a versao do modelo usa a variavel `itemCatalogo`, a preparacao exige um item ativo e retorna `422` se ele nao estiver definido.
 
 ### Envio individual
@@ -86,7 +97,7 @@ Content-Type: application/json
 }
 ```
 
-O comando exige papel `Administrador` ou `Gerente`. Destinatario fora da acao ou do tenant nao e revelado (`404`); versao desatualizada, envio concorrente ou destinatario ja solicitado retorna `409`; regra que impede o envio retorna `422`. A outbox e a mudanca de estado sao gravadas na mesma transacao.
+O comando exige papel `Administrador`, `Gerente` ou `Operador`. Destinatario fora da acao ou do tenant nao e revelado (`404`); versao desatualizada, envio concorrente ou destinatario ja solicitado retorna `409`; regra que impede o envio retorna `422`. A outbox e a mudanca de estado sao gravadas na mesma transacao.
 
 ## Movimentacoes comerciais
 
@@ -128,6 +139,6 @@ Disponivel somente para `Administrador`, com paginacao e filtros controlados.
 - `404` sem revelar existencia em outro tenant;
 - `409` para conflito de estado, concorrencia ou unicidade;
 - `422` para regra de negocio que impede a operacao;
-- `X-Correlation-Id` propagado entre Web, API, Worker e hubs.
+- `X-Correlation-Id` propagado entre Web, API, Worker e integracoes quando o contrato externo permitir.
 
 Os schemas detalhados serao gerados no OpenAPI junto com a implementacao e nao devem duplicar diretamente entidades de persistencia.

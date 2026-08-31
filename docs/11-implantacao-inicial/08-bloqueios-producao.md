@@ -20,9 +20,9 @@ Producao nao recebe aplicacao nem dados empresariais enquanto qualquer bloqueio 
 
 ## Comunicacao
 
-- [ ] Notification Hub autenticado e idempotente;
-- [ ] origem e chave do CRM provisionadas;
-- [ ] templates e parametros aprovados;
+- [ ] WhatsMiau autenticado e idempotencia do CRM homologada;
+- [ ] instancia, chave e segredo de webhook exclusivos provisionados;
+- [ ] modelos, parametros e uso de `sendText` aprovados;
 - [ ] envio individual homologado com destinatario autorizado;
 - [ ] Worker liberado formalmente para iniciar.
 

@@ -44,6 +44,43 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
         Assert.Equal((await banco.Usuarios.SingleAsync(TestContext.Current.CancellationToken)).Id.ToString(), autorizacao.UsuarioIdentidadeId);
     }
 
+    [Fact]
+    public async Task Deve_ativar_usuarios_iniciais_com_papeis_diferentes()
+    {
+        var opcoesBanco = new DbContextOptionsBuilder<ContextoDeIdentidade>().UseNpgsql(postgres.Conexao, x => x.MigrationsHistoryTable(ContextoDeIdentidade.Historico, ContextoDeIdentidade.Schema)).Options;
+        await using var banco = new ContextoDeIdentidade(opcoesBanco); await banco.Database.MigrateAsync(TestContext.Current.CancellationToken);
+        var tenantId = Guid.NewGuid();
+        var opcoesAutorizacao = new DbContextOptionsBuilder<ContextoDeAutorizacao>().UseNpgsql(postgres.Conexao, x => x.MigrationsHistoryTable(ContextoDeAutorizacao.TabelaDeHistoricoDasMigrations, ContextoDeAutorizacao.Schema)).Options;
+        await using var bancoAutorizacao = new ContextoDeAutorizacao(opcoesAutorizacao, new ContextoDeTeste(tenantId));
+        await bancoAutorizacao.Database.MigrateAsync(TestContext.Current.CancellationToken);
+        await banco.Sessoes.ExecuteDeleteAsync(TestContext.Current.CancellationToken); await banco.Usuarios.ExecuteDeleteAsync(TestContext.Current.CancellationToken);
+        await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().ExecuteDeleteAsync(TestContext.Current.CancellationToken);
+        var configuracao = Options.Create(new OpcoesDeIdentidadeLocal
+        {
+            TenantId = tenantId,
+            NomeTenant = "LavaMais",
+            UsuariosIniciais =
+            [
+                new() { Telefone = "11900000001", Nome = "Usuario Administrador", Papel = "Administrador" },
+                new() { Telefone = "11900000002", Nome = "Usuario Gerente", Papel = "Gerente" },
+                new() { Telefone = "11900000003", Nome = "Usuario Operador", Papel = "Operador" }
+            ]
+        });
+        var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao), configuracao, TimeProvider.System);
+
+        Assert.True(await servico.PrimeiroAcessoDisponivel(TestContext.Current.CancellationToken));
+        var administrador = await servico.PrimeiroAcesso("11900000001", "senha-admin-segura", TestContext.Current.CancellationToken);
+        var gerente = await servico.PrimeiroAcesso("11900000002", "senha-gerente-segura", TestContext.Current.CancellationToken);
+        var operador = await servico.PrimeiroAcesso("11900000003", "senha-operador-segura", TestContext.Current.CancellationToken);
+
+        Assert.False(await servico.PrimeiroAcessoDisponivel(TestContext.Current.CancellationToken));
+        Assert.Equal("Administrador", administrador.Papel);
+        Assert.Equal("Gerente", gerente.Papel);
+        Assert.Equal("Operador", operador.Papel);
+        var papeis = await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().OrderBy(usuario => usuario.Papel).Select(usuario => usuario.Papel).ToListAsync(TestContext.Current.CancellationToken);
+        Assert.Equal([PapelDoCrm.Administrador, PapelDoCrm.Gerente, PapelDoCrm.Operador], papeis);
+    }
+
     private sealed record ContextoDeTeste(Guid TenantId) : IContextoDoUsuario
     {
         public bool Autenticado => true;

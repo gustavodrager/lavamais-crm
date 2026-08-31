@@ -17,7 +17,7 @@ O CRM armazena somente senha protegida com PBKDF2-SHA256 e o hash SHA-256 dos to
 ## Gerente
 
 - manter clientes;
-- manter catalogo e etiquetas;
+- manter catalogo, etiquetas e modelos comerciais;
 - criar, preparar, executar e acompanhar acoes;
 - registrar resultados.
 
@@ -26,15 +26,17 @@ O CRM armazena somente senha protegida com PBKDF2-SHA256 e o hash SHA-256 dos to
 - consultar e manter clientes;
 - consultar acoes;
 - acompanhar envios;
-- registrar resultados comerciais.
+- solicitar envio individual de mensagem ja preparada, sem editar conteudo, publico ou modelo;
+- registrar resultados comerciais;
 - criar, ordenar, editar, remover e publicar o roteiro diario operacional.
 
-O Operador nao prepara nem inicia uma acao na configuracao inicial.
+O Operador nao cria, prepara, edita, cancela nem altera publico ou modelo de uma acao na configuracao inicial.
 
 ## Regras
 
 - papeis sao sempre limitados ao tenant;
 - acesso negado por padrao;
 - autorizacao e validada na API, nao somente na interface;
+- todos os perfis ativos podem consultar telefone e detalhes cadastrais dos clientes;
 - mudancas de papel sao auditadas;
 - usuario autenticado sem papel ativo nao acessa dados empresariais.

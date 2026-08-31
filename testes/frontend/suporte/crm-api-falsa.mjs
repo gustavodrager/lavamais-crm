@@ -5,11 +5,14 @@ const idCriado = "7e4e1e75-b222-4cff-8db8-222222222222";
 const itemCatalogoId = "6d3d0d64-a111-4cff-8db8-111111111112";
 const modeloId = "6d3d0d64-a111-4cff-8db8-111111111115";
 const versaoModeloId = "6d3d0d64-a111-4cff-8db8-111111111116";
+const clienteId = "6d3d0d64-a111-4cff-8db8-111111111113";
 const criteriosVazios = { versaoSchema: 2, modo: "Filtros", tipoCliente: null, cidades: null, bairros: null, etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null };
-const acao = { id, nome: "Ação integrada de edredons", objetivo: "Validar o fluxo real", itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", versaoModeloId: null, criterios: criteriosVazios, situacao: "EmProcessamento", dataAtualizacao: "2026-08-18T12:00:00Z", versao: 3 };
+const acao = { id, nome: "Ação integrada de edredons", objetivo: "Validar o fluxo real", itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", versaoModeloId: null, criterios: criteriosVazios, situacao: "EmProcessamento", dataAtualizacao: "2026-08-18T12:00:00Z", versao: 3, quantidadeDestinatarios: 12, mensagensParaEnviar: 0, falhasParaRevisar: 2, retornosParaRegistrar: 4, resultadosRegistrados: 6 };
 let acaoCriada = null;
 const totais = { destinatarios: 12, pendentes: 0, aguardandoSolicitacao: 0, solicitados: 0, enviados: 2, entregues: 2, lidos: 6, falhos: 2, naoInformados: 6, semRetorno: 2, responderam: 0, interessados: 2, convertidos: 2, semInteresse: 0, valorConvertido: 150 };
-let destinatarioCriado = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana Martins!", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
+let destinatarioCriado = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId, nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana Martins!", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
+let clienteDetalhado = { id: clienteId, nome: "Ana Martins", nomeFantasia: "Ana Casa", whatsapp: "5513999999999", email: "ana@example.com", dataNascimento: "1988-05-12", tipo: "Residencial", situacao: "Ativo", permiteMarketingWhatsapp: true, endereco: { logradouro: "Av. Presidente Kennedy", numero: "1240", complemento: "Apto 42", bairro: "Boqueirão", cidade: "Praia Grande", estado: "SP", cep: "11700-000" }, etiquetaIds: ["3bf773d6-f28c-4165-92b5-3b1b153a2c32"], codigoExterno: "1001", dataCadastroOrigem: "2024-02-10T12:00:00Z", dataCriacao: "2026-08-15T13:30:00Z", dataAtualizacao: "2026-08-29T11:57:16Z" };
+const clientesAdicionais = [];
 const dataHoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const [anoHoje, mesHoje, diaHoje] = dataHoje.split("-").map(Number);
 const dataAmanha = new Date(Date.UTC(anoHoje, mesHoje - 1, diaHoje + 1)).toISOString().slice(0, 10);
@@ -42,9 +45,15 @@ const movimentacoesHoje = [
   { id: "7d3d0d64-a111-4cff-8db8-111111111111", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", valorTotal: 75, dataMovimentacao: `${dataHoje}T15:00:00Z`, codigoExterno: null, observacao: null, origem: "Recepcao", situacao: "Registrada", versao: 1, linhas: [{ id: "7d3d0d64-a111-4cff-8db8-111111111112", ofertaDeServicoId: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", quantidade: 1, precoTabela: 75, precoUnitario: 75, subtotal: 75 }] },
   { id: "7d3d0d64-a111-4cff-8db8-111111111121", clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nomeCliente: "Patricia Souza", valorTotal: 40, dataMovimentacao: `${dataHoje}T14:00:00Z`, codigoExterno: null, observacao: "Registro corrigido", origem: "Recepcao", situacao: "Cancelada", versao: 2, linhas: [] },
 ];
+const ofertasDoCatalogoDeLavanderia = [
+  { id: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom", categoria: "Cama, mesa e banho", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", precoUnitario: 75, situacao: "Ativo", versao: 1 },
+  { id: "5d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "6d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Camisa", categoria: "Vestuario", servicoDeLavanderiaId: "7d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem e passadoria", precoUnitario: 16.2, situacao: "Ativo", versao: 1 },
+];
 http.createServer((req, res) => {
   res.setHeader("content-type", "application/json");
   if (req.headers.authorization !== "Bearer token-controlado-e2e") { res.statusCode = 401; return res.end(JSON.stringify({ title: "Nao autenticado" })); }
+  if (req.url === "/api/v1/capacidades") return res.end(JSON.stringify({ envioNotificacoesHabilitado: true }));
+  if (req.url === "/api/v1/catalogo-lavanderia/ofertas") return res.end(JSON.stringify(ofertasDoCatalogoDeLavanderia));
   if (req.url === "/api/v1/itens-de-catalogo?situacao=Ativo" || req.url === "/api/v1/itens-de-catalogo") return res.end(JSON.stringify([{ id: itemCatalogoId, tipo: "Servico", nome: "Lavagem de edredom", descricao: null, categoria: "Casa", valorReferencia: 50, situacao: "Ativo", codigoExterno: "SRV-1" }]));
   if (req.url === "/api/v1/etiquetas") return res.end(JSON.stringify([{ id: "3bf773d6-f28c-4165-92b5-3b1b153a2c32", nome: "Cliente recorrente" }]));
   if (req.url === "/api/v1/modelos-de-mensagem") return res.end(JSON.stringify([{ id: modeloId, nome: "Oferta de serviço", canal: "Whatsapp", situacao: "Publicado", versaoAtualId: versaoModeloId, versoes: [{ id: versaoModeloId, numero: 1, conteudoPreVisualizacao: "Olá, {{nomeCliente}}! Conheça {{itemCatalogo}}.", variaveis: ["nomeCliente", "itemCatalogo"], chaveTemplateNotificacao: "oferta_servico", dataPublicacao: "2026-08-19T10:00:00Z" }] }]));
@@ -53,8 +62,8 @@ http.createServer((req, res) => {
     req.on("data", (parte) => { corpo += parte; });
     return req.on("end", () => {
       const dados = JSON.parse(corpo);
-      destinatarioCriado = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana Martins!", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
-      acaoCriada = { id: idCriado, nome: dados.nome, objetivo: dados.objetivo, itemDeCatalogoId: dados.itemDeCatalogoId, versaoModeloId: dados.versaoModeloId, criterios: dados.criterios, situacao: "Rascunho", dataAtualizacao: "2026-08-19T12:00:00Z", versao: 1 };
+      destinatarioCriado = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId, nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana Martins!", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
+      acaoCriada = { id: idCriado, nome: dados.nome, objetivo: dados.objetivo, itemDeCatalogoId: dados.itemDeCatalogoId, versaoModeloId: dados.versaoModeloId, criterios: dados.criterios, situacao: "Rascunho", dataAtualizacao: "2026-08-19T12:00:00Z", versao: 1, quantidadeDestinatarios: 0, mensagensParaEnviar: 0, falhasParaRevisar: 0, retornosParaRegistrar: 0, resultadosRegistrados: 0 };
       res.statusCode = 201;
       res.end(JSON.stringify(acaoCriada));
     });
@@ -66,12 +75,41 @@ http.createServer((req, res) => {
     return req.on("end", () => { acaoCriada = { ...acaoCriada, ...JSON.parse(corpo), dataAtualizacao: "2026-08-19T12:01:00Z", versao: acaoCriada.versao + 1 }; res.statusCode = 204; res.end(); });
   }
   if (req.url?.startsWith(`/api/v1/acoes-comerciais/${idCriado}/simular-publico`) && req.method === "POST") return res.end(JSON.stringify({ quantidadeEncontrada: 2, quantidadeElegivel: 1, pagina: 1, tamanhoPagina: 20, clientes: [{ clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana Martins", whatsapp: "+5513999999999", elegivel: true, motivoExclusao: null }, { clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nome: "Patricia Souza", whatsapp: null, elegivel: false, motivoExclusao: "SemPermissao" }] }));
-  if (req.url === `/api/v1/acoes-comerciais/${idCriado}/preparar` && req.method === "POST" && acaoCriada) { acaoCriada = { ...acaoCriada, situacao: "Preparada", versao: acaoCriada.versao + 1 }; res.statusCode = 204; return res.end(); }
-  if (req.url === `/api/v1/acoes-comerciais/${idCriado}/destinatarios/${destinatarioCriado.id}/enviar` && req.method === "POST" && acaoCriada) { destinatarioCriado = { ...destinatarioCriado, situacaoEnvio: "AguardandoSolicitacao", versao: destinatarioCriado.versao + 1 }; acaoCriada = { ...acaoCriada, situacao: "EmProcessamento", versao: acaoCriada.versao + 1 }; res.statusCode = 202; return res.end(JSON.stringify({ id: destinatarioCriado.id, situacaoEnvio: destinatarioCriado.situacaoEnvio, versao: destinatarioCriado.versao })); }
+  if (req.url === `/api/v1/acoes-comerciais/${idCriado}/preparar` && req.method === "POST" && acaoCriada) { acaoCriada = { ...acaoCriada, situacao: "Preparada", quantidadeDestinatarios: 1, mensagensParaEnviar: 1, versao: acaoCriada.versao + 1 }; res.statusCode = 204; return res.end(); }
+  if (req.url === `/api/v1/acoes-comerciais/${idCriado}/destinatarios/${destinatarioCriado.id}/enviar` && req.method === "POST" && acaoCriada) { destinatarioCriado = { ...destinatarioCriado, situacaoEnvio: "AguardandoSolicitacao", versao: destinatarioCriado.versao + 1 }; acaoCriada = { ...acaoCriada, situacao: "EmProcessamento", mensagensParaEnviar: 0, versao: acaoCriada.versao + 1 }; res.statusCode = 202; return res.end(JSON.stringify({ id: destinatarioCriado.id, situacaoEnvio: destinatarioCriado.situacaoEnvio, versao: destinatarioCriado.versao })); }
   if (req.url === `/api/v1/acoes-comerciais/${idCriado}/destinatarios/${destinatarioCriado.id}/resultado` && req.method === "PUT") { let corpo = ""; req.on("data", (parte) => { corpo += parte; }); return req.on("end", () => { const dados = JSON.parse(corpo); destinatarioCriado = { ...destinatarioCriado, resultadoComercial: dados.resultado, valorConvertido: dados.valorConvertido, dataResultadoComercial: "2026-08-20T15:00:00Z", versao: destinatarioCriado.versao + 1 }; res.statusCode = 204; res.end(); }); }
   if (req.url === `/api/v1/acoes-comerciais/${id}`) return res.end(JSON.stringify({ acao, totais, destinatarios: destinatariosIntegrados }));
   if (req.url === `/api/v1/acoes-comerciais/${idCriado}` && acaoCriada) { const preparada = acaoCriada.situacao !== "Rascunho"; return res.end(JSON.stringify({ acao: acaoCriada, totais: { ...totais, destinatarios: preparada ? 1 : 0, pendentes: preparada && destinatarioCriado.situacaoEnvio === "Pendente" ? 1 : 0, aguardandoSolicitacao: preparada && destinatarioCriado.situacaoEnvio === "AguardandoSolicitacao" ? 1 : 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, naoInformados: preparada ? 1 : 0, convertidos: 0, valorConvertido: 0 }, destinatarios: preparada ? [destinatarioCriado] : [] })); }
-  if (new URL(req.url, "http://127.0.0.1:4310").pathname === "/api/v1/clientes") return res.end(JSON.stringify({ itens: [], pagina: 1, tamanhoPagina: 20, total: 0 }));
+  const caminho = new URL(req.url, "http://127.0.0.1:4310").pathname;
+  if (caminho === "/api/v1/movimentacoes-comerciais" && req.method === "POST") {
+    let corpo = "";
+    req.on("data", (parte) => { corpo += parte; });
+    return req.on("end", () => {
+      const dados = JSON.parse(corpo);
+      const linhas = dados.linhas.map((linha, indice) => {
+        const oferta = ofertasDoCatalogoDeLavanderia.find((item) => item.id === linha.ofertaDeServicoId);
+        const precoUnitario = linha.precoUnitario ?? oferta.precoUnitario;
+        return { id: `7d3d0d64-a111-4cff-8db8-${String(140 + indice).padStart(12, "0")}`, ofertaDeServicoId: oferta.id, artigoDeLavanderiaId: oferta.artigoDeLavanderiaId, nomeArtigo: oferta.nomeArtigo, servicoDeLavanderiaId: oferta.servicoDeLavanderiaId, nomeServico: oferta.nomeServico, quantidade: linha.quantidade, precoTabela: oferta.precoUnitario, precoUnitario, subtotal: precoUnitario * linha.quantidade };
+      });
+      const novaMovimentacao = { id: "7d3d0d64-a111-4cff-8db8-111111111131", clienteId: dados.clienteId, nomeCliente: clienteDetalhado.nome, valorTotal: linhas.reduce((total, linha) => total + linha.subtotal, 0), dataMovimentacao: dados.dataMovimentacao ?? new Date().toISOString(), codigoExterno: dados.codigoExterno, observacao: dados.observacao, origem: "Recepcao", situacao: "Registrada", versao: 1, linhas };
+      movimentacoesHoje.unshift(novaMovimentacao);
+      res.statusCode = 201;
+      res.end(JSON.stringify({ id: novaMovimentacao.id }));
+    });
+  }
+  if (caminho === `/api/v1/clientes/${clienteId}` && req.method === "PUT") {
+    let corpo = "";
+    req.on("data", (parte) => { corpo += parte; });
+    return req.on("end", () => { const dados = JSON.parse(corpo); clienteDetalhado = { ...clienteDetalhado, ...dados, permiteMarketingWhatsapp: dados.permiteMarketingWhatsapp, dataAtualizacao: new Date().toISOString() }; res.statusCode = 204; res.end(); });
+  }
+  if (caminho === "/api/v1/clientes" && req.method === "POST") {
+    let corpo = "";
+    req.on("data", (parte) => { corpo += parte; });
+    return req.on("end", () => { const dados = JSON.parse(corpo); const novo = { ...clienteDetalhado, ...dados, id: "9d3d0d64-a111-4cff-8db8-111111111119", situacao: "Ativo", permiteMarketingWhatsapp: dados.permiteMarketingWhatsapp, dataCriacao: new Date().toISOString(), dataAtualizacao: new Date().toISOString() }; clientesAdicionais.push(novo); res.statusCode = 201; res.end(JSON.stringify({ id: novo.id })); });
+  }
+  const clienteConsultado = [clienteDetalhado, ...clientesAdicionais].find((cliente) => caminho === `/api/v1/clientes/${cliente.id}`);
+  if (clienteConsultado) return res.end(JSON.stringify(clienteConsultado));
+  if (caminho === "/api/v1/clientes") return res.end(JSON.stringify({ itens: [clienteDetalhado, ...clientesAdicionais], pagina: 1, tamanhoPagina: 20, total: 1 + clientesAdicionais.length }));
   if (new URL(req.url, "http://127.0.0.1:4310").pathname === "/api/v1/roteiros") {
     const data = new URL(req.url, "http://127.0.0.1:4310").searchParams.get("data");
     if (data === dataHoje) return res.end(JSON.stringify(roteiroHoje));

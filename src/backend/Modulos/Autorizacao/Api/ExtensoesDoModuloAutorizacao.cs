@@ -34,12 +34,15 @@ public static class ExtensoesDoModuloAutorizacao
                     politica.RequireAuthenticatedUser().RequireClaim("papel_crm", "Administrador"));
                 opcoes.AddPolicy(PoliticasDeAutorizacao.Gestor, politica =>
                     politica.RequireAuthenticatedUser().RequireClaim("papel_crm", "Administrador", "Gerente"));
+                opcoes.AddPolicy(PoliticasDeAutorizacao.EnvioIndividual, politica =>
+                    politica.RequireAuthenticatedUser().RequireClaim("papel_crm", "Administrador", "Gerente", "Operador"));
                 return;
             }
 
             opcoes.AddPolicy(PoliticasDeAutorizacao.UsuarioAtivo, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(null)));
             opcoes.AddPolicy(PoliticasDeAutorizacao.Administrador, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador)));
             opcoes.AddPolicy(PoliticasDeAutorizacao.Gestor, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(PapelDoCrm.Administrador, PapelDoCrm.Gerente)));
+            opcoes.AddPolicy(PoliticasDeAutorizacao.EnvioIndividual, politica => politica.RequireAuthenticatedUser().AddRequirements(new RequisitoDePapelDoCrm(null)));
         });
         return servicos;
     }

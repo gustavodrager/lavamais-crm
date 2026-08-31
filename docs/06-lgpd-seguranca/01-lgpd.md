@@ -38,7 +38,8 @@ Este documento define requisitos tecnicos iniciais. Base legal, textos de consen
 
 - elegibilidade verifica permissao de comunicacao;
 - destinatarios sao congelados para auditoria;
-- conteudo e dados enviados ao Notification Hub sao limitados ao template;
+- conteudo e dados enviados ao WhatsMiau ou a futura Central sao limitados ao necessario para a mensagem congelada;
+- WhatsMiau e demais operadores externos devem constar da avaliacao juridica e contratual;
 - revogacao futura impede novas acoes, sem apagar automaticamente o historico necessario a auditoria.
 
 ## Pendencias obrigatorias antes da producao

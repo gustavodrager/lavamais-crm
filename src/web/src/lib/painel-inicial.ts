@@ -1,5 +1,6 @@
 import type {
   DetalheAcaoComercial,
+  ResumoAcaoComercial,
   ResumoMovimentacaoComercial,
   RoteiroDiario,
 } from "@/contratos/apresentacao";
@@ -42,6 +43,14 @@ export interface ResumoComercialDoPainel {
   interessados: number;
   conversoes: number;
   valorConvertido: number;
+  porAcao: ResumoPorAcaoNoPainel[];
+}
+
+export interface ResumoOperacionalDasAcoes {
+  mensagensParaEnviar: number;
+  falhasParaRevisar: number;
+  retornosParaRegistrar: number;
+  resultadosRegistrados: number;
   porAcao: ResumoPorAcaoNoPainel[];
 }
 
@@ -123,6 +132,25 @@ export function resumirAcoesNoPainel(
     interessados,
     conversoes,
     valorConvertido,
+    porAcao,
+  };
+}
+
+export function resumirAcoesOperacionais(resumos: ResumoAcaoComercial[]): ResumoOperacionalDasAcoes {
+  const ativas = resumos.filter((acao) => acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada");
+  const porAcao = ativas.map((acao) => ({
+    acaoId: acao.id,
+    dataAtualizacao: acao.dataAtualizacao,
+    mensagensParaEnviar: acao.mensagensParaEnviar,
+    falhasParaRevisar: acao.falhasParaRevisar,
+    retornosParaRegistrar: acao.retornosParaRegistrar,
+  })).sort((a, b) => new Date(b.dataAtualizacao).getTime() - new Date(a.dataAtualizacao).getTime());
+
+  return {
+    mensagensParaEnviar: ativas.reduce((total, acao) => total + acao.mensagensParaEnviar, 0),
+    falhasParaRevisar: ativas.reduce((total, acao) => total + acao.falhasParaRevisar, 0),
+    retornosParaRegistrar: ativas.reduce((total, acao) => total + acao.retornosParaRegistrar, 0),
+    resultadosRegistrados: ativas.reduce((total, acao) => total + acao.resultadosRegistrados, 0),
     porAcao,
   };
 }

@@ -18,7 +18,7 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
 public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco, ConsultaDeCatalogo catalogo, ConsultaDeModelos modelos, SimuladorDePublico simulador, IRegistradorDeAuditoria auditoria, IPublicadorDeOutbox outbox, IContextoDoUsuario usuario, TimeProvider relogio) : IProjecaoDeEnvios
 {
     private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
-    public Task<List<AcaoComercial>> Listar(CancellationToken ct) => banco.Acoes.AsNoTracking().OrderByDescending(x => x.DataCriacao).ToListAsync(ct);
+    public Task<List<AcaoComercial>> Listar(CancellationToken ct) => banco.Acoes.AsNoTracking().Include(x => x.Destinatarios).OrderByDescending(x => x.DataCriacao).ToListAsync(ct);
     public Task<AcaoComercial?> Obter(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
     public Task<AcaoComercial?> ObterDetalhe(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Include(x => x.Destinatarios).SingleOrDefaultAsync(x => x.Id == id, ct);
 
@@ -93,13 +93,13 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         try
         {
             await banco.SaveChangesAsync(ct);
-            var solicitacao = new SolicitacaoNotificationHub(
-                "lavamais-crm",
+            var solicitacao = new SolicitacaoDeNotificacao(
                 "Whatsapp",
                 destinatario.ChaveTemplateNotificacaoSnapshot,
                 destinatario.ChaveIdempotencia!,
                 destinatario.NomeClienteSnapshot,
                 destinatario.DestinoSnapshot,
+                destinatario.ConteudoPreVisualizacaoSnapshot,
                 JsonSerializer.Deserialize<Dictionary<string, string>>(destinatario.PayloadNotificacaoJson, OpcoesJson)!);
             var mensagem = new MensagemDeOutboxSolicitada(
                 acao.TenantId,
@@ -120,11 +120,63 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         return new(destinatario.Id, destinatario.SituacaoEnvio, destinatario.Versao);
     }
 
-    public async Task RegistrarSolicitacao(Guid tenantId, Guid destinatarioId, string notificacaoId, System.Data.Common.DbTransaction transacao, CancellationToken ct)
-    { banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct); var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); d.RegistrarSolicitacao(notificacaoId); await banco.SaveChangesAsync(ct); }
-    public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) => await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().AsNoTracking().Where(x => x.NotificacaoExternaId != null && x.SituacaoEnvio != SituacaoDoEnvio.Entregue && x.SituacaoEnvio != SituacaoDoEnvio.Lido && x.SituacaoEnvio != SituacaoDoEnvio.Falhou).OrderBy(x => x.DataUltimaReconciliacao ?? DateTimeOffset.MinValue).ThenBy(x => x.Id).Take(limite).Select(x => new NotificacaoPendente(x.TenantId, x.Id, x.NotificacaoExternaId!)).ToListAsync(ct);
-    public async Task AtualizarEstado(Guid tenantId, Guid destinatarioId, string estadoExterno, string? codigoFalha, CancellationToken ct)
-    { var d = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct); var estado = estadoExterno.ToUpperInvariant() switch { "PENDING" or "PROCESSING" => SituacaoDoEnvio.Solicitado, "SENT" => SituacaoDoEnvio.Enviado, "DELIVERED" => SituacaoDoEnvio.Entregue, "READ" => SituacaoDoEnvio.Lido, "FAILED" or "UNDELIVERABLE" => SituacaoDoEnvio.Falhou, _ => d.SituacaoEnvio }; var agora = relogio.GetUtcNow(); d.AtualizarEstado(estado, codigoFalha, agora); var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == d.AcaoComercialId, ct); acao.RecalcularConclusao(agora); await banco.SaveChangesAsync(ct); }
+    public async Task RegistrarSolicitacao(Guid tenantId, Guid destinatarioId, ReferenciaDeNotificacao referencia, System.Data.Common.DbTransaction transacao, CancellationToken ct)
+    {
+        banco.Database.SetDbConnection(transacao.Connection!, false);
+        await banco.Database.UseTransactionAsync(transacao, ct);
+        var destinatario = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct);
+        destinatario.RegistrarSolicitacao(referencia);
+        await banco.SaveChangesAsync(ct);
+    }
+
+    public async Task RegistrarFalhaNaSolicitacao(Guid tenantId, Guid destinatarioId, string codigoFalha, System.Data.Common.DbTransaction transacao, CancellationToken ct)
+    {
+        banco.Database.SetDbConnection(transacao.Connection!, false);
+        await banco.Database.UseTransactionAsync(transacao, ct);
+        var destinatario = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct);
+        var agora = relogio.GetUtcNow();
+        destinatario.RegistrarFalhaNaSolicitacao(codigoFalha, agora);
+        var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == destinatario.AcaoComercialId, ct);
+        acao.RecalcularConclusao(agora);
+        await banco.SaveChangesAsync(ct);
+    }
+
+    public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) =>
+        await banco.Set<DestinatarioDaAcao>()
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(x => x.NotificacaoId != null
+                && x.ServicoNotificacao != null
+                && x.SituacaoEnvio != SituacaoDoEnvio.Entregue
+                && x.SituacaoEnvio != SituacaoDoEnvio.Lido
+                && x.SituacaoEnvio != SituacaoDoEnvio.Falhou)
+            .OrderBy(x => x.DataUltimaReconciliacao ?? DateTimeOffset.MinValue)
+            .ThenBy(x => x.Id)
+            .Take(limite)
+            .Select(x => new NotificacaoPendente(
+                x.TenantId,
+                x.Id,
+                new ReferenciaDeNotificacao(x.ServicoNotificacao!.Value, x.NotificacaoId!)))
+            .ToListAsync(ct);
+
+    public async Task AtualizarEstado(Guid tenantId, Guid destinatarioId, EstadoConsolidadoDaNotificacao estadoTecnico, CancellationToken ct)
+    {
+        var destinatario = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct);
+        var estado = estadoTecnico.Situacao switch
+        {
+            SituacaoTecnicaDaNotificacao.Pendente or SituacaoTecnicaDaNotificacao.Processando => SituacaoDoEnvio.Solicitado,
+            SituacaoTecnicaDaNotificacao.Enviada => SituacaoDoEnvio.Enviado,
+            SituacaoTecnicaDaNotificacao.Entregue => SituacaoDoEnvio.Entregue,
+            SituacaoTecnicaDaNotificacao.Lida => SituacaoDoEnvio.Lido,
+            SituacaoTecnicaDaNotificacao.Falhou => SituacaoDoEnvio.Falhou,
+            _ => destinatario.SituacaoEnvio
+        };
+        var agora = relogio.GetUtcNow();
+        destinatario.AtualizarEstado(estado, estadoTecnico.CodigoFalha, agora);
+        var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == destinatario.AcaoComercialId, ct);
+        acao.RecalcularConclusao(agora);
+        await banco.SaveChangesAsync(ct);
+    }
 
     public async Task RegistrarResultado(Guid acaoId, Guid destinatarioId, ResultadoComercial resultado, decimal? valorConvertido, uint versaoEsperada, CancellationToken ct)
     {

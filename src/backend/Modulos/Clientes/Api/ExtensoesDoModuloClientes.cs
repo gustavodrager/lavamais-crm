@@ -48,7 +48,22 @@ public static class ExtensoesDoModuloClientes
     }
 
     public sealed record CriarEtiqueta(string Nome);
-    public sealed record RespostaDeCliente(Guid Id, string Nome, string? NomeFantasia, string? Tipo, string Whatsapp, string? Email, DateOnly? DataNascimento, SituacaoDoCliente Situacao, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds, string? CodigoExterno, DateTimeOffset? DataCadastroOrigem)
+    public sealed record RespostaDeCliente(
+        Guid Id,
+        string Nome,
+        string? NomeFantasia,
+        string? Tipo,
+        string Whatsapp,
+        string? Email,
+        DateOnly? DataNascimento,
+        SituacaoDoCliente Situacao,
+        bool PermiteMarketingWhatsapp,
+        DadosDoEndereco? Endereco,
+        IReadOnlyCollection<Guid> EtiquetaIds,
+        string? CodigoExterno,
+        DateTimeOffset? DataCadastroOrigem,
+        DateTimeOffset DataCriacao,
+        DateTimeOffset DataAtualizacao)
     {
         public static RespostaDeCliente Criar(Cliente c)
         {
@@ -56,7 +71,7 @@ public static class ExtensoesDoModuloClientes
             var email = c.Contatos.SingleOrDefault(x => x.Tipo == TipoDeContato.Email)?.ValorNormalizado;
             var permissao = c.Permissoes.SingleOrDefault(x => x.Canal == TipoDeContato.Whatsapp && x.Finalidade == "Marketing")?.Permitida ?? false;
             var endereco = c.Endereco is null ? null : new DadosDoEndereco(c.Endereco.Logradouro, c.Endereco.Numero, c.Endereco.Complemento, c.Endereco.Bairro, c.Endereco.Cidade, c.Endereco.Estado, c.Endereco.Cep);
-            return new(c.Id, c.Nome, c.NomeFantasia, c.Tipo, whatsapp, email, c.DataNascimento, c.Situacao, permissao, endereco, c.Etiquetas.Select(x => x.EtiquetaId).ToArray(), c.CodigoExterno, c.DataCadastroOrigem);
+            return new(c.Id, c.Nome, c.NomeFantasia, c.Tipo, whatsapp, email, c.DataNascimento, c.Situacao, permissao, endereco, c.Etiquetas.Select(x => x.EtiquetaId).ToArray(), c.CodigoExterno, c.DataCadastroOrigem, c.DataCriacao, c.DataAtualizacao);
         }
     }
 }

@@ -49,15 +49,15 @@ Os bancos remotos estao no projeto Railway `lavamais-crm` (`5263440b-433f-477d-a
 
 Quando os servicos da API e do Worker forem criados no Railway, cada um deve receber a variavel de referencia `DATABASE_URL=${{Postgres.DATABASE_URL}}`. A API usa `ASPNETCORE_ENVIRONMENT`; o Worker usa `DOTNET_ENVIRONMENT`. Nao usar `DATABASE_PUBLIC_URL`, porque o PostgreSQL permanece privado.
 
-O Notification Hub usa `NotificationHub__BaseUrl`, `NotificationHub__ApiKey` e o `source` exclusivo `lavamais-crm`. A chave de API permanece vazia no repositorio. Ambientes compartilhados devem fornecer conexoes e credenciais por configuracao externa e nunca versionar segredos.
+O envio usa `Notificacoes__Modo=Desabilitado|Local|Central`. O modo local exige `Notificacoes__WhatsMiau__BaseUrl`, `ApiKey`, `NomeInstancia` e `SegredoWebhook`; o modo central exige `Notificacoes__Central__BaseUrl`, `ApiKey` e `Origem=lavamais-crm`. API e Worker devem receber o mesmo modo e as mesmas credenciais por configuracao externa. Segredos permanecem vazios no repositorio.
 
 ### Identidade local
 
-Configure `IdentidadeLocal__TelefonePermitido`, `IdentidadeLocal__TenantId`, `IdentidadeLocal__NomeTenant` e `IdentidadeLocal__NomeUsuario`. O primeiro acesso define a senha do unico telefone autorizado. A senha protegida e os hashes das sessoes ficam no schema `identidade`; tokens em claro permanecem apenas no BFF.
+Configure `IdentidadeLocal__TenantId`, `IdentidadeLocal__NomeTenant` e `IdentidadeLocal__UsuariosIniciais`. Cada item de `UsuariosIniciais` define telefone, nome e papel inicial (`Administrador`, `Gerente` ou `Operador`), e cada usuario define sua propria senha no primeiro acesso. `TelefonePermitido` e `NomeUsuario` permanecem como compatibilidade para ambientes com um unico administrador inicial. A senha protegida e os hashes das sessoes ficam no schema `identidade`; tokens em claro permanecem apenas no BFF.
 
-Nesta etapa `EnvioNotificacoes__Habilitado=false` e o Worker deve permanecer com zero replicas. A homologacao termina na preparacao e revisao da audiencia; o endpoint de envio responde `503` antes de alterar o destinatario ou gravar outbox.
+Com `Notificacoes__Modo=Desabilitado`, o Worker nao processa a outbox e o endpoint de envio responde `503` antes de alterar o destinatario ou gravar a intencao. Para homologar o modo local, configure o WhatsMiau na API e no Worker, publique o webhook `/api/v1/webhooks/whatsmiau/{segredo}` e inicie uma unica replica do Worker.
 
-Cada confirmacao individual muda somente o destinatario escolhido para `AguardandoSolicitacao` e gera uma mensagem de outbox na mesma transacao. A primeira confirmacao muda a Acao Comercial para `EmProcessamento`; nao existe comando coletivo. O Worker processa uma intencao por vez, reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` em novas tentativas, recupera leases interrompidos e apenas consulta o estado tecnico no Notification Hub. Retentativas de provedor e webhooks permanecem sob responsabilidade do Hub.
+Cada confirmacao individual muda somente o destinatario escolhido para `AguardandoSolicitacao` e gera uma mensagem de outbox na mesma transacao. A primeira confirmacao muda a Acao Comercial para `EmProcessamento`; nao existe comando coletivo. O Worker processa uma intencao por vez, reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` e recupera leases interrompidos. No modo local, o CRM guarda o identificador do WhatsMiau e recebe seus estados tecnicos; no modo central, essa responsabilidade volta ao servico externo.
 
 ## Build e testes
 
@@ -79,4 +79,4 @@ As fabricas de design dos modulos tambem reconhecem `DATABASE_URL`. Assim, a eta
 
 ## Primeiro administrador
 
-O primeiro administrador e ativado pela tela de primeiro acesso usando o telefone permitido na configuracao. Depois que a senha e definida, o endpoint recusa nova ativacao.
+Os usuarios iniciais sao ativados pela tela de primeiro acesso usando os telefones permitidos na configuracao. Depois que a senha de um usuario e definida, o endpoint recusa nova ativacao daquele telefone.

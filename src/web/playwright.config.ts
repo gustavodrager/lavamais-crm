@@ -10,7 +10,7 @@ export default defineConfig({
   use: { baseURL: "http://127.0.0.1:3000", trace: "on-first-retry" },
   webServer: [
     { command: "node ../../testes/frontend/suporte/crm-api-falsa.mjs", cwd: __dirname, url: "http://127.0.0.1:4310/api/v1/acoes-comerciais", reuseExistingServer: false },
-    { command: "npm run dev -- --webpack --hostname 127.0.0.1", cwd: __dirname, url: "http://127.0.0.1:3000", reuseExistingServer: false, env: { ...process.env, LAVAMAIS_AMBIENTE_TESTE: "1", LAVAMAIS_CRM_API_URL: "http://127.0.0.1:4310", LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO: "1" } },
+    { command: "npm run dev -- --webpack --hostname 127.0.0.1", cwd: __dirname, url: "http://127.0.0.1:3000", reuseExistingServer: false, env: { ...process.env, LAVAMAIS_AMBIENTE_TESTE: "1", LAVAMAIS_CRM_API_URL: "http://127.0.0.1:4310" } },
   ],
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },

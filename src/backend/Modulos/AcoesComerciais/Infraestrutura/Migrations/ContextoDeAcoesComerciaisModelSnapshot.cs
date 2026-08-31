@@ -165,10 +165,10 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("nome_cliente_snapshot");
 
-                    b.Property<string>("NotificacaoExternaId")
+                    b.Property<string>("NotificacaoId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
-                        .HasColumnName("notificacao_externa_id");
+                        .HasColumnName("notificacao_id");
 
                     b.Property<string>("PayloadNotificacaoJson")
                         .IsRequired()
@@ -180,6 +180,11 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("resultado_comercial");
+
+                    b.Property<string>("ServicoNotificacao")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("servico_notificacao");
 
                     b.Property<string>("SituacaoEnvio")
                         .IsRequired()

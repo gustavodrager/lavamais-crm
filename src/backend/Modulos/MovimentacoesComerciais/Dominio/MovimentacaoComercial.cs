@@ -42,6 +42,25 @@ public sealed class MovimentacaoComercial
     public IReadOnlyCollection<LinhaDaMovimentacao> Linhas => linhas;
     public static MovimentacaoComercial Registrar(Guid tenantId, Guid clienteId, string nomeCliente, IReadOnlyCollection<LinhaPreparada> linhas, DateTimeOffset dataMovimentacao, string? codigoExterno, string? observacao, OrigemDaMovimentacao origem, string usuarioId, DateTimeOffset agora) => new(tenantId, clienteId, nomeCliente, linhas, dataMovimentacao, codigoExterno, observacao, origem, usuarioId, agora);
     public void Cancelar(string motivo, string usuarioId, DateTimeOffset agora) { if (Situacao == SituacaoDaMovimentacao.Cancelada) throw new ExcecaoDeConflito("movimentacao_ja_cancelada", "A movimentacao ja esta cancelada."); MotivoCancelamento = LimparObrigatorio(motivo, 300, "motivo_cancelamento_invalido"); UsuarioCancelamentoId = LimparObrigatorio(usuarioId, 200, "usuario_invalido"); DataCancelamento = agora; Situacao = SituacaoDaMovimentacao.Cancelada; }
+    public void SubstituirComposicaoImportada(IReadOnlyCollection<LinhaPreparada> itens, string? observacao)
+    {
+        if (Origem != OrigemDaMovimentacao.ImportacaoEssence)
+            throw new ExcecaoDeRegraDeNegocio("origem_incompativel", "Somente movimentacoes importadas do Essence podem ter a composicao substituida.");
+        if (Situacao != SituacaoDaMovimentacao.Registrada)
+            throw new ExcecaoDeConflito("movimentacao_cancelada", "Uma movimentacao cancelada nao pode ter a composicao substituida.");
+        if (itens.Count == 0)
+            throw new ExcecaoDeRegraDeNegocio("linhas_obrigatorias", "A movimentacao deve possuir ao menos uma linha.");
+        if (itens.Select(x => x.OfertaDeServicoId).Distinct().Count() != itens.Count)
+            throw new ExcecaoDeRegraDeNegocio("oferta_duplicada", "Uma oferta deve aparecer apenas uma vez na movimentacao.");
+        var valorComposto = itens.Sum(x => x.Quantidade * x.PrecoPraticado);
+        if (valorComposto != ValorTotal)
+            throw new ExcecaoDeRegraDeNegocio("valor_composicao_divergente", "A nova composicao deve preservar o valor total da movimentacao.");
+
+        linhas.Clear();
+        foreach (var item in itens)
+            linhas.Add(LinhaDaMovimentacao.Criar(TenantId, Id, item));
+        Observacao = Limpar(observacao, 500, "observacao_invalida");
+    }
     private static string LimparObrigatorio(string? valor, int limite, string codigo) => Limpar(valor, limite, codigo) ?? throw new ExcecaoDeRegraDeNegocio(codigo, "O valor e obrigatorio.");
     private static string? Limpar(string? valor, int limite, string codigo) { var limpo = string.IsNullOrWhiteSpace(valor) ? null : valor.Trim(); if (limpo?.Length > limite) throw new ExcecaoDeRegraDeNegocio(codigo, $"O valor deve possuir ate {limite} caracteres."); return limpo; }
 }

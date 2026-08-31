@@ -26,6 +26,35 @@ public sealed class MovimentacaoComercialTestes
         Assert.Throws<ExcecaoDeRegraDeNegocio>(() => MovimentacaoComercial.Registrar(Guid.NewGuid(), Guid.NewGuid(), "Ana", [CriarLinha(1, -1)], DateTimeOffset.UtcNow, null, null, OrigemDaMovimentacao.Recepcao, "operador", DateTimeOffset.UtcNow));
     }
 
+    [Fact]
+    public void Deve_substituir_composicao_importada_preservando_total()
+    {
+        var agora = DateTimeOffset.UtcNow;
+        var movimentacao = MovimentacaoComercial.Registrar(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            "Ana",
+            [CriarLinha(1, 117.17m)],
+            agora,
+            "ESS-123",
+            "Importado do Essence.",
+            OrigemDaMovimentacao.ImportacaoEssence,
+            "importador",
+            agora);
+        LinhaPreparada[] composicao =
+        [
+            CriarLinha(2, 30m),
+            CriarLinha(1, 57.17m)
+        ];
+
+        movimentacao.SubstituirComposicaoImportada(composicao, "[HML SINTETICO] Composicao de teste.");
+
+        Assert.Equal(117.17m, movimentacao.ValorTotal);
+        Assert.Equal(3, movimentacao.Linhas.Sum(x => x.Quantidade));
+        Assert.Equal(2, movimentacao.Linhas.Count);
+        Assert.Contains("HML SINTETICO", movimentacao.Observacao, StringComparison.Ordinal);
+    }
+
     private static LinhaPreparada CriarLinha(int quantidade, decimal preco) =>
         new(Guid.NewGuid(), Guid.NewGuid(), "Camisa", Guid.NewGuid(), "Lavagem e passadoria", quantidade, 31.90m, preco);
 }

@@ -2,6 +2,9 @@ import { acoesDemonstracao, clientesDemonstracao } from "@/demonstracao/dados";
 import type { PortaCrmApi } from "@/portas/crm-api";
 
 export const repositorioDemonstracao: PortaCrmApi = {
+  async obterCapacidades() {
+    return { envioNotificacoesHabilitado: true };
+  },
   async listarItensDeCatalogoAtivos() {
     return [
       { id: "6d3d0d64-a111-4cff-8db8-111111111112", nome: "Lavagem de edredom", tipo: "Servico", categoria: "Casa" },
@@ -46,9 +49,22 @@ export const repositorioDemonstracao: PortaCrmApi = {
   },
   async obterCliente(id) {
     const cliente = clientesDemonstracao.find((item) => item.id === id);
-    return cliente ? { ...cliente, nomeFantasia: null, tipo: null, email: null, dataNascimento: null, situacao: "Ativo" as const, endereco: null } : null;
+    return cliente ? {
+      ...cliente,
+      nomeFantasia: null,
+      tipo: null,
+      email: null,
+      dataNascimento: null,
+      situacao: "Ativo" as const,
+      endereco: null,
+      etiquetaIds: [],
+      dataCadastroOrigem: null,
+      dataCriacao: "2026-08-01T12:00:00Z",
+      dataAtualizacao: "2026-08-01T12:00:00Z",
+    } : null;
   },
   async criarCliente() { return { id: crypto.randomUUID() }; },
+  async atualizarCliente() {},
   async preVisualizarImportacao() {
     return { referenciaArquivo: crypto.randomUUID(), colunas: ["nome", "whatsapp"], totalLinhas: 1, amostra: [{ numero: 2, valores: ["Ana Martins", "13999999999"], erros: [] }] };
   },

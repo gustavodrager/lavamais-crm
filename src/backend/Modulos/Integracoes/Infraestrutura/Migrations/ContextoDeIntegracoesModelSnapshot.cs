@@ -90,12 +90,124 @@ namespace LavaMais.Crm.Modulos.Integracoes.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ChaveUnica")
-                        .IsUnique();
-
                     b.HasIndex("Situacao", "DisponivelEm");
 
+                    b.HasIndex("TenantId", "ChaveUnica")
+                        .IsUnique();
+
                     b.ToTable("mensagens_da_outbox", "integracoes");
+                });
+
+            modelBuilder.Entity("LavaMais.Crm.Modulos.Integracoes.Dominio.NotificacaoLocal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Canal")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("canal");
+
+                    b.Property<string>("ChaveIdempotencia")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("chave_idempotencia");
+
+                    b.Property<string>("ChaveModelo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("chave_modelo");
+
+                    b.Property<string>("CodigoFalha")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("codigo_falha");
+
+                    b.Property<string>("ConteudoSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("conteudo_snapshot");
+
+                    b.Property<DateTimeOffset>("DataAtualizacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_atualizacao");
+
+                    b.Property<DateTimeOffset>("DataCriacao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_criacao");
+
+                    b.Property<DateTimeOffset?>("DataEnvio")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_envio");
+
+                    b.Property<string>("IdentificadorNoProvedor")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("identificador_no_provedor");
+
+                    b.Property<string>("NomeDestinatario")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("nome_destinatario");
+
+                    b.Property<string>("ParametrosJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parametros_json");
+
+                    b.Property<string>("Situacao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("situacao");
+
+                    b.Property<string>("SituacaoEntrega")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("situacao_entrega");
+
+                    b.Property<string>("TelefoneDestinatario")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("telefone_destinatario");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer")
+                        .HasColumnName("tentativas");
+
+                    b.Property<string>("UltimoErro")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("ultimo_erro");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdentificadorNoProvedor")
+                        .IsUnique()
+                        .HasFilter("identificador_no_provedor IS NOT NULL");
+
+                    b.HasIndex("TenantId", "ChaveIdempotencia")
+                        .IsUnique();
+
+                    b.ToTable("notificacoes_locais", "integracoes");
                 });
 #pragma warning restore 612, 618
         }

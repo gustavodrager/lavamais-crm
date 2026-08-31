@@ -60,18 +60,20 @@ public sealed class ApiDaFundacaoTestes
         Assert.Equal("application/json", resposta.Content.Headers.ContentType?.MediaType);
         var contrato = await resposta.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/enviar", contrato);
+        Assert.Contains("/api/v1/capacidades", contrato);
+        Assert.DoesNotContain("/api/v1/webhooks/whatsmiau", contrato);
         Assert.DoesNotContain("/api/v1/acoes-comerciais/{id}/iniciar", contrato);
     }
 
     [Fact]
-    public void Deve_exigir_gestor_no_envio_individual_e_remover_inicio_coletivo()
+    public void Deve_permitir_envio_individual_para_operacao_e_remover_inicio_coletivo()
     {
         using var fabrica = CriarFabrica();
         var rotas = fabrica.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToArray();
 
         var envio = Assert.Single(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{acaoId:guid}/destinatarios/{destinatarioId:guid}/enviar");
 
-        Assert.Contains(envio.Metadata.GetOrderedMetadata<IAuthorizeData>(), x => x.Policy == PoliticasDeAutorizacao.Gestor);
+        Assert.Contains(envio.Metadata.GetOrderedMetadata<IAuthorizeData>(), x => x.Policy == PoliticasDeAutorizacao.EnvioIndividual);
         Assert.DoesNotContain(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{id:guid}/iniciar");
     }
 
@@ -84,8 +86,8 @@ public sealed class ApiDaFundacaoTestes
         AssertPolitica(HttpMethods.Post, "/api/v1/itens-de-catalogo/", PoliticasDeAutorizacao.Gestor);
         AssertPolitica(HttpMethods.Put, "/api/v1/itens-de-catalogo/{id:guid}", PoliticasDeAutorizacao.Gestor);
         AssertPolitica(HttpMethods.Post, "/api/v1/etiquetas/", PoliticasDeAutorizacao.Gestor);
-        AssertPolitica(HttpMethods.Post, "/api/v1/modelos-de-mensagem/", PoliticasDeAutorizacao.Administrador);
-        AssertPolitica(HttpMethods.Post, "/api/v1/modelos-de-mensagem/{id:guid}/publicar", PoliticasDeAutorizacao.Administrador);
+        AssertPolitica(HttpMethods.Post, "/api/v1/modelos-de-mensagem/", PoliticasDeAutorizacao.Gestor);
+        AssertPolitica(HttpMethods.Post, "/api/v1/modelos-de-mensagem/{id:guid}/publicar", PoliticasDeAutorizacao.Gestor);
         return;
 
         void AssertPolitica(string metodo, string rota, string politica)
@@ -103,6 +105,7 @@ public sealed class ApiDaFundacaoTestes
     [InlineData("/api/v1/modelos-de-mensagem")]
     [InlineData("/api/v1/acoes-comerciais")]
     [InlineData("/api/v1/auditoria")]
+    [InlineData("/api/v1/capacidades")]
     public async Task Deve_exigir_autenticacao_nos_endpoints_empresariais(string rota)
     {
         await using var fabrica = CriarFabrica();
@@ -111,6 +114,21 @@ public sealed class ApiDaFundacaoTestes
         using var resposta = await cliente.GetAsync(rota, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Webhook_deve_responder_ok_sem_revelar_segredo_valido()
+    {
+        await using var fabrica = CriarFabrica();
+        using var cliente = fabrica.CreateClient();
+        using var conteudo = new StringContent("{\"event\":\"messages.update\"}", System.Text.Encoding.UTF8, "application/json");
+
+        using var resposta = await cliente.PostAsync(
+            "/api/v1/webhooks/whatsmiau/segredo-incorreto",
+            conteudo,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
     }
 
     [Fact]

@@ -24,9 +24,9 @@ public static class ExtensoesDoModuloModelos
         var grupo = endpoints.MapGroup("/api/v1/modelos-de-mensagem").RequireAuthorization(PoliticasDeAutorizacao.UsuarioAtivo).WithTags("Modelos de mensagem");
         grupo.MapGet("/", async (GerenciadorDeModelos g, CancellationToken ct) => (await g.Listar(ct)).Select(RespostaDoModelo.Criar));
         grupo.MapPost("/", async (CriarModelo dados, GerenciadorDeModelos g, CancellationToken ct) => { var modelo = await g.Criar(dados.Nome, ct); return Results.Created($"/api/v1/modelos-de-mensagem/{modelo.Id}", RespostaDoModelo.Criar(modelo)); })
-            .RequireAuthorization(PoliticasDeAutorizacao.Administrador);
+            .RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{id:guid}/publicar", async (Guid id, DadosDaPublicacao dados, GerenciadorDeModelos g, CancellationToken ct) => Results.Ok(RespostaDaVersao.Criar(await g.Publicar(id, dados, ct))))
-            .RequireAuthorization(PoliticasDeAutorizacao.Administrador);
+            .RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         return endpoints;
     }
 

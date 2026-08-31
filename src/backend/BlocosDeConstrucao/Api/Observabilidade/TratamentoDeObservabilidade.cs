@@ -7,9 +7,10 @@ public sealed class TratamentoDeObservabilidade(RequestDelegate proximo, ILogger
     public async Task InvokeAsync(HttpContext contexto)
     {
         var inicio = Stopwatch.GetTimestamp();
+        var caminhoSeguro = CaminhoSeguroDaRequisicao.Obter(contexto.Request.Path);
         using var atividade = ObservabilidadeDoCrm.Atividades.StartActivity("http.request", ActivityKind.Server);
         atividade?.SetTag("http.request.method", contexto.Request.Method);
-        atividade?.SetTag("url.path", contexto.Request.Path.Value);
+        atividade?.SetTag("url.path", caminhoSeguro);
 
         try
         {
@@ -29,7 +30,7 @@ public sealed class TratamentoDeObservabilidade(RequestDelegate proximo, ILogger
             logger.LogInformation(
                 "Requisicao HTTP concluida {Metodo} {Caminho} {StatusCode} em {DuracaoMs} ms",
                 contexto.Request.Method,
-                contexto.Request.Path.Value,
+                caminhoSeguro,
                 contexto.Response.StatusCode,
                 duracao);
         }

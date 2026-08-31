@@ -3,7 +3,7 @@
 ## Pre-condicoes
 
 - usuario autenticado no tenant correto;
-- usuario com papel `Administrador` ou `Gerente` para criar/preparar a acao; `Operador` pode consultar a acao e registrar resultados;
+- usuario com papel `Administrador` ou `Gerente` para criar/preparar a acao; `Operador` pode consultar a acao, solicitar envio individual de mensagens ja preparadas e registrar resultados;
 - clientes ativos com WhatsApp e permissao de comunicacao;
 - item de catalogo ativo, quando informado ou exigido pelo modelo;
 - versao publicada de modelo vinculada a template tecnico existente.
@@ -52,21 +52,21 @@ Depois disso, criterios, item e modelo nao podem ser alterados.
 
 ## 6. Selecionar e conferir destinatario
 
-O usuario seleciona um destinatario congelado da acao. O CRM apresenta nome, WhatsApp e conteudo final montado. O template e seus parametros ja estao congelados e nao permitem edicao livre.
+O usuario seleciona um destinatario congelado da acao. Para o `Operador`, a interface prioriza uma fila simples e ja abre o proximo destinatario pendente. O CRM apresenta nome, WhatsApp e conteudo final montado. O template e seus parametros ja estao congelados e nao permitem edicao livre.
 
 ## 7. Solicitar envio individual
 
-Depois de uma confirmacao explicita, o sistema muda somente aquele destinatario para `AguardandoSolicitacao` e cria uma unica mensagem de outbox. A primeira solicitacao muda a acao para `EmProcessamento`. Nao existe comando de disparo coletivo na Versao 1.0.
+Depois de uma confirmacao explicita, o sistema muda somente aquele destinatario para `AguardandoSolicitacao` e cria uma unica mensagem de outbox. A confirmacao individual pode ser feita por `Administrador`, `Gerente` ou `Operador`. A primeira solicitacao muda a acao para `EmProcessamento`. Nao existe comando de disparo coletivo na Versao 1.0.
 
 ## 8. Solicitar notificacao
 
-O Worker chama o Notification Hub com origem, chave de template, telefone, payload e chave de idempotencia. O identificador retornado e salvo no destinatario.
+O Worker chama a porta de notificacoes com chave do modelo, telefone, conteudo congelado, parametros e chave de idempotencia. No modo local, o WhatsMiau recebe o texto e seu identificador e salvo junto da origem `Local`; no modo futuro, a mesma referencia indica `Central`.
 
-Falha de rede mantem a outbox elegivel para nova tentativa com a mesma chave.
+Resposta HTTP temporaria mantem a outbox elegivel para nova tentativa com a mesma chave. Falha de rede com resultado incerto termina em falha para evitar duplicidade automatica.
 
 ## 9. Reconciliar
 
-O Worker consulta notificacoes nao finalizadas e atualiza a projecao do CRM para `Enviado`, `Entregue`, `Lido` ou `Falhou`.
+O Worker consulta notificacoes nao finalizadas no adaptador que as criou e atualiza a projecao do CRM para `Enviado`, `Entregue`, `Lido` ou `Falhou`. No modo local, o webhook `messages.update` alimenta o estado tecnico antes da reconciliacao.
 
 ## 10. Concluir
 

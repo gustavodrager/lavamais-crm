@@ -24,7 +24,7 @@ Nao existe rollback automatico de migration em producao.
 ## Worker e envios
 
 - reduzir Worker para zero replicas interrompe processamento sem apagar a outbox;
-- nao reenviar manualmente mensagens sem confirmar chave de idempotencia e estado no Notification Hub;
+- nao reenviar manualmente mensagens sem confirmar chave de idempotencia, origem da referencia e estado no WhatsMiau ou na Central;
 - registrar destinatarios afetados por identificador, sem copiar telefone ou conteudo para o incidente.
 
 ## Criterio de encerramento

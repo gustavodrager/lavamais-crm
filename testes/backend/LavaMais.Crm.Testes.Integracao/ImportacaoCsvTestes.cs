@@ -159,5 +159,35 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         Assert.True(cliente.Permissoes.Single().Permitida);
     }
 
+    [Fact]
+    [Trait("Categoria", "RequerDocker")]
+    public async Task Carga_basica_da_origem_deve_preservar_dados_enriquecidos_e_consentimento()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var contexto = new Contexto(Guid.NewGuid());
+        var opcoesClientes = new DbContextOptionsBuilder<ContextoDeClientes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema)).Options;
+        await using var banco = new ContextoDeClientes(opcoesClientes, contexto); await banco.Database.MigrateAsync(ct);
+        var gerenciador = new GerenciadorDeClientes(banco, contexto, TimeProvider.System);
+        var endereco = new DadosDoEndereco("Rua A", "10", null, "Centro", "Santos", "SP", "11000000");
+        var dataOrigem = new DateTimeOffset(2025, 1, 10, 0, 0, 0, TimeSpan.Zero);
+        var criado = await gerenciador.Criar(new(
+            "Nome original", "13997776651", "Fantasia", "Fisica", "cliente@exemplo.com",
+            new DateOnly(1990, 2, 3), true, endereco, [], "CLI-1", dataOrigem), ct);
+        gerenciador.DescartarAlteracoesPendentes();
+
+        var resultado = await gerenciador.ImportarDadosBasicosDaOrigem(new("CLI-1", "Nome atualizado", "13997776652"), ct);
+
+        gerenciador.DescartarAlteracoesPendentes();
+        var cliente = await banco.Clientes.AsNoTracking().Include(x => x.Endereco).Include(x => x.Contatos).Include(x => x.Permissoes).SingleAsync(x => x.Id == criado.Id, ct);
+        Assert.True(resultado.Atualizado);
+        Assert.Equal("Nome atualizado", cliente.Nome);
+        Assert.Equal("Fisica", cliente.Tipo);
+        Assert.Equal("Fantasia", cliente.NomeFantasia);
+        Assert.Equal(dataOrigem, cliente.DataCadastroOrigem);
+        Assert.Equal("Centro", cliente.Endereco!.Bairro);
+        Assert.Contains(cliente.Contatos, x => x.Tipo == TipoDeContato.Email && x.ValorNormalizado == "cliente@exemplo.com");
+        Assert.True(cliente.Permissoes.Single().Permitida);
+    }
+
     private sealed class Contexto(Guid tenantId) : IContextoDoUsuario { public bool Autenticado => true; public Guid TenantId { get; } = tenantId; public string UsuarioIdentidadeId => "administrador-teste"; }
 }

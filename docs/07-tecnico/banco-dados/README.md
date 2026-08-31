@@ -87,7 +87,7 @@ Guarda nome, canal, situacao e versao atual do modelo comercial.
 
 ### `comunicacao.versoes_dos_modelos`
 
-Uma versao publicada e imutavel e guarda assunto, conteudo de pre-visualizacao, variaveis e `chave_template_notificacao` do Notification Hub.
+Uma versao publicada e imutavel e guarda assunto, conteudo de pre-visualizacao, variaveis e `chave_template_notificacao`. A chave e estavel entre os adaptadores local e central.
 
 ## Acoes comerciais
 
@@ -131,7 +131,8 @@ situacao_envio
 resultado_comercial
 valor_convertido
 chave_idempotencia
-notificacao_externa_id
+notificacao_id
+servico_notificacao
 data_solicitacao
 data_ultima_reconciliacao
 codigo_falha
@@ -159,7 +160,8 @@ O codigo externo e unico dentro do tenant quando informado. O agregado usa `xmin
 
 - `autorizacao.usuarios_crm` vincula `sub + tenant_id` ao papel local;
 - `auditoria.registros_de_auditoria` guarda a trilha segura;
-- `integracoes.mensagens_da_outbox` persiste efeitos externos e controle de processamento.
+- `integracoes.mensagens_da_outbox` persiste efeitos externos e controle de processamento;
+- `integracoes.notificacoes_locais` guarda snapshot, idempotencia por tenant, identificador do WhatsMiau e estado tecnico, sem funcionar como uma segunda fila.
 
 ## Identidade
 

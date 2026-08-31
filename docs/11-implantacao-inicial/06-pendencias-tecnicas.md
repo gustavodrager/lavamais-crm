@@ -8,14 +8,14 @@
 - definir recuperacao controlada enquanto nao existe fluxo automatico de senha;
 - remover configuracoes residuais de OIDC do backend quando nao houver conflito com outra frente.
 
-## Notification Hub
+## Notificacoes
 
-- disponibilizar contrato com autenticacao por chave e idempotencia;
-- cadastrar origem e chave `lavamais-crm`;
-- provisionar templates aprovados pela Meta;
-- confirmar nomes e ordem dos parametros;
-- definir intervalo de reconciliacao e politica de falha final;
-- validar o fluxo antes de habilitar a API e iniciar o Worker.
+- provisionar uma instancia autorizada e a `apikey` do WhatsMiau por ambiente;
+- cadastrar a URL de `messages.update` com segredo exclusivo;
+- revisar os modelos e confirmar o uso operacional de `sendText` antes da producao;
+- validar envio, entrega, leitura, falha e resultado incerto com destinatario autorizado;
+- iniciar o Worker com uma replica somente depois dessa validacao;
+- homologar o adaptador `Central` antes de uma migracao futura.
 
 ## Movimentacoes comerciais
 

@@ -1,5 +1,6 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 using LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
 using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 using LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura;
@@ -17,9 +18,6 @@ using LavaMais.Crm.Modulos.Integracoes.Infraestrutura;
 using LavaMais.Crm.Modulos.Segmentacao.Aplicacao;
 using LavaMais.Crm.Modulos.Segmentacao.Dominio;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System.Net;
-using System.Text;
 
 namespace LavaMais.Crm.Testes.Integracao;
 
@@ -99,9 +97,8 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         var versaoDesatualizada = await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorProcessamento.EnviarDestinatario(acao.Id, primeiro.Id, primeiro.Versao, ct));
         Assert.Equal("versao_desatualizada", versaoDesatualizada.Codigo);
         Assert.Single(await verificacaoOutbox.Mensagens.AsNoTracking().ToListAsync(ct));
-        using var http = new HttpClient(new HubFalso()) { BaseAddress = new Uri("http://notification-hub") };
-        var clienteHub = new ClienteDoNotificationHub(http, Options.Create(new OpcoesDoNotificationHub { BaseUrl = http.BaseAddress.ToString(), ApiKey = "segredo", Source = "lavamais-crm" }));
-        var processador = new ProcessadorDeOutbox(bancoIntegracoesProcessamento, clienteHub, gerenciadorProcessamento, TimeProvider.System);
+        var despachante = new DespachanteFalso();
+        var processador = new ProcessadorDeOutbox(bancoIntegracoesProcessamento, despachante, gerenciadorProcessamento, TimeProvider.System);
         Assert.True(await processador.ProcessarProxima(ct)); await processador.Reconciliar(ct);
         await using var verificacaoEnvio = new ContextoDeAcoesComerciais(Opcoes<ContextoDeAcoesComerciais>(conexao, ContextoDeAcoesComerciais.Schema, ContextoDeAcoesComerciais.Historico), contexto);
         var primeiroEnviado = await verificacaoEnvio.Set<DestinatarioDaAcao>().AsNoTracking().SingleAsync(x => x.Id == primeiro.Id, ct);
@@ -114,7 +111,7 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         var gerenciadorSegundo = new GerenciadorDeAcoesComerciais(bancoAcoesSegundo, new ConsultaDeCatalogo(bancoCatalogo), new ConsultaDeModelos(bancoModelos), simulador, new RegistradorDeAuditoria(bancoAuditoriaSegundo, contexto), new PublicadorDeOutbox(bancoIntegracoesSegundo), contexto, TimeProvider.System);
         var envioSegundo = await gerenciadorSegundo.EnviarDestinatario(acao.Id, segundo.Id, segundo.Versao, ct);
         Assert.Equal(SituacaoDoEnvio.AguardandoSolicitacao, envioSegundo.SituacaoEnvio);
-        var processadorSegundo = new ProcessadorDeOutbox(bancoIntegracoesSegundo, clienteHub, gerenciadorSegundo, TimeProvider.System);
+        var processadorSegundo = new ProcessadorDeOutbox(bancoIntegracoesSegundo, despachante, gerenciadorSegundo, TimeProvider.System);
         Assert.True(await processadorSegundo.ProcessarProxima(ct)); await processadorSegundo.Reconciliar(ct);
         verificacaoEnvio.ChangeTracker.Clear();
         Assert.Equal(SituacaoDaAcaoComercial.Concluida, (await verificacaoEnvio.Acoes.AsNoTracking().SingleAsync(ct)).Situacao);
@@ -148,9 +145,12 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
     private static async Task<Exception?> TentarEnviar(GerenciadorDeAcoesComerciais gerenciador, Guid acaoId, Guid destinatarioId, uint versao, CancellationToken ct) =>
         await Record.ExceptionAsync(() => gerenciador.EnviarDestinatario(acaoId, destinatarioId, versao, ct));
     private sealed class Contexto(Guid tenantId) : IContextoDoUsuario { public bool Autenticado => true; public Guid TenantId { get; } = tenantId; public string UsuarioIdentidadeId => "gerente-teste"; }
-    private sealed class HubFalso : HttpMessageHandler
+    private sealed class DespachanteFalso : IDespachanteDeNotificacoes
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        { var json = request.Method == HttpMethod.Post ? "{\"id\":\"notif-1\"}" : "{\"status\":\"Delivered\",\"failureCode\":null}"; return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") }); }
+        public Task<ReferenciaDeNotificacao> Criar(Guid tenantId, SolicitacaoDeNotificacao solicitacao, CancellationToken ct) =>
+            Task.FromResult(new ReferenciaDeNotificacao(ServicoDeNotificacao.Central, $"notif-{solicitacao.ChaveIdempotencia}"));
+
+        public Task<EstadoConsolidadoDaNotificacao> Obter(ReferenciaDeNotificacao referencia, CancellationToken ct) =>
+            Task.FromResult(new EstadoConsolidadoDaNotificacao(SituacaoTecnicaDaNotificacao.Entregue));
     }
 }

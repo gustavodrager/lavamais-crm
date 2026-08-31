@@ -39,16 +39,17 @@ Validar que a LavaMais consegue selecionar um publico relevante da base de clien
 - revisao e exclusao manual de destinatarios;
 - congelamento da audiencia antes do envio;
 - escolha de modelo de mensagem de WhatsApp;
-- conferencia e envio imediato individual por destinatario pelo Notification Hub;
+- conferencia e envio imediato individual por destinatario pelo WhatsMiau, atras de uma porta preparada para a futura Central de Notificacao;
 - acompanhamento do estado de envio e entrega;
 - registro manual do resultado comercial.
 
 ### Modelos de mensagem
 
 - modelos previamente aprovados para WhatsApp proativo;
+- criacao e publicacao por Administrador ou Gerente dentro de Acoes Comerciais;
 - variaveis controladas, como nome do cliente e item do catalogo;
 - pre-visualizacao antes da preparacao;
-- vinculacao com a chave tecnica do Notification Hub.
+- vinculacao com uma chave tecnica estavel, independente do adaptador de notificacoes.
 
 ## Telas iniciais
 
@@ -59,7 +60,8 @@ Validar que a LavaMais consegue selecionar um publico relevante da base de clien
 5. Detalhe e acompanhamento da acao.
 6. Lista e cadastro de clientes.
 7. Importacao de clientes.
-8. Configuracoes de catalogo, etiquetas e modelos.
+8. Biblioteca de mensagens aprovadas dentro de Acoes Comerciais.
+9. Configuracoes de catalogo, etiquetas e disponibilidade do canal de mensagens.
 
 Essas responsabilidades podem ser combinadas em menos rotas durante o desenho da experiencia.
 

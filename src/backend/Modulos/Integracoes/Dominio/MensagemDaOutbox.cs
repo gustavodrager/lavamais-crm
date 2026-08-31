@@ -1,6 +1,6 @@
 namespace LavaMais.Crm.Modulos.Integracoes.Dominio;
 
-public enum SituacaoDaOutbox { Pendente = 1, Processando = 2, Concluida = 3 }
+public enum SituacaoDaOutbox { Pendente = 1, Processando = 2, Concluida = 3, Falhou = 4 }
 
 public sealed class MensagemDaOutbox
 {
@@ -20,5 +20,8 @@ public sealed class MensagemDaOutbox
     public uint Versao { get; private set; }
     public void MarcarProcessando(DateTimeOffset agora) { Situacao = SituacaoDaOutbox.Processando; ProcessandoAte = agora.AddMinutes(1); Tentativas++; }
     public void Concluir(DateTimeOffset agora) { Situacao = SituacaoDaOutbox.Concluida; ProcessandoAte = null; DataConclusao = agora; UltimoErro = null; }
+    public void Falhar(string erro, DateTimeOffset agora) { Situacao = SituacaoDaOutbox.Falhou; ProcessandoAte = null; DataConclusao = agora; UltimoErro = LimitarErro(erro); }
     public void Reagendar(string erro, DateTimeOffset agora) { Situacao = SituacaoDaOutbox.Pendente; ProcessandoAte = null; UltimoErro = erro.Length > 500 ? erro[..500] : erro; DisponivelEm = agora.AddSeconds(Math.Min(300, Math.Pow(2, Tentativas))); }
+
+    private static string LimitarErro(string erro) => erro.Length > 500 ? erro[..500] : erro;
 }

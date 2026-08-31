@@ -14,7 +14,7 @@ A primeira entrega possui um fluxo principal:
 4. selecionar o publico por filtros simples;
 5. revisar os destinatarios elegiveis;
 6. escolher um modelo de mensagem aprovado;
-7. enviar pelo Notification Hub;
+7. enviar pelo adaptador de notificacoes configurado;
 8. acompanhar entrega e registrar o resultado comercial.
 
 Nao teremos historico inicial de pedidos ou movimentacoes. Por isso, as primeiras segmentacoes usam dados declarados do cliente, localizacao, etiquetas, data de cadastro, permissao de comunicacao e selecao manual.
@@ -38,7 +38,7 @@ Essas capacidades pertencem ao projeto futuro LavaMais Operacao e Producao.
 - Worker em .NET 10;
 - PostgreSQL e Entity Framework Core;
 - identidade local por telefone, senha e sessao opaca;
-- Notification Hub para WhatsApp e futuros canais;
+- WhatsMiau para o envio local de WhatsApp, atras de uma porta preparada para a futura Central de Notificacao;
 - xUnit, Testcontainers, Vitest e Playwright;
 - Docker e CI/CD.
 
@@ -58,6 +58,6 @@ Os prototipos e documentos marcados como historicos representam uma fase anterio
 
 ## Estado atual
 
-O backend possui as Fatias 0 a 9 da implantacao inicial: fundacao, identidade e tenant, clientes, importacao CSV, catalogo, modelos, rascunhos, segmentacao, preparacao transacional da audiencia, envio pelo Notification Hub com outbox, acompanhamento de resultados e endurecimento operacional. Consulte as [instrucoes do backend](src/backend/README.md) e o [runbook operacional](docs/09-operacao/README.md).
+O backend possui as Fatias 0 a 9 da implantacao inicial: fundacao, identidade e tenant, clientes, importacao CSV, catalogo, modelos, rascunhos, segmentacao, preparacao transacional da audiencia, envio local pelo WhatsMiau com outbox, acompanhamento de resultados e endurecimento operacional. A integracao usa uma porta que preserva o adaptador da futura Central de Notificacao. Consulte as [instrucoes do backend](src/backend/README.md) e o [runbook operacional](docs/09-operacao/README.md).
 
 O frontend em `src/web` cobre o fluxo principal da Versao 1.0: criacao do rascunho, simulacao do publico, selecao de modelo publicado, preparacao da audiencia, inicio do processamento, acompanhamento dos destinatarios e registro de resultados comerciais. A integracao ocorre pelo BFF do Next.js, sem expor tokens ao JavaScript. Os testes de componentes e integracao usam Vitest; o fluxo principal usa Playwright.

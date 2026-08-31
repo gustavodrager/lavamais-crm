@@ -21,7 +21,8 @@ Para a Versao 1.0 estar pronta, tambem e necessario:
 - validar importacao com amostra real autorizada;
 - configurar de forma segura o telefone permitido e o primeiro administrador;
 - validar primeiro acesso, login, expiracao, revogacao e persistencia das sessoes em homologacao;
-- provisionar chave e templates no Notification Hub;
+- provisionar e homologar a instancia, a chave e o webhook do WhatsMiau;
+- validar que o modo pode ser trocado para `Central` sem alterar Acoes Comerciais;
 - testar idempotencia em repeticao de requisicao;
 - testar falha parcial de destinatarios;
 - executar restauracao de backup em ambiente controlado;

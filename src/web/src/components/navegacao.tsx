@@ -8,13 +8,14 @@ import type { SessaoApresentacao } from "@/contratos/apresentacao";
 
 const todosPapeis: Array<NonNullable<SessaoApresentacao["papel"]>> = ["Administrador", "Gerente", "Operador"];
 const gestores: Array<NonNullable<SessaoApresentacao["papel"]>> = ["Administrador", "Gerente"];
+const administradores: Array<NonNullable<SessaoApresentacao["papel"]>> = ["Administrador"];
 export const itensNavegacao = [
   { href: "/inicio", rotulo: "Início", icone: House, papeis: todosPapeis },
-  { href: "/acoes-comerciais", rotulo: "Ações Comerciais", icone: Megaphone, papeis: todosPapeis },
   { href: "/clientes", rotulo: "Clientes", icone: Users, papeis: todosPapeis },
-  { href: "/movimentacoes", rotulo: "Movimentações", icone: ReceiptText, papeis: todosPapeis },
-  { href: "/roteiros", rotulo: "Roteiros", icone: Route, papeis: todosPapeis },
-  { href: "/importacao", rotulo: "Importação", icone: Upload, papeis: gestores },
+  { href: "/movimentacoes", rotulo: "Movimentações", rotuloOperador: "Atendimentos", icone: ReceiptText, papeis: todosPapeis },
+  { href: "/acoes-comerciais", rotulo: "Ações Comerciais", rotuloOperador: "Mensagens", icone: Megaphone, papeis: todosPapeis },
+  { href: "/roteiros", hrefOperador: "/meu-roteiro", rotulo: "Roteiros", rotuloOperador: "Roteiro", icone: Route, papeis: todosPapeis },
+  { href: "/importacao", rotulo: "Importação", icone: Upload, papeis: administradores },
   { href: "/configuracoes", rotulo: "Configurações", icone: Settings, papeis: gestores },
 ];
 
@@ -23,8 +24,13 @@ export function Navegacao({ aoNavegar, tema = "claro", papel }: { aoNavegar?: ()
   const itensVisiveis = itensNavegacao.filter((item) => item.papeis.includes(papel ?? "Gerente"));
   return (
     <nav aria-label="Navegação principal" className="space-y-1">
-      {itensVisiveis.map(({ href, rotulo, icone: Icone }) => {
-        const ativo = caminho === href || caminho.startsWith(`${href}/`);
+      {itensVisiveis.map((item) => {
+        const { icone: Icone } = item;
+        const hrefOperador = "hrefOperador" in item ? item.hrefOperador : undefined;
+        const rotuloOperador = "rotuloOperador" in item ? item.rotuloOperador : undefined;
+        const href = papel === "Operador" ? hrefOperador ?? item.href : item.href;
+        const rotulo = papel === "Operador" ? rotuloOperador ?? item.rotulo : item.rotulo;
+        const ativo = caminho === href || caminho.startsWith(`${href}/`) || (item.href === "/roteiros" && (caminho === "/roteiros" || caminho.startsWith("/roteiros/")));
         return (
           <Link key={href} href={href} onClick={aoNavegar} aria-current={ativo ? "page" : undefined}
             className={cn(

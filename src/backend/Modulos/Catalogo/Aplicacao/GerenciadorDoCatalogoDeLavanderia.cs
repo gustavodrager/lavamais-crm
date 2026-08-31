@@ -7,9 +7,154 @@ namespace LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 
 public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, IContextoDoUsuario usuario, TimeProvider relogio)
 {
+    private const string NomeDoArtigoHistoricoEssence = "Itens sem detalhamento do Essence";
+    private const string NomeDoServicoHistoricoEssence = "Movimentacao historica importada";
+    private const string NomeDoServicoSinteticoEssence = "Composicao sintetica de homologacao";
+    private const string PrefixoDoArtigoSinteticoEssence = "HML sintetico - ";
+    private const string CategoriaSinteticaEssence = "Composicao sintetica HML";
+
     public Task<List<ArtigoDeLavanderia>> ListarArtigos(CancellationToken ct) => banco.ArtigosDeLavanderia.AsNoTracking().OrderBy(x => x.Categoria).ThenBy(x => x.Nome).ToListAsync(ct);
     public Task<List<ServicoDeLavanderia>> ListarServicos(CancellationToken ct) => banco.ServicosDeLavanderia.AsNoTracking().OrderBy(x => x.Nome).ToListAsync(ct);
-    public Task<List<OfertaDeServico>> ListarOfertas(CancellationToken ct) => banco.OfertasDeServico.AsNoTracking().Include(x => x.Artigo).Include(x => x.Servico).OrderBy(x => x.Artigo.Categoria).ThenBy(x => x.Artigo.Nome).ThenBy(x => x.Servico.Nome).ToListAsync(ct);
+    public Task<List<OfertaDeServico>> ListarOfertas(CancellationToken ct) => banco.OfertasDeServico.AsNoTracking().Include(x => x.Artigo).Include(x => x.Servico)
+        .Where(x => x.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo
+            && x.Artigo.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo
+            && x.Servico.Situacao == SituacaoDoCatalogoDeLavanderia.Ativo)
+        .OrderBy(x => x.Artigo.Categoria).ThenBy(x => x.Artigo.Nome).ThenBy(x => x.Servico.Nome).ToListAsync(ct);
+
+    public async Task<OfertaHistoricaDoEssence> ObterOuCriarOfertaHistoricaDoEssence(CancellationToken ct)
+    {
+        var agora = relogio.GetUtcNow();
+        var artigo = await banco.ArtigosDeLavanderia.SingleOrDefaultAsync(x => x.NomeNormalizado == NomeDoArtigoHistoricoEssence.ToUpperInvariant(), ct);
+        if (artigo is null)
+        {
+            artigo = ArtigoDeLavanderia.Criar(usuario.TenantId, NomeDoArtigoHistoricoEssence, "Referencia historica", agora);
+            artigo.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+            banco.Add(artigo);
+        }
+
+        var servico = await banco.ServicosDeLavanderia.SingleOrDefaultAsync(x => x.NomeNormalizado == NomeDoServicoHistoricoEssence.ToUpperInvariant(), ct);
+        if (servico is null)
+        {
+            servico = ServicoDeLavanderia.Criar(usuario.TenantId, NomeDoServicoHistoricoEssence, "Uso exclusivo para tickets importados sem composicao de itens.", agora);
+            servico.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+            banco.Add(servico);
+        }
+
+        await banco.SaveChangesAsync(ct);
+        var oferta = await banco.OfertasDeServico.SingleOrDefaultAsync(
+            x => x.ArtigoDeLavanderiaId == artigo.Id && x.ServicoDeLavanderiaId == servico.Id,
+            ct);
+        if (oferta is null)
+        {
+            oferta = OfertaDeServico.Criar(usuario.TenantId, artigo.Id, servico.Id, 0m, agora);
+            oferta.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+            banco.Add(oferta);
+            await banco.SaveChangesAsync(ct);
+        }
+
+        return new(oferta.Id, artigo.Id, artigo.Nome, servico.Id, servico.Nome);
+    }
+
+    public async Task<IReadOnlyDictionary<string, OfertaSinteticaDoEssence>> ObterOuCriarOfertasSinteticasDoEssence(
+        IReadOnlyCollection<DefinicaoDeProdutoSinteticoDoEssence> definicoes,
+        CancellationToken ct)
+    {
+        if (definicoes.Count == 0)
+            throw new ArgumentException("Informe ao menos um produto para criar as ofertas sinteticas.", nameof(definicoes));
+        var repetidas = definicoes.GroupBy(x => x.Chave, StringComparer.Ordinal).Where(x => x.Count() > 1).Select(x => x.Key).ToArray();
+        if (repetidas.Length > 0)
+            throw new ArgumentException($"Existem chaves de produtos sinteticos repetidas: {string.Join(", ", repetidas)}", nameof(definicoes));
+        var nomesPorChave = definicoes.ToDictionary(
+            x => x.Chave,
+            x => CriarNomeDoArtigoSintetico(x.Nome),
+            StringComparer.Ordinal);
+        var nomesRepetidos = nomesPorChave.Values
+            .GroupBy(x => x, StringComparer.OrdinalIgnoreCase)
+            .Where(x => x.Count() > 1)
+            .Select(x => x.Key)
+            .ToArray();
+        if (nomesRepetidos.Length > 0)
+            throw new ArgumentException($"Existem nomes de produtos sinteticos repetidos apos a normalizacao: {string.Join(", ", nomesRepetidos)}", nameof(definicoes));
+
+        var agora = relogio.GetUtcNow();
+        var nomeNormalizadoDoServico = NomeDoServicoSinteticoEssence.ToUpperInvariant();
+        var servico = await banco.ServicosDeLavanderia.SingleOrDefaultAsync(x => x.NomeNormalizado == nomeNormalizadoDoServico, ct);
+        if (servico is null)
+        {
+            servico = ServicoDeLavanderia.Criar(
+                usuario.TenantId,
+                NomeDoServicoSinteticoEssence,
+                "Uso exclusivo em composicoes sinteticas de homologacao; nao representa o servico real do Essence.",
+                agora);
+            servico.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+            banco.Add(servico);
+        }
+        else if (servico.Situacao != SituacaoDoCatalogoDeLavanderia.Inativo)
+        {
+            servico.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+        }
+
+        var nomesNormalizados = nomesPorChave.Values.Select(x => x.ToUpperInvariant()).ToArray();
+        var artigos = (await banco.ArtigosDeLavanderia
+                .Where(x => nomesNormalizados.Contains(x.NomeNormalizado))
+                .ToListAsync(ct))
+            .ToDictionary(x => x.NomeNormalizado, StringComparer.Ordinal);
+        foreach (var nome in nomesPorChave.Values)
+        {
+            var normalizado = nome.ToUpperInvariant();
+            if (!artigos.TryGetValue(normalizado, out var artigo))
+            {
+                artigo = ArtigoDeLavanderia.Criar(usuario.TenantId, nome, CategoriaSinteticaEssence, agora);
+                artigo.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+                banco.Add(artigo);
+                artigos[normalizado] = artigo;
+            }
+            else if (artigo.Situacao != SituacaoDoCatalogoDeLavanderia.Inativo)
+            {
+                artigo.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+            }
+        }
+
+        await banco.SaveChangesAsync(ct);
+        var artigosIds = artigos.Values.Select(x => x.Id).ToArray();
+        var ofertas = (await banco.OfertasDeServico
+                .Where(x => x.ServicoDeLavanderiaId == servico.Id && artigosIds.Contains(x.ArtigoDeLavanderiaId))
+                .ToListAsync(ct))
+            .ToDictionary(x => x.ArtigoDeLavanderiaId);
+        foreach (var definicao in definicoes)
+        {
+            var artigo = artigos[nomesPorChave[definicao.Chave].ToUpperInvariant()];
+            if (!ofertas.TryGetValue(artigo.Id, out var oferta))
+            {
+                oferta = OfertaDeServico.Criar(usuario.TenantId, artigo.Id, servico.Id, definicao.ValorUnitarioReferencia, agora);
+                oferta.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+                banco.Add(oferta);
+                ofertas[artigo.Id] = oferta;
+            }
+            else if (oferta.Situacao != SituacaoDoCatalogoDeLavanderia.Inativo)
+            {
+                oferta.AlterarSituacao(SituacaoDoCatalogoDeLavanderia.Inativo, agora);
+            }
+        }
+        await banco.SaveChangesAsync(ct);
+
+        return definicoes.ToDictionary(
+            definicao => definicao.Chave,
+            definicao =>
+            {
+                var artigo = artigos[nomesPorChave[definicao.Chave].ToUpperInvariant()];
+                var oferta = ofertas[artigo.Id];
+                return new OfertaSinteticaDoEssence(
+                    definicao.Chave,
+                    oferta.Id,
+                    artigo.Id,
+                    artigo.Nome,
+                    servico.Id,
+                    servico.Nome,
+                    oferta.PrecoUnitario);
+            },
+            StringComparer.Ordinal);
+    }
 
     public async Task<ResultadoDaCargaInicial> CarregarCatalogoInicial(CancellationToken ct)
     {
@@ -59,6 +204,14 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
         "Pequenos reparos" => baseLavagem * 0.75m,
         _ => baseLavagem
     }, 2);
+
+    private static string CriarNomeDoArtigoSintetico(string nome)
+    {
+        var original = nome.Trim();
+        var limite = 160 - PrefixoDoArtigoSinteticoEssence.Length;
+        if (original.Length > limite) original = original[..limite];
+        return $"{PrefixoDoArtigoSinteticoEssence}{original}";
+    }
 
     private static readonly DefinicaoDeServico[] Servicos =
     [
@@ -114,3 +267,13 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
 }
 
 public sealed record ResultadoDaCargaInicial(int ArtigosCriados, int ServicosCriados, int OfertasCriadas);
+public sealed record OfertaHistoricaDoEssence(Guid OfertaId, Guid ArtigoId, string NomeArtigo, Guid ServicoId, string NomeServico);
+public sealed record DefinicaoDeProdutoSinteticoDoEssence(string Chave, string Nome, decimal ValorUnitarioReferencia);
+public sealed record OfertaSinteticaDoEssence(
+    string Chave,
+    Guid OfertaId,
+    Guid ArtigoId,
+    string NomeArtigo,
+    Guid ServicoId,
+    string NomeServico,
+    decimal PrecoUnitario);

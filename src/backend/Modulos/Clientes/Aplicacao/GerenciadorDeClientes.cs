@@ -69,6 +69,56 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
         return new(cliente, true);
     }
 
+    public async Task<ResultadoDaImportacaoDeCliente> ImportarDadosBasicosDaOrigem(
+        DadosBasicosDoClienteNaOrigem dados,
+        CancellationToken ct)
+    {
+        var codigoExterno = string.IsNullOrWhiteSpace(dados.CodigoExterno)
+            ? throw new ExcecaoDeRegraDeNegocio("codigo_externo_obrigatorio", "O codigo externo e obrigatorio para a carga controlada.")
+            : dados.CodigoExterno.Trim();
+        var whatsapp = NormalizadorDeWhatsapp.Normalizar(dados.Whatsapp);
+        var cliente = await banco.Clientes
+            .Include(x => x.Contatos)
+            .SingleOrDefaultAsync(x => x.CodigoExterno == codigoExterno, ct);
+
+        if (cliente is null)
+        {
+            var telefoneJaVinculado = await banco.Clientes
+                .Where(x => x.Situacao == SituacaoDoCliente.Ativo)
+                .AnyAsync(x => x.Contatos.Any(c => c.Tipo == TipoDeContato.Whatsapp && c.ValorNormalizado == whatsapp), ct);
+            if (telefoneJaVinculado)
+                throw new ExcecaoDeConflito("whatsapp_ja_vinculado", "O WhatsApp ja pertence a outro cliente e exige conciliacao manual.");
+
+            var criado = await Criar(new DadosDoCliente(
+                dados.Nome,
+                dados.Whatsapp,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                [],
+                codigoExterno,
+                dados.DataCadastroOrigem), ct);
+            return new(criado, false);
+        }
+
+        if (cliente.Situacao != SituacaoDoCliente.Ativo)
+            throw new ExcecaoDeConflito("cliente_inativo", "O cliente da origem esta inativo no CRM e exige conciliacao manual.");
+
+        cliente.AtualizarDadosBasicosDaOrigem(
+            dados.Nome,
+            dados.Whatsapp,
+            codigoExterno,
+            dados.DataCadastroOrigem,
+            relogio.GetUtcNow());
+        if (await WhatsappExiste(cliente, cliente.Id, ct))
+            throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe outro cliente ativo com este WhatsApp no tenant.");
+        await banco.SaveChangesAsync(ct);
+        return new(cliente, true);
+    }
+
     public void DescartarAlteracoesPendentes() => banco.ChangeTracker.Clear();
 
     public async Task Inativar(Guid id, CancellationToken ct)
@@ -131,6 +181,7 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
 }
 
 public sealed record DadosDoCliente(string Nome, string Whatsapp, string? NomeFantasia, string? Tipo, string? Email, DateOnly? DataNascimento, bool PermiteMarketingWhatsapp, DadosDoEndereco? Endereco, IReadOnlyCollection<Guid> EtiquetaIds, string? CodigoExterno = null, DateTimeOffset? DataCadastroOrigem = null);
+public sealed record DadosBasicosDoClienteNaOrigem(string CodigoExterno, string Nome, string Whatsapp, DateTimeOffset? DataCadastroOrigem = null);
 public sealed record DadosDoEndereco(string? Logradouro, string? Numero, string? Complemento, string? Bairro, string? Cidade, string? Estado, string? Cep);
 public sealed record ResultadoDaImportacaoDeCliente(Cliente Cliente, bool Atualizado);
 

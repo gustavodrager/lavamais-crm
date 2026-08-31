@@ -21,7 +21,7 @@ export type EstadoRegistroMovimentacao = { mensagem?: string; sucesso?: boolean;
 export async function registrarMovimentacao(_estado: EstadoRegistroMovimentacao, dados: FormData): Promise<EstadoRegistroMovimentacao> {
   if (!await obterPortaSessao().obterSessao()) return { mensagem: "Sua sessão expirou. Os dados continuam no formulário; entre novamente para continuar.", requerLogin: true };
   const validacao = esquema.safeParse(Object.fromEntries(dados));
-  if (!validacao.success) return { mensagem: "Revise os dados da movimentação." };
+  if (!validacao.success) return { mensagem: "Revise os dados do atendimento." };
   const entrada = validacao.data;
   let linhasBrutas: unknown;
   try { linhasBrutas = JSON.parse(entrada.linhas); } catch { return { mensagem: "Revise os artigos e serviços informados." }; }
@@ -42,15 +42,15 @@ export async function registrarMovimentacao(_estado: EstadoRegistroMovimentacao,
   } catch (erro) {
     if (erro instanceof ErroCrmApi) {
       if (erro.status === 401) return { mensagem: "Sua sessão expirou. Os dados continuam no formulário; entre novamente para continuar.", requerLogin: true };
-      if (erro.status === 403) return { mensagem: "Seu perfil não tem permissão para registrar movimentações." };
+      if (erro.status === 403) return { mensagem: "Seu perfil não tem permissão para registrar atendimentos." };
       if (erro.status === 409) return { mensagem: `Não foi possível registrar porque houve um conflito: ${erro.message}` };
-      if (erro.status === 422) return { mensagem: `A CRM API rejeitou o registro: ${erro.message}` };
+      if (erro.status === 422) return { mensagem: `Revise o atendimento: ${erro.message}` };
     }
-    return { mensagem: "Não foi possível registrar a movimentação agora. Tente novamente." };
+    return { mensagem: "Não foi possível registrar o atendimento agora. Tente novamente." };
   }
   revalidatePath("/movimentacoes");
   revalidatePath(`/clientes/${entrada.clienteId}`);
-  const parametros = new URLSearchParams({ sucesso: "Movimentação registrada", clienteId: entrada.clienteId });
+  const parametros = new URLSearchParams({ sucesso: "Atendimento registrado", clienteId: entrada.clienteId });
   if (entrada.busca) parametros.set("busca", entrada.busca);
   redirect(`/movimentacoes?${parametros}`);
 }

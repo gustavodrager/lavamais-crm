@@ -4,9 +4,10 @@ namespace LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 
 public interface IAutorizacaoDaIdentidade
 {
-    Task ProvisionarAdministradorInicial(
+    Task ProvisionarUsuarioInicial(
         Guid tenantId,
         string usuarioIdentidadeId,
+        string papel,
         DbTransaction transacao,
         DateTimeOffset agora,
         CancellationToken cancellationToken);

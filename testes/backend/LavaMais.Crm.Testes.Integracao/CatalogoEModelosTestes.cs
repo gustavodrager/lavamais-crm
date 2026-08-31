@@ -32,6 +32,58 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
 
     [Fact]
     [Trait("Categoria", "RequerDocker")]
+    public async Task Deve_respeitar_situacao_inativa_ao_criar_item_de_referencia()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var contexto = new Contexto(Guid.NewGuid());
+        await using var banco = new ContextoDeCatalogo(OpcoesCatalogo(postgres.Conexao), contexto); await banco.Database.MigrateAsync(ct);
+        var gerenciador = new GerenciadorDeCatalogo(banco, contexto, TimeProvider.System);
+
+        var item = await gerenciador.Criar(new(
+            TipoDeItemDeCatalogo.Produto,
+            "Essence - item historico",
+            null,
+            "Referencia historica Essence",
+            null,
+            SituacaoDoItemDeCatalogo.Inativo,
+            "ESSENCE-TESTE"), ct);
+
+        Assert.Equal(SituacaoDoItemDeCatalogo.Inativo, item.Situacao);
+        Assert.Equal(SituacaoDoItemDeCatalogo.Inativo, (await banco.Itens.AsNoTracking().SingleAsync(ct)).Situacao);
+    }
+
+    [Fact]
+    [Trait("Categoria", "RequerDocker")]
+    public async Task Deve_criar_ofertas_sinteticas_inativas_de_forma_idempotente()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var contexto = new Contexto(Guid.NewGuid());
+        await using var banco = new ContextoDeCatalogo(OpcoesCatalogo(postgres.Conexao), contexto); await banco.Database.MigrateAsync(ct);
+        var gerenciador = new GerenciadorDoCatalogoDeLavanderia(banco, contexto, TimeProvider.System);
+        DefinicaoDeProdutoSinteticoDoEssence[] definicoes =
+        [
+            new("CAMISA", "Camisa", 12.50m),
+            new("CALCA", "Calca", 15m)
+        ];
+
+        var primeira = await gerenciador.ObterOuCriarOfertasSinteticasDoEssence(definicoes, ct);
+        var segunda = await gerenciador.ObterOuCriarOfertasSinteticasDoEssence(definicoes, ct);
+        var prefixoLongo = new string('X', 160);
+        var colisao = await Assert.ThrowsAsync<ArgumentException>(() => gerenciador.ObterOuCriarOfertasSinteticasDoEssence(
+            [new("LONGO-A", $"{prefixoLongo}A", 1m), new("LONGO-B", $"{prefixoLongo}B", 1m)],
+            ct));
+
+        Assert.Equal(primeira["CAMISA"].OfertaId, segunda["CAMISA"].OfertaId);
+        Assert.Contains("apos a normalizacao", colisao.Message);
+        Assert.Equal(2, await banco.ArtigosDeLavanderia.CountAsync(x => x.Categoria == "Composicao sintetica HML", ct));
+        Assert.Equal(2, await banco.OfertasDeServico.CountAsync(x => x.ServicoDeLavanderiaId == primeira["CAMISA"].ServicoId, ct));
+        Assert.All(await banco.ArtigosDeLavanderia.Where(x => x.Categoria == "Composicao sintetica HML").ToListAsync(ct),
+            artigo => Assert.Equal(SituacaoDoCatalogoDeLavanderia.Inativo, artigo.Situacao));
+        Assert.Empty(await gerenciador.ListarOfertas(ct));
+    }
+
+    [Fact]
+    [Trait("Categoria", "RequerDocker")]
     public async Task Deve_publicar_versoes_imutaveis_com_template_tecnico()
     {
         var ct = TestContext.Current.CancellationToken;

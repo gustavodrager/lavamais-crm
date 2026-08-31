@@ -46,7 +46,7 @@ describe("DefinicaoPublico", () => {
     await usuario.click(await screen.findByRole("button", { name: /Adicionar Ana Martins/ }));
     await usuario.click(screen.getByRole("button", { name: "Confirmar 1 cliente" }));
     await waitFor(() => expect(salvarListaManual).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", clienteIds: ["6d3d0d64-a111-4cff-8db8-111111111113"] }));
-    expect(screen.getByRole("button", { name: "Alterar escolha" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Alterar escolha" })).toBeInTheDocument();
   });
 
   it("permite retirar uma cliente da fila", async () => {

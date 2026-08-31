@@ -34,7 +34,7 @@ Como gerente, quero cadastrar produtos e servicos para relaciona-los a uma Acao 
 
 ### HU07 — Manter modelo comercial
 
-Como administrador, quero disponibilizar um modelo aprovado para que a equipe use mensagens consistentes.
+Como gerente ou administrador, quero disponibilizar um modelo aprovado para que a equipe use mensagens consistentes.
 
 ## Acao Comercial
 

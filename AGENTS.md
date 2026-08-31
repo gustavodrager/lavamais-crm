@@ -38,7 +38,7 @@ Como nao existe historico inicial de pedidos ou movimentacoes, nao implementar c
 - Monolito modular no backend.
 - PostgreSQL com Entity Framework Core.
 - Autenticacao local por telefone, senha e sessao opaca, conforme ADR-011.
-- Envio de mensagens delegado ao Notification Hub.
+- Envio de mensagens pelo WhatsMiau no modo local, atras de porta preparada para a futura Central de Notificacao, conforme ADR-017.
 - Outbox transacional no CRM para efeitos externos.
 - OpenAPI para o contrato HTTP.
 
@@ -70,13 +70,15 @@ Cada modulo organiza `Dominio`, `Aplicacao`, `Infraestrutura` e sua exposicao HT
 - Os papeis `Administrador`, `Gerente` e `Operador` sao especificos do CRM e ficam no banco do CRM.
 - O BFF guarda o token opaco na sessao server-side e entrega ao navegador somente um cookie `HttpOnly`.
 
-## Notification Hub
+## Notificacoes
 
 - Credenciais ficam apenas na API ou no Worker.
-- Usar `source` exclusivo do CRM e `idempotencyKey` deterministica.
-- Nao duplicar retries, tentativas de provedor ou webhooks da Meta no CRM.
-- O CRM registra o estado comercial e o identificador da notificacao; o Notification Hub registra o estado tecnico de entrega.
-- Mensagens proativas de WhatsApp usam templates aprovados e parametros, sem edicao livre do corpo.
+- Usar chave de idempotencia deterministica por tenant e guardar a origem `Local` ou `Central` junto ao identificador.
+- A outbox transacional existente e a unica fila; `notificacoes_locais` guarda estado tecnico, nao agenda trabalho.
+- No modo local, enviar o conteudo congelado pelo WhatsMiau e converter somente os eventos conhecidos de `messages.update`.
+- Nao registrar telefone, conteudo, `apikey` ou segredo do webhook em logs.
+- No modo `Central`, usar `source=lavamais-crm` e delegar tentativas e webhooks tecnicos ao servico externo.
+- Mensagens proativas de WhatsApp usam modelos revisados e parametros controlados, sem edicao livre depois da preparacao.
 
 ## Persistencia
 

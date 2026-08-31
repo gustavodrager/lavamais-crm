@@ -12,7 +12,8 @@
 - validar primeiro acesso e continuidade das sessoes depois de reinicios;
 - concluir dominio, DNS, alertas e responsaveis operacionais;
 - ensaiar restauracao no provedor e definir RPO e RTO;
-- integrar um Notification Hub compativel antes de ativar o Worker e o envio individual.
+- homologar instancia, credenciais e webhook do WhatsMiau antes de ativar o Worker e o envio individual;
+- manter o adaptador da Central de Notificacao coberto por teste de contrato para a migracao futura.
 
 ## Qualidade e governanca
 

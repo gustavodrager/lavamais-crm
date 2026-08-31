@@ -8,7 +8,8 @@
 - [ ] revisar migrations novas e scripts PostgreSQL numerados;
 - [ ] confirmar backup ou ponto de restauracao anterior quando houver dados;
 - [ ] validar variaveis conforme `docs/07-tecnico/configuracao`;
-- [ ] manter `EnvioNotificacoes__Habilitado=false` e Worker com zero replicas enquanto o Hub nao estiver liberado.
+- [ ] manter `Notificacoes__Modo=Desabilitado` e Worker com zero replicas enquanto o WhatsMiau nao estiver homologado;
+- [ ] antes de habilitar `Local`, configurar os mesmos valores na API e no Worker e cadastrar o webhook com segredo exclusivo.
 
 ## Banco
 
@@ -26,6 +27,8 @@
 - [ ] reiniciar Web/BFF e confirmar continuidade da sessao;
 - [ ] validar isolamento de tenant e papeis;
 - [ ] executar fluxo de clientes, importacao, catalogo, modelos e audiencia preparada;
+- [ ] com o modo local liberado, enviar para destinatario autorizado e confirmar `Enviado`, `Entregue` e `Lido`;
+- [ ] repetir a chave de idempotencia e confirmar uma unica chamada efetiva;
 - [ ] validar a capacidade de movimentacoes comerciais quando a frente do ADR-012 estiver concluida.
 
 ## Evidencias

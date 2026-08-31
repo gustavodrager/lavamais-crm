@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { CabecalhoPagina } from "@/components/cabecalho-pagina";
 import { EstadoFalhaApi } from "@/components/estado-falha-api";
 import { FormularioNovaAcao } from "@/components/formulario-nova-acao";
@@ -5,8 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { JornadaAcao } from "@/components/jornada-acao";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
+import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
+import { papelDaVisao } from "@/lib/sessao-apresentacao";
 
 export default async function NovaAcao() {
+  const sessao = await obterPortaSessao().obterSessao();
+  if (papelDaVisao(sessao) === "Operador") redirect("/acoes-comerciais");
   let itensCatalogo;
   try {
     itensCatalogo = await obterPortaCrmApi().listarItensDeCatalogoAtivos();

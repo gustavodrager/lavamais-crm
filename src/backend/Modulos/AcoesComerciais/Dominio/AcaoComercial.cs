@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
@@ -111,7 +112,8 @@ public sealed class DestinatarioDaAcao
     public string ChaveTemplateNotificacaoSnapshot { get; private set; } = string.Empty;
     public string PayloadNotificacaoJson { get; private set; } = string.Empty;
     public string? ChaveIdempotencia { get; private set; }
-    public string? NotificacaoExternaId { get; private set; }
+    public string? NotificacaoId { get; private set; }
+    public ServicoDeNotificacao? ServicoNotificacao { get; private set; }
     public DateTimeOffset? DataUltimaReconciliacao { get; private set; }
     public string? CodigoFalha { get; private set; }
     public ResultadoComercial ResultadoComercial { get; private set; } = ResultadoComercial.NaoInformado;
@@ -126,14 +128,39 @@ public sealed class DestinatarioDaAcao
         ChaveIdempotencia = chave;
         SituacaoEnvio = SituacaoDoEnvio.AguardandoSolicitacao;
     }
-    public void RegistrarSolicitacao(string id)
+    public void RegistrarSolicitacao(ReferenciaDeNotificacao referencia)
     {
         if (SituacaoEnvio != SituacaoDoEnvio.AguardandoSolicitacao)
             throw new ExcecaoDeConflito("destinatario_nao_aguarda_solicitacao", "O destinatario nao possui intencao de envio pendente.");
-        NotificacaoExternaId = id;
+        if (string.IsNullOrWhiteSpace(referencia.Id))
+            throw new ExcecaoDeRegraDeNegocio("notificacao_invalida", "O identificador da notificacao e obrigatorio.");
+        NotificacaoId = referencia.Id;
+        ServicoNotificacao = referencia.Servico;
         SituacaoEnvio = SituacaoDoEnvio.Solicitado;
     }
-    public void AtualizarEstado(SituacaoDoEnvio estado, string? codigo, DateTimeOffset agora) { SituacaoEnvio = estado; CodigoFalha = codigo; DataUltimaReconciliacao = agora; }
+    public void RegistrarFalhaNaSolicitacao(string codigo, DateTimeOffset agora)
+    {
+        if (SituacaoEnvio != SituacaoDoEnvio.AguardandoSolicitacao)
+            throw new ExcecaoDeConflito("destinatario_nao_aguarda_solicitacao", "O destinatario nao possui intencao de envio pendente.");
+        SituacaoEnvio = SituacaoDoEnvio.Falhou;
+        CodigoFalha = codigo;
+        DataUltimaReconciliacao = agora;
+    }
+    public void AtualizarEstado(SituacaoDoEnvio estado, string? codigo, DateTimeOffset agora)
+    {
+        DataUltimaReconciliacao = agora;
+        if (SituacaoEnvio == SituacaoDoEnvio.Falhou || SituacaoEnvio == SituacaoDoEnvio.Lido) return;
+        if (estado == SituacaoDoEnvio.Falhou)
+        {
+            if (SituacaoEnvio == SituacaoDoEnvio.Entregue) return;
+            SituacaoEnvio = estado;
+            CodigoFalha = codigo;
+            return;
+        }
+        if (Ordem(estado) <= Ordem(SituacaoEnvio)) return;
+        SituacaoEnvio = estado;
+        CodigoFalha = null;
+    }
     public void RegistrarResultado(ResultadoComercial resultado, decimal? valorConvertido, string usuarioId, DateTimeOffset agora)
     {
         if (resultado == ResultadoComercial.NaoInformado) throw new ExcecaoDeRegraDeNegocio("resultado_invalido", "Informe um resultado comercial.");
@@ -141,4 +168,15 @@ public sealed class DestinatarioDaAcao
         if (valorConvertido < 0) throw new ExcecaoDeRegraDeNegocio("valor_invalido", "O valor convertido nao pode ser negativo.");
         ResultadoComercial = resultado; ValorConvertido = valorConvertido; UsuarioResultadoId = usuarioId; DataResultadoComercial = agora;
     }
+
+    private static int Ordem(SituacaoDoEnvio situacao) => situacao switch
+    {
+        SituacaoDoEnvio.Pendente => 0,
+        SituacaoDoEnvio.AguardandoSolicitacao => 1,
+        SituacaoDoEnvio.Solicitado => 2,
+        SituacaoDoEnvio.Enviado => 3,
+        SituacaoDoEnvio.Entregue => 4,
+        SituacaoDoEnvio.Lido => 5,
+        _ => -1
+    };
 }

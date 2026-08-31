@@ -10,6 +10,9 @@ function retornoSeguro(valor: FormDataEntryValue | string | null) {
   const caminho = typeof valor === "string" ? valor : valor?.toString();
   return caminho && caminho.startsWith("/") && !caminho.startsWith("//") ? caminho : null;
 }
+async function autenticar(urlApi: string, rota: "primeiro-acesso" | "entrar", telefone: string, senha: string) {
+  return await fetch(new URL(`/api/v1/autenticacao/${rota}`, urlApi), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefone, senha }), cache: "no-store" });
+}
 
 export async function GET(requisicao: NextRequest) {
   const retorno = retornoSeguro(new URL(requisicao.url).searchParams.get("retorno"));
@@ -21,8 +24,12 @@ export async function POST(requisicao: NextRequest) {
   const dados = await requisicao.formData(); const telefone = String(dados.get("telefone") ?? ""); const senha = String(dados.get("senha") ?? ""); const primeiro = dados.get("primeiroAcesso") === "1"; const retorno = retornoSeguro(dados.get("retorno")); const urlApi = process.env.LAVAMAIS_CRM_API_URL;
   if (!urlApi) return NextResponse.redirect(criarUrlDaAplicacao(`/entrar?${new URLSearchParams({ erro: "configuracao", ...(retorno ? { retorno } : {}) })}`, requisicao.url), 303);
   try {
-    const resposta = await fetch(new URL(`/api/v1/autenticacao/${primeiro ? "primeiro-acesso" : "entrar"}`, urlApi), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefone, senha }), cache: "no-store" });
-    if (!resposta.ok) return NextResponse.redirect(criarUrlDaAplicacao(`/entrar?${new URLSearchParams({ erro: "credenciais", ...(retorno ? { retorno } : {}) })}`, requisicao.url), 303);
+    let resposta = await autenticar(urlApi, primeiro ? "primeiro-acesso" : "entrar", telefone, senha);
+    if (primeiro && !resposta.ok) resposta = await autenticar(urlApi, "entrar", telefone, senha);
+    if (!resposta.ok) {
+      const erro = resposta.status === 401 || resposta.status === 400 ? "credenciais" : resposta.status === 429 ? "tentativas" : "indisponivel";
+      return NextResponse.redirect(criarUrlDaAplicacao(`/entrar?${new URLSearchParams({ erro, ...(retorno ? { retorno } : {}) })}`, requisicao.url), 303);
+    }
     const sessao = esquema.parse(await resposta.json()); const id = randomUUID(); const iniciais = sessao.nome.split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
     await salvarSessao(id, { apresentacao: { usuario: { nome: sessao.nome, iniciais }, tenant: { nome: sessao.nomeTenant }, papel: sessao.papel }, accessToken: sessao.token, expiraEm: new Date(sessao.expiraEm).getTime() });
     const destinoPadrao = sessao.papel === "Operador" ? "/inicio" : "/inicio";

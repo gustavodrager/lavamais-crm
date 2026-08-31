@@ -27,7 +27,8 @@ Em desenvolvimento, o repositorio de sessoes usa memoria. Homologacao e producao
 - acompanhamento dos destinatários e registro de resultado comercial;
 - cadastro e listagem de clientes;
 - importação CSV;
-- configurações de catálogo, etiquetas e modelos;
+- biblioteca de mensagens aprovadas dentro de Ações Comerciais;
+- configurações de catálogo, etiquetas e disponibilidade do canal de mensagens;
 - validação no navegador e novamente na Server Action;
 - redirecionamento ao detalhe após confirmação da CRM API.
 
@@ -39,7 +40,7 @@ LAVAMAIS_CRM_API_URL=http://127.0.0.1:5000 npm run dev:sem-autenticacao
 
 Esse modo existe apenas fora de produção, não implementa login local e não recebe `tenantId`. Se a CRM API real exigir bearer token, ele pode ser informado somente no servidor por `LAVAMAIS_ACCESS_TOKEN_DESENVOLVIMENTO`. A aplicação recusa a flag `LAVAMAIS_DESABILITAR_AUTENTICACAO=1` quando `NODE_ENV=production`.
 
-Mantenha `LAVAMAIS_ENVIO_NOTIFICACOES_HABILITADO=0` enquanto a Central de Notificacao nao estiver integrada.
+A interface consulta `/api/v1/capacidades` na CRM API para decidir se apresenta o envio individual. Nao existe uma segunda flag no Next.js; a API e a unica autoridade sobre a disponibilidade do canal.
 
 ## Executar e verificar
 

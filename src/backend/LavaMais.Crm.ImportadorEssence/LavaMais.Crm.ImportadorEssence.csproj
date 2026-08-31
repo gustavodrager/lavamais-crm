@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="LavaMais.Crm.Testes.Unidade" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+    <ProjectReference Include="../Modulos/Catalogo/LavaMais.Crm.Modulos.Catalogo.csproj" />
+    <ProjectReference Include="../Modulos/Clientes/LavaMais.Crm.Modulos.Clientes.csproj" />
+    <ProjectReference Include="../Modulos/Importacoes/LavaMais.Crm.Modulos.Importacoes.csproj" />
+    <ProjectReference Include="../Modulos/MovimentacoesComerciais/LavaMais.Crm.Modulos.MovimentacoesComerciais.csproj" />
+  </ItemGroup>
+</Project>

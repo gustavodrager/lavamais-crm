@@ -4,5 +4,5 @@ import { FormularioCliente } from "./formulario-cliente";
 
 export default async function NovoCliente({ searchParams }: { searchParams: Promise<{ retorno?: string }> }) {
   const { retorno } = await searchParams;
-  return <><CabecalhoPagina titulo="Novo cliente" descricao="Cadastre o contato e a permissão de comunicação que serão usados nas Ações Comerciais." /><Card className="max-w-3xl"><CardHeader><CardTitle>Dados do cliente</CardTitle></CardHeader><CardContent><FormularioCliente retorno={retorno} /></CardContent></Card></>;
+  return <><CabecalhoPagina titulo="Novo cliente" descricao="Cadastre contato, autorização de mensagens e endereço para os próximos atendimentos." /><Card className="max-w-3xl"><CardHeader><CardTitle>Dados do cliente</CardTitle></CardHeader><CardContent><FormularioCliente retorno={retorno} /></CardContent></Card></>;
 }

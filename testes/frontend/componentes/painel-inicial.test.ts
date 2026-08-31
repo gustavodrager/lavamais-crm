@@ -1,6 +1,7 @@
 import type {
   DestinatarioDaAcao,
   DetalheAcaoComercial,
+  ResumoAcaoComercial,
   ResumoMovimentacaoComercial,
   RoteiroDiario,
 } from "../../../src/web/src/contratos/apresentacao";
@@ -8,6 +9,7 @@ import {
   dataLocalAmanha,
   dataLocalAtual,
   movimentacoesRegistradasHoje,
+  resumirAcoesOperacionais,
   resumirAcoesNoPainel,
   resumirMovimentacoesDoDia,
   resumirRoteiroDoDia,
@@ -39,6 +41,23 @@ describe("painel inicial", () => {
       conversoes: 1,
       valorConvertido: 120,
     });
+  });
+
+  it("resume a fila operacional sem consultar cada ação novamente", () => {
+    const base: ResumoAcaoComercial = {
+      id: "acao-1", nome: "Ação 1", objetivo: null, itemDeCatalogoId: null, versaoModeloId: null, criterios,
+      situacao: "EmProcessamento", totalDestinatarios: 10, mensagensParaEnviar: 3, falhasParaRevisar: 1,
+      retornosParaRegistrar: 2, resultadosRegistrados: 4, dataAtualizacao: "2026-08-26T12:00:00Z", versao: 1,
+    };
+
+    const resumo = resumirAcoesOperacionais([
+      base,
+      { ...base, id: "acao-2", mensagensParaEnviar: 2, falhasParaRevisar: 0, retornosParaRegistrar: 1, resultadosRegistrados: 5, dataAtualizacao: "2026-08-27T12:00:00Z" },
+      { ...base, id: "rascunho", situacao: "Rascunho", mensagensParaEnviar: 99 },
+    ]);
+
+    expect(resumo).toMatchObject({ mensagensParaEnviar: 5, falhasParaRevisar: 1, retornosParaRegistrar: 3, resultadosRegistrados: 9 });
+    expect(resumo.porAcao.map((acao) => acao.acaoId)).toEqual(["acao-2", "acao-1"]);
   });
 
   it("considera o mês e o dia no horário de São Paulo", () => {

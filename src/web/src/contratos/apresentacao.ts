@@ -16,6 +16,10 @@ export interface ResumoAcaoComercial {
   situacao: SituacaoAcaoComercial;
   totalDestinatarios: number | null;
   quantidadeDestinatarios?: number | null;
+  mensagensParaEnviar: number;
+  falhasParaRevisar: number;
+  retornosParaRegistrar: number;
+  resultadosRegistrados: number;
   dataAtualizacao: string;
   versao: number;
 }
@@ -111,7 +115,10 @@ export interface DetalheCliente extends ResumoCliente {
   tipo: string | null;
   email: string | null;
   dataNascimento: string | null;
-  situacao: "Ativo" | "Inativo";
+  etiquetaIds: string[];
+  dataCadastroOrigem: string | null;
+  dataCriacao: string;
+  dataAtualizacao: string;
   endereco: {
     logradouro: string | null;
     numero: string | null;
@@ -176,6 +183,7 @@ export interface SessaoApresentacao {
   usuario: { nome: string; iniciais: string };
   tenant: { nome: string };
   papel?: "Administrador" | "Gerente" | "Operador";
+  papelVisualizado?: "Administrador" | "Gerente" | "Operador";
   autenticacaoDesabilitada?: boolean;
 }
 

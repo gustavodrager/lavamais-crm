@@ -12,7 +12,7 @@ flowchart LR
     A --> D[("PostgreSQL do CRM")]
     A --> O["Outbox"]
     K["CRM Worker"] --> O
-    K --> N["Notification Hub"]
+    K --> N["WhatsMiau ou Central de Notificacao"]
     K --> D
 ```
 
@@ -37,7 +37,7 @@ flowchart LR
 
 - processo .NET separado usando os mesmos modulos de aplicacao;
 - consome a outbox;
-- solicita notificacoes ao Notification Hub;
+- solicita notificacoes pela porta configurada;
 - reconcilia estados pendentes;
 - executara futuras importacoes e integracoes demoradas.
 
@@ -59,7 +59,7 @@ flowchart LR
 - [Configuracao por aplicacao e ambiente](configuracao/README.md)
 - [Identidade local](../10-decisoes/ADR-011-identidade-local-do-crm.md)
 - [Identity Hub — historico](integracoes/identity-hub.md)
-- [Notification Hub](integracoes/notification-hub.md)
+- [Notificacoes: WhatsMiau local e futura Central](integracoes/notificacoes.md)
 - [Hybex e Essence GO Industrial](integracoes/hybex-essence-go.md)
 
 ## Restricoes atuais

@@ -12,8 +12,8 @@ Produção permanece bloqueada enquanto qualquer item obrigatório estiver abert
 - [ ] RPO, RTO, retencao e responsaveis aprovados;
 - [ ] alertas e procedimento de incidente ativos;
 - [ ] politica de dados pessoais e retencao aprovada;
-- [ ] Notification Hub seguro, idempotente e homologado antes de qualquer envio;
-- [ ] templates, parametros, origem e credenciais de WhatsApp aprovados.
+- [ ] adaptador de notificacoes seguro, idempotente e homologado antes de qualquer envio;
+- [ ] instancia, modelos, parametros, webhook e credenciais do WhatsMiau aprovados;
 
 ## Implantacao
 
@@ -23,7 +23,7 @@ Produção permanece bloqueada enquanto qualquer item obrigatório estiver abert
 - [ ] aplicar scripts PostgreSQL numerados;
 - [ ] publicar API e validar saude;
 - [ ] publicar Web/BFF e validar login;
-- [ ] liberar Worker somente depois da API e do Hub;
+- [ ] liberar Worker somente depois da API e do canal WhatsApp;
 - [ ] iniciar Worker com uma replica;
 - [ ] acompanhar logs, outbox e estados sem expor dados pessoais.
 

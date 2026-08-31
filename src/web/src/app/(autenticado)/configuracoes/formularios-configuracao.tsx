@@ -1,56 +1,169 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CircleCheck, CircleHelp, CircleOff, MessageCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import type { OpcaoModeloDeMensagem } from "@/contratos/apresentacao";
-import { modelosPadraoLavaMais, type ModeloPadraoLavaMais } from "@/conteudo/modelos-padrao-lavamais";
-import { carregarCatalogoInicial, criarEtiqueta, criarModelo, criarServico, type ResultadoConfiguracao } from "./acoes";
+import { carregarCatalogoInicial, criarEtiqueta, criarServico } from "./acoes";
 
-type Item = { id: string; nome: string; categoria: string | null; valorReferencia: number | null; codigoExterno: string | null };
+type Item = {
+  id: string;
+  nome: string;
+  categoria: string | null;
+  valorReferencia: number | null;
+  situacao: "Ativo" | "Inativo";
+  codigoExterno: string | null;
+};
 type Etiqueta = { id: string; nome: string };
+type SecaoConfiguracao = "servicos" | "etiquetas";
+export type SituacaoCanalMensagens = "Disponivel" | "Indisponivel" | "NaoVerificado";
 
-export function FormulariosConfiguracao({ itens, etiquetas, modelos, secaoInicial = "servicos" }: { itens: Item[]; etiquetas: Etiqueta[]; modelos: OpcaoModeloDeMensagem[]; secaoInicial?: "servicos" | "mensagens" }) {
-  const [secao, setSecao] = useState<"servicos" | "etiquetas" | "mensagens">(secaoInicial);
-  return <div className="space-y-5"><div role="tablist" aria-label="Áreas de configuração" className="flex flex-wrap gap-2 rounded-xl border bg-secondary/60 p-2">{([['servicos','Serviços'],['etiquetas','Etiquetas'],['mensagens','Mensagens']] as const).map(([valor, rotulo]) => <Button key={valor} role="tab" aria-selected={secao === valor} variant={secao === valor ? "default" : "ghost"} onClick={() => setSecao(valor)}>{rotulo}</Button>)}</div><div role="tabpanel" className="mx-auto max-w-3xl">{secao === "servicos" ? <FormularioServico itens={itens} /> : secao === "etiquetas" ? <FormularioEtiqueta etiquetas={etiquetas} /> : <FormularioModelo modelos={modelos} />}</div></div>;
+const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+export function FormulariosConfiguracao({
+  itens,
+  etiquetas,
+  secaoInicial = "servicos",
+  podeCarregarCatalogoInicial,
+  situacaoCanalMensagens,
+}: {
+  itens: Item[];
+  etiquetas: Etiqueta[];
+  secaoInicial?: SecaoConfiguracao;
+  podeCarregarCatalogoInicial: boolean;
+  situacaoCanalMensagens: SituacaoCanalMensagens;
+}) {
+  const secao = secaoInicial;
+  return <div className="space-y-5">
+    <StatusCanalMensagens situacao={situacaoCanalMensagens} />
+    <nav aria-label="Áreas de configuração" className="flex gap-2 rounded-xl border bg-secondary/60 p-2">
+      <Button asChild variant={secao === "servicos" ? "default" : "ghost"} className="min-h-11">
+        <Link href="/configuracoes" aria-current={secao === "servicos" ? "page" : undefined}>Catálogo</Link>
+      </Button>
+      <Button asChild variant={secao === "etiquetas" ? "default" : "ghost"} className="min-h-11">
+        <Link href="/configuracoes?secao=etiquetas" aria-current={secao === "etiquetas" ? "page" : undefined}>Etiquetas</Link>
+      </Button>
+    </nav>
+    <div className="mx-auto max-w-4xl">{secao === "servicos"
+      ? <FormularioServico itens={itens} podeCarregarCatalogoInicial={podeCarregarCatalogoInicial} />
+      : <FormularioEtiqueta etiquetas={etiquetas} />}
+    </div>
+  </div>;
 }
 
-function FormularioServico({ itens }: { itens: Item[] }) {
-  const referencia = useRef<HTMLFormElement>(null); const [mensagem, setMensagem] = useState<string | null>(null); const [resumoCarga, setResumoCarga] = useState<string | null>(null); const [pendente, iniciar] = useTransition();
-  function enviar(dados: FormData) { iniciar(async () => concluir(await criarServico({ nome: String(dados.get("nome") ?? ""), categoria: String(dados.get("categoria") ?? ""), valorReferencia: String(dados.get("valorReferencia") ?? ""), codigoExterno: String(dados.get("codigoExterno") ?? "") }), referencia.current, setMensagem)); }
-  function carregar() { iniciar(async () => { const resultado = await carregarCatalogoInicial(); if (resultado.sucesso) { setMensagem(null); setResumoCarga(resultado.resumo ?? "Catálogo inicial conferido."); } else { setResumoCarga(null); setMensagem(resultado.mensagem); } }); }
-  return <Card><CardHeader><CardTitle>Serviços</CardTitle><CardDescription>Itens oferecidos nas ações comerciais.</CardDescription></CardHeader><CardContent className="space-y-5"><section className="rounded-lg border bg-secondary/30 p-4"><h3 className="font-medium">Catálogo da lavanderia</h3><p className="mt-1 text-sm text-muted-foreground">Cria artigos, serviços aplicáveis e preços iniciais sem duplicar registros existentes.</p><Button type="button" variant="outline" className="mt-3" disabled={pendente} onClick={carregar}>{pendente ? "Carregando..." : "Carregar catálogo inicial"}</Button>{resumoCarga ? <Alert className="mt-3"><AlertDescription>{resumoCarga}</AlertDescription></Alert> : null}</section><form ref={referencia} action={enviar} className="space-y-3"><Campo id="servico-nome" rotulo="Nome"><Input id="servico-nome" name="nome" required /></Campo><Campo id="servico-categoria" rotulo="Categoria"><Input id="servico-categoria" name="categoria" /></Campo><div className="grid grid-cols-2 gap-3"><Campo id="servico-valor" rotulo="Valor"><Input id="servico-valor" name="valorReferencia" inputMode="decimal" /></Campo><Campo id="servico-codigo" rotulo="Código externo"><Input id="servico-codigo" name="codigoExterno" /></Campo></div><Mensagem mensagem={mensagem} /><Button type="submit" disabled={pendente}>{pendente ? "Salvando..." : "Adicionar serviço"}</Button></form><ListaVaziaOuItens vazio="Nenhum serviço cadastrado." itens={itens.map((item) => <li key={item.id} className="flex justify-between gap-3"><span>{item.nome}</span><Badge variant="secondary">{item.categoria ?? "Sem categoria"}</Badge></li>)} /></CardContent></Card>;
+function StatusCanalMensagens({ situacao }: { situacao: SituacaoCanalMensagens }) {
+  const configuracao = situacao === "Disponivel"
+    ? { rotulo: "Disponível", Icone: CircleCheck, classe: "text-emerald-700" }
+    : situacao === "Indisponivel"
+      ? { rotulo: "Indisponível", Icone: CircleOff, classe: "text-muted-foreground" }
+      : { rotulo: "Não verificado", Icone: CircleHelp, classe: "text-muted-foreground" };
+  return <section aria-labelledby="titulo-status-mensagens" className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4">
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><MessageCircle className="size-5" aria-hidden="true" /></span>
+      <div><h2 id="titulo-status-mensagens" className="font-medium">Canal de mensagens</h2><p className="text-sm text-muted-foreground">Envio de mensagens pelo WhatsApp</p></div>
+    </div>
+    <Badge variant="outline" className={configuracao.classe}><configuracao.Icone aria-hidden="true" />{configuracao.rotulo}</Badge>
+  </section>;
+}
+
+function FormularioServico({ itens, podeCarregarCatalogoInicial }: { itens: Item[]; podeCarregarCatalogoInicial: boolean }) {
+  const referencia = useRef<HTMLFormElement>(null);
+  const [retorno, setRetorno] = useState<{ sucesso: boolean; mensagem: string } | null>(null);
+  const [resumoCarga, setResumoCarga] = useState<string | null>(null);
+  const [pendente, iniciar] = useTransition();
+
+  function enviar(dados: FormData) {
+    iniciar(async () => {
+      const resultado = await criarServico({
+        nome: String(dados.get("nome") ?? ""),
+        categoria: String(dados.get("categoria") ?? ""),
+        valorReferencia: String(dados.get("valorReferencia") ?? ""),
+        codigoExterno: String(dados.get("codigoExterno") ?? ""),
+      });
+      if (resultado.sucesso) {
+        referencia.current?.reset();
+        setRetorno({ sucesso: true, mensagem: "Serviço adicionado ao catálogo das ações comerciais." });
+      } else setRetorno({ sucesso: false, mensagem: resultado.mensagem });
+    });
+  }
+
+  function carregar() {
+    iniciar(async () => {
+      const resultado = await carregarCatalogoInicial();
+      if (resultado.sucesso) {
+        setRetorno(null);
+        setResumoCarga(resultado.resumo ?? "Catálogo inicial conferido.");
+      } else {
+        setResumoCarga(null);
+        setRetorno({ sucesso: false, mensagem: resultado.mensagem });
+      }
+    });
+  }
+
+  return <Card>
+    <CardHeader><CardTitle>Itens das ações comerciais</CardTitle><CardDescription>Serviços que podem ser vinculados à criação de uma ação.</CardDescription></CardHeader>
+    <CardContent className="space-y-5">
+      <section aria-labelledby="titulo-servicos-cadastrados">
+        <div className="mb-3 flex items-center justify-between gap-3"><h3 id="titulo-servicos-cadastrados" className="font-medium">Serviços cadastrados</h3><Badge variant="secondary">{itens.length}</Badge></div>
+        {itens.length === 0 ? <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Nenhum serviço cadastrado.</p> : <ul className="divide-y rounded-lg border">{itens.map((item) => <li key={item.id} className="flex flex-col justify-between gap-2 p-3 sm:flex-row sm:items-center">
+          <div><span className="font-medium">{item.nome}</span><span className="mt-1 block text-xs text-muted-foreground">{item.categoria ?? "Sem categoria"}{item.valorReferencia !== null ? ` · ${moeda.format(item.valorReferencia)}` : " · Sem valor de referência"}</span></div>
+          <Badge variant={item.situacao === "Ativo" ? "secondary" : "outline"}>{item.situacao}</Badge>
+        </li>)}</ul>}
+      </section>
+      <form ref={referencia} action={enviar} className="space-y-4 border-t pt-5">
+        <h3 className="font-medium">Adicionar serviço</h3>
+        <div className="space-y-2"><Label htmlFor="servico-nome">Nome</Label><Input id="servico-nome" name="nome" required /></div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2"><Label htmlFor="servico-categoria">Categoria</Label><Input id="servico-categoria" name="categoria" /></div>
+          <div className="space-y-2"><Label htmlFor="servico-valor">Valor de referência (R$)</Label><Input id="servico-valor" name="valorReferencia" inputMode="decimal" /></div>
+        </div>
+        <details className="rounded-lg border p-3"><summary className="cursor-pointer text-sm font-medium">Dados de integração</summary><div className="mt-3 space-y-2"><Label htmlFor="servico-codigo">Código externo</Label><Input id="servico-codigo" name="codigoExterno" /></div></details>
+        {retorno ? <Alert variant={retorno.sucesso ? "default" : "destructive"}><AlertTitle>{retorno.sucesso ? "Serviço adicionado" : "Não foi possível salvar"}</AlertTitle><AlertDescription>{retorno.mensagem}</AlertDescription></Alert> : null}
+        <Button type="submit" disabled={pendente}>{pendente ? "Salvando..." : "Adicionar serviço"}</Button>
+      </form>
+      {podeCarregarCatalogoInicial ? <section className="border-t pt-5" aria-labelledby="titulo-catalogo-movimentacoes">
+        <h3 id="titulo-catalogo-movimentacoes" className="font-medium">Catálogo das movimentações</h3>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">Cria artigos, serviços aplicáveis e preços iniciais sem duplicar registros existentes.</p>
+        <Button type="button" variant="outline" className="mt-3" disabled={pendente} onClick={carregar}>{pendente ? "Carregando..." : "Carregar catálogo inicial"}</Button>
+        {resumoCarga ? <Alert className="mt-3"><AlertTitle>Catálogo conferido</AlertTitle><AlertDescription>{resumoCarga}</AlertDescription></Alert> : null}
+      </section> : null}
+    </CardContent>
+  </Card>;
 }
 
 function FormularioEtiqueta({ etiquetas }: { etiquetas: Etiqueta[] }) {
-  const referencia = useRef<HTMLFormElement>(null); const [mensagem, setMensagem] = useState<string | null>(null); const [pendente, iniciar] = useTransition();
-  function enviar(dados: FormData) { iniciar(async () => concluir(await criarEtiqueta({ nome: String(dados.get("nome") ?? "") }), referencia.current, setMensagem)); }
-  return <Card><CardHeader><CardTitle>Etiquetas</CardTitle><CardDescription>Marcadores declarados para organizar clientes.</CardDescription></CardHeader><CardContent className="space-y-5"><form ref={referencia} action={enviar} className="space-y-3"><Campo id="etiqueta-nome" rotulo="Nome"><Input id="etiqueta-nome" name="nome" required /></Campo><Mensagem mensagem={mensagem} /><Button type="submit" disabled={pendente}>{pendente ? "Salvando..." : "Adicionar etiqueta"}</Button></form><ListaVaziaOuItens vazio="Nenhuma etiqueta cadastrada." itens={etiquetas.map((item) => <li key={item.id}><Badge variant="secondary">{item.nome}</Badge></li>)} /></CardContent></Card>;
-}
+  const referencia = useRef<HTMLFormElement>(null);
+  const [retorno, setRetorno] = useState<{ sucesso: boolean; mensagem: string } | null>(null);
+  const [pendente, iniciar] = useTransition();
 
-function FormularioModelo({ modelos }: { modelos: OpcaoModeloDeMensagem[] }) {
-  const referencia = useRef<HTMLFormElement>(null); const [mensagem, setMensagem] = useState<string | null>(null); const [pendente, iniciar] = useTransition();
-  function usarModelo(modelo: ModeloPadraoLavaMais) {
-    const formulario = referencia.current;
-    if (!formulario) return;
-    const nome = formulario.elements.namedItem("nome");
-    const conteudo = formulario.elements.namedItem("conteudoPreVisualizacao");
-    const chaveTemplate = formulario.elements.namedItem("chaveTemplateNotificacao");
-    if (nome instanceof HTMLInputElement) nome.value = modelo.nome;
-    if (conteudo instanceof HTMLTextAreaElement) conteudo.value = modelo.conteudoPreVisualizacao;
-    if (chaveTemplate instanceof HTMLInputElement) chaveTemplate.value = modelo.chaveTemplateNotificacao;
-    if (nome instanceof HTMLInputElement) nome.focus();
+  function enviar(dados: FormData) {
+    iniciar(async () => {
+      const resultado = await criarEtiqueta({ nome: String(dados.get("nome") ?? "") });
+      if (resultado.sucesso) {
+        referencia.current?.reset();
+        setRetorno({ sucesso: true, mensagem: "Etiqueta adicionada e disponível para organizar clientes." });
+      } else setRetorno({ sucesso: false, mensagem: resultado.mensagem });
+    });
   }
-  function enviar(dados: FormData) { iniciar(async () => concluir(await criarModelo({ nome: String(dados.get("nome") ?? ""), conteudoPreVisualizacao: String(dados.get("conteudoPreVisualizacao") ?? ""), chaveTemplateNotificacao: String(dados.get("chaveTemplateNotificacao") ?? "") }), referencia.current, setMensagem)); }
-  return <Card><CardHeader><CardTitle>Mensagens</CardTitle><CardDescription>Escolha uma sugestão LavaMais e confira o texto antes de disponibilizá-la.</CardDescription></CardHeader><CardContent className="space-y-5"><section aria-labelledby="titulo-modelos-padrao" className="space-y-3"><div><h3 id="titulo-modelos-padrao" className="font-medium">Mensagens prontas da LavaMais</h3><p className="text-sm text-muted-foreground">Clique em uma opção para preencher os dados.</p></div><div className="grid gap-2 sm:grid-cols-2">{modelosPadraoLavaMais.map((modelo) => <button key={modelo.id} type="button" onClick={() => usarModelo(modelo)} className="min-h-11 rounded-lg border bg-card px-3 py-3 text-left transition-colors hover:border-primary hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"><span className="block text-sm font-medium">{modelo.nome}</span><span className="block text-xs text-muted-foreground">{modelo.objetivo}</span></button>)}</div></section><form ref={referencia} action={enviar} className="space-y-3 border-t pt-5"><Campo id="modelo-nome" rotulo="Nome da mensagem"><Input id="modelo-nome" name="nome" required /></Campo><Campo id="modelo-conteudo" rotulo="Mensagem que será conferida"><Textarea id="modelo-conteudo" name="conteudoPreVisualizacao" className="min-h-32" required /></Campo><details className="rounded-lg border p-3"><summary className="cursor-pointer text-sm font-medium">Configuração técnica</summary><div className="mt-3"><Campo id="modelo-template" rotulo="Chave na Central de Notificação"><Input id="modelo-template" name="chaveTemplateNotificacao" required /></Campo></div></details><p className="text-xs text-muted-foreground">Confirme que a mensagem correspondente está aprovada na Central de Notificação.</p><Mensagem mensagem={mensagem} /><Button type="submit" disabled={pendente}>{pendente ? "Disponibilizando..." : "Disponibilizar mensagem"}</Button></form><ListaVaziaOuItens vazio="Nenhuma mensagem disponível. Escolha uma sugestão acima para começar." itens={modelos.map((item) => <li key={item.versaoId}><span>{item.nome}</span><Badge variant="secondary" className="ml-2">Disponível</Badge></li>)} /></CardContent></Card>;
-}
 
-function concluir(resultado: ResultadoConfiguracao, formulario: HTMLFormElement | null, definirMensagem: (mensagem: string | null) => void) { if (resultado.sucesso) { formulario?.reset(); definirMensagem(null); } else definirMensagem(resultado.mensagem); }
-function Campo({ id, rotulo, children }: { id: string; rotulo: string; children: React.ReactNode }) { return <div className="space-y-2"><Label htmlFor={id}>{rotulo}</Label>{children}</div>; }
-function Mensagem({ mensagem }: { mensagem: string | null }) { return mensagem ? <Alert variant="destructive"><AlertDescription>{mensagem}</AlertDescription></Alert> : null; }
-function ListaVaziaOuItens({ vazio, itens }: { vazio: string; itens: React.ReactNode[] }) { return itens.length ? <ul className="space-y-2 border-t pt-4 text-sm">{itens}</ul> : <p className="border-t pt-4 text-sm text-muted-foreground">{vazio}</p>; }
+  return <Card>
+    <CardHeader><CardTitle>Etiquetas de clientes</CardTitle><CardDescription>Marcadores declarados para organizar e selecionar clientes.</CardDescription></CardHeader>
+    <CardContent className="space-y-5">
+      <section aria-labelledby="titulo-etiquetas-cadastradas">
+        <div className="mb-3 flex items-center justify-between gap-3"><h3 id="titulo-etiquetas-cadastradas" className="font-medium">Etiquetas cadastradas</h3><Badge variant="secondary">{etiquetas.length}</Badge></div>
+        {etiquetas.length === 0 ? <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">Nenhuma etiqueta cadastrada.</p> : <ul className="flex flex-wrap gap-2 rounded-lg border p-3">{etiquetas.map((item) => <li key={item.id}><Badge variant="secondary">{item.nome}</Badge></li>)}</ul>}
+      </section>
+      <form ref={referencia} action={enviar} className="space-y-4 border-t pt-5">
+        <h3 className="font-medium">Adicionar etiqueta</h3>
+        <div className="space-y-2"><Label htmlFor="etiqueta-nome">Nome</Label><Input id="etiqueta-nome" name="nome" required /></div>
+        {retorno ? <Alert variant={retorno.sucesso ? "default" : "destructive"}><AlertTitle>{retorno.sucesso ? "Etiqueta adicionada" : "Não foi possível salvar"}</AlertTitle><AlertDescription>{retorno.mensagem}</AlertDescription></Alert> : null}
+        <Button type="submit" disabled={pendente}>{pendente ? "Salvando..." : "Adicionar etiqueta"}</Button>
+      </form>
+    </CardContent>
+  </Card>;
+}

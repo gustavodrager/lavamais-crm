@@ -27,7 +27,7 @@ Modelo de mensagem
         ↓
 Revisao dos destinatarios
         ↓
-Envio pelo Notification Hub
+Envio pelo canal de notificacoes configurado
         ↓
 Entrega e resultado comercial
 ```

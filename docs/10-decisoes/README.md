@@ -21,6 +21,10 @@ Esta pasta registra decisoes arquiteturais e de produto que orientam todas as co
 | [ADR-013](ADR-013-roteiro-diario-operacional.md) | Roteiro diario simples para coletas e entregas |
 | [ADR-014](ADR-014-lista-assistida-de-clientes.md) | Lista assistida de ate dez clientes e envio individual em interface de conversa |
 | [ADR-015](ADR-015-catalogo-de-artigos-e-servicos.md) | Catalogo relacional e movimentacao comercial com uma ou mais linhas |
+| [ADR-016](ADR-016-carga-historica-controlada-do-essence.md) | Carga historica controlada de clientes, tickets e referencias agregadas do Essence |
+| [ADR-017](ADR-017-notificacoes-locais-com-whatsmiau.md) | Envio local pelo WhatsMiau atras de porta compativel com a futura Central de Notificacao |
+| [ADR-018](ADR-018-usuarios-iniciais-por-perfil.md) | Usuarios iniciais por perfil para homologacao |
+| [ADR-019](ADR-019-composicao-sintetica-de-produtos-em-homologacao.md) | Composicao sintetica e reversivel de produtos em tickets de homologacao |
 
 ## Regra
 

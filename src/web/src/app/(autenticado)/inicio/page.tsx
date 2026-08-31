@@ -2,10 +2,12 @@ import type { DetalheAcaoComercial } from "@/contratos/apresentacao";
 import { redirect } from "next/navigation";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
+import { papelDaVisao } from "@/lib/sessao-apresentacao";
 import {
   dataLocalAmanha,
   dataLocalAtual,
   rotuloMesAtual,
+  resumirAcoesOperacionais,
   resumirAcoesNoPainel,
   resumirMovimentacoesDoDia,
 } from "@/lib/painel-inicial";
@@ -19,16 +21,23 @@ export default async function Inicio() {
   const agora = new Date();
   const dataHoje = dataLocalAtual(agora);
   const dataAmanha = dataLocalAmanha(agora);
+  const papelVisualizado = papelDaVisao(sessao);
 
-  if (sessao?.papel === "Operador") {
-    const [roteiro, movimentacoes] = await Promise.all([
-      api.obterRoteiro(dataHoje),
+  if (papelVisualizado === "Operador") {
+    const [resultado, movimentacoes, roteiro, roteiroAmanha] = await Promise.all([
+      api.listarAcoes(),
       api.listarMovimentacoes(undefined, 100),
+      api.obterRoteiro(dataHoje),
+      api.obterRoteiro(dataAmanha),
     ]);
 
     return <PainelOperador
-      roteiro={roteiro}
+      resumoAcoes={resumirAcoesOperacionais(resultado.itens)}
       resumoMovimentacoes={resumirMovimentacoesDoDia(movimentacoes, agora)}
+      roteiro={roteiro}
+      roteiroAmanha={roteiroAmanha}
+      dataHoje={dataHoje}
+      dataAmanha={dataAmanha}
     />;
   }
 

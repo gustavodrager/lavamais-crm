@@ -70,6 +70,27 @@ public sealed class Cliente
         DataAtualizacao = agora;
     }
 
+    public void AtualizarDadosBasicosDaOrigem(
+        string nome,
+        string whatsapp,
+        string codigoExterno,
+        DateTimeOffset? dataCadastroOrigem,
+        DateTimeOffset agora)
+    {
+        DefinirNome(nome);
+        var contatoWhatsapp = Contatos.SingleOrDefault(x => x.Tipo == TipoDeContato.Whatsapp);
+        if (contatoWhatsapp is null)
+            Contatos.Add(ContatoDoCliente.CriarWhatsapp(TenantId, Id, whatsapp));
+        else
+            contatoWhatsapp.AtualizarWhatsapp(whatsapp);
+
+        CodigoExterno = Limitar(codigoExterno, 100, "codigo_externo_invalido")
+            ?? throw new ExcecaoDeRegraDeNegocio("codigo_externo_obrigatorio", "O codigo externo e obrigatorio para a carga controlada.");
+        if (dataCadastroOrigem is not null)
+            DataCadastroOrigem = dataCadastroOrigem.Value.ToUniversalTime();
+        DataAtualizacao = agora;
+    }
+
     public void Inativar(DateTimeOffset agora)
     {
         Situacao = SituacaoDoCliente.Inativo;

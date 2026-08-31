@@ -5,6 +5,7 @@ import { z } from "zod";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
+import { papelDaVisao } from "@/lib/sessao-apresentacao";
 
 const esquema = z.object({
   nome: z.string().trim().min(3).max(160),
@@ -22,6 +23,7 @@ export type FalhaCriarRascunho = {
 export async function criarRascunho(entrada: EntradaCriarRascunho): Promise<FalhaCriarRascunho> {
   const sessao = await obterPortaSessao().obterSessao();
   if (!sessao) redirect("/entrar?retorno=/acoes-comerciais/nova");
+  if (papelDaVisao(sessao) === "Operador") return { sucesso: false, mensagem: "Seu perfil acompanha e executa mensagens, mas não cria ações comerciais." };
 
   const validacao = esquema.safeParse(entrada);
   if (!validacao.success) {
