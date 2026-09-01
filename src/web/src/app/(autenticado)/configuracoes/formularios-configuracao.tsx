@@ -127,7 +127,7 @@ function FormularioServico({ itens, podeCarregarCatalogoInicial }: { itens: Item
         <Button type="submit" disabled={pendente}>{pendente ? "Salvando..." : "Adicionar serviço"}</Button>
       </form>
       {podeCarregarCatalogoInicial ? <section className="border-t pt-5" aria-labelledby="titulo-catalogo-movimentacoes">
-        <h3 id="titulo-catalogo-movimentacoes" className="font-medium">Catálogo das movimentações</h3>
+        <h3 id="titulo-catalogo-movimentacoes" className="font-medium">Catálogo de atendimentos</h3>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">Cria artigos, serviços aplicáveis e preços iniciais sem duplicar registros existentes.</p>
         <Button type="button" variant="outline" className="mt-3" disabled={pendente} onClick={carregar}>{pendente ? "Carregando..." : "Carregar catálogo inicial"}</Button>
         {resumoCarga ? <Alert className="mt-3"><AlertTitle>Catálogo conferido</AlertTitle><AlertDescription>{resumoCarga}</AlertDescription></Alert> : null}

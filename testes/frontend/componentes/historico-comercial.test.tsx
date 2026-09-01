@@ -10,16 +10,16 @@ const base: ResumoMovimentacaoComercial = {
 };
 
 describe("HistoricoComercial", () => {
-  it("calcula os indicadores somente com movimentações registradas", () => {
+  it("calcula os indicadores somente com atendimentos registrados", () => {
     const movimentacoes: ResumoMovimentacaoComercial[] = [
       base,
       { ...base, id: "6d3d0d64-a111-4cff-8db8-111111111122", valorTotal: 50, dataMovimentacao: "2026-08-25T12:00:00Z" },
       { ...base, id: "6d3d0d64-a111-4cff-8db8-111111111123", valorTotal: 900, situacao: "Cancelada" },
     ];
-    render(<HistoricoComercial movimentacoes={movimentacoes} podeCancelar />);
+    render(<HistoricoComercial movimentacoes={movimentacoes} podeCancelar={false} />);
     expect(screen.getByText("Total informado").parentElement).toHaveTextContent("150,00");
-    expect(screen.getByText("Movimentações").parentElement).toHaveTextContent("2");
+    expect(screen.getByText("Atendimentos").parentElement).toHaveTextContent("2");
     expect(screen.getByText("Média informada").parentElement).toHaveTextContent("75,00");
-    expect(within(screen.getByRole("table")).getAllByText("Cancelada")).toHaveLength(1);
+    expect(within(screen.getByRole("table")).getAllByText("Cancelado")).toHaveLength(1);
   });
 });

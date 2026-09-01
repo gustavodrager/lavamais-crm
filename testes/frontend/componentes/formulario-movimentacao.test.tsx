@@ -12,37 +12,51 @@ const ofertas = [
 ];
 
 describe("FormularioMovimentacao", () => {
+  beforeEach(() => window.sessionStorage.clear());
+
   it("permite montar uma visita com várias linhas e calcula o total", async () => {
     const usuario = userEvent.setup();
     render(<FormularioMovimentacao clienteId="7d3d0d64-a111-4cff-8db8-111111111112" nomeCliente="Ana" ofertas={ofertas} agoraLocal="2026-08-25T17:00" />);
-    expect(screen.getByRole("link", { name: "Abrir detalhes das movimentações de Ana" })).toHaveAttribute("href", "/clientes/7d3d0d64-a111-4cff-8db8-111111111112");
+    expect(screen.getByRole("link", { name: "Abrir histórico de atendimentos de Ana" })).toHaveAttribute("href", "/clientes/7d3d0d64-a111-4cff-8db8-111111111112");
 
-    await usuario.selectOptions(screen.getByLabelText("Artigo e serviço"), ofertas[0].id);
+    await usuario.click(screen.getByRole("button", { name: /Selecionar Camisa/ }));
     await usuario.clear(screen.getByLabelText("Quantidade"));
     await usuario.type(screen.getByLabelText("Quantidade"), "2");
     expect(screen.getAllByText("R$ 32,40").length).toBeGreaterThanOrEqual(2);
 
     await usuario.click(screen.getByRole("button", { name: "Adicionar item" }));
-    const seletores = screen.getAllByLabelText("Artigo e serviço");
-    await usuario.selectOptions(seletores[1], ofertas[1].id);
+    expect(screen.getAllByRole("textbox", { name: "Localizar item ou serviço" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /Selecionar Camisa/ })).not.toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: /Selecionar Terno/ }));
     expect(screen.getByText("R$ 111,60")).toBeVisible();
-    expect(screen.getAllByRole("option", { name: /Camisa/ })[1]).toBeDisabled();
 
-    await usuario.click(screen.getByRole("button", { name: "Remover linha 2" }));
-    expect(screen.getAllByLabelText("Artigo e serviço")).toHaveLength(1);
+    await usuario.click(screen.getByRole("button", { name: "Remover item 2" }));
+    expect(screen.queryByText("Terno")).not.toBeInTheDocument();
   });
 
   it("exige confirmação explícita antes de registrar", async () => {
     const usuario = userEvent.setup();
     render(<FormularioMovimentacao clienteId="7d3d0d64-a111-4cff-8db8-111111111112" nomeCliente="Ana" ofertas={ofertas} agoraLocal="2026-08-25T17:00" />);
 
-    await usuario.selectOptions(screen.getByLabelText("Artigo e serviço"), ofertas[0].id);
-    await usuario.click(screen.getByRole("button", { name: "Registrar atendimento" }));
+    await usuario.click(screen.getByRole("button", { name: /Selecionar Camisa/ }));
+    await usuario.click(screen.getByRole("button", { name: "Revisar atendimento" }));
 
-    expect(screen.getByRole("alertdialog")).toHaveTextContent("Confirmar este atendimento?");
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("Confirmar atendimento?");
     expect(screen.getByRole("alertdialog")).toHaveTextContent("Ana");
     expect(screen.getByRole("alertdialog")).toHaveTextContent("R$ 16,20 por unidade");
     await usuario.click(screen.getByRole("button", { name: "Voltar e revisar" }));
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
+  it("não permite revisar quando o preço combinado é inválido", async () => {
+    const usuario = userEvent.setup();
+    render(<FormularioMovimentacao clienteId="7d3d0d64-a111-4cff-8db8-111111111112" nomeCliente="Ana" ofertas={ofertas} agoraLocal="2026-08-25T17:00" />);
+
+    await usuario.click(screen.getByRole("button", { name: /Selecionar Camisa/ }));
+    await usuario.click(screen.getByRole("button", { name: "Alterar preço" }));
+    await usuario.type(screen.getByLabelText("Preço combinado"), "valor inválido");
+
+    expect(screen.getByText("Informe um preço válido.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Revisar atendimento" })).toBeDisabled();
   });
 });

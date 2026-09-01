@@ -12,7 +12,7 @@ const administradores: Array<NonNullable<SessaoApresentacao["papel"]>> = ["Admin
 export const itensNavegacao = [
   { href: "/inicio", rotulo: "Início", icone: House, papeis: todosPapeis },
   { href: "/clientes", rotulo: "Clientes", icone: Users, papeis: todosPapeis },
-  { href: "/movimentacoes", rotulo: "Movimentações", rotuloOperador: "Atendimentos", icone: ReceiptText, papeis: todosPapeis },
+  { href: "/movimentacoes", rotulo: "Atendimentos", icone: ReceiptText, papeis: todosPapeis },
   { href: "/acoes-comerciais", rotulo: "Ações Comerciais", rotuloOperador: "Mensagens", icone: Megaphone, papeis: todosPapeis },
   { href: "/roteiros", hrefOperador: "/meu-roteiro", rotulo: "Roteiros", rotuloOperador: "Roteiro", icone: Route, papeis: todosPapeis },
   { href: "/importacao", rotulo: "Importação", icone: Upload, papeis: administradores },

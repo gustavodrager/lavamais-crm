@@ -66,7 +66,7 @@ export function PainelGerencial({ acoes, resumo, roteiro, roteiroAmanha, resumoM
     </Card>
 
     <section className="mt-6" aria-labelledby="titulo-operacao-painel">
-      <CabecalhoSecao id="titulo-operacao-painel" titulo="Operação de hoje" descricao="Roteiro e movimentações comerciais do dia." complemento="Hoje" />
+      <CabecalhoSecao id="titulo-operacao-painel" titulo="Operação de hoje" descricao="Roteiro e atendimentos do dia." complemento="Hoje" />
       <div className="grid items-stretch gap-5 lg:grid-cols-2">
         <ResumoRoteiroGerencial roteiro={roteiro} roteiroAmanha={roteiroAmanha} dataHoje={dataHoje} dataAmanha={dataAmanha} />
         <ResumoMovimentacoesGerencial resumo={resumoMovimentacoes} />
@@ -146,14 +146,14 @@ function ResumoMovimentacoesGerencial({ resumo }: { resumo: ResumoMovimentacoesD
         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><ReceiptText className="size-4" aria-hidden="true" /></span>
         <Badge variant="secondary">{plural(resumo.quantidadeRegistradas, "registro", "registros")}</Badge>
       </div>
-      <CardTitle><h3>Movimentações de hoje</h3></CardTitle>
+      <CardTitle><h3>Atendimentos de hoje</h3></CardTitle>
       <CardDescription>Visitas comerciais registradas pela equipe.</CardDescription>
     </CardHeader>
     <CardContent className="space-y-4">
       <dl className="grid grid-cols-3 gap-3"><div><dt className="text-xs text-muted-foreground">Registros</dt><dd className="mt-1 text-base font-semibold tabular-nums text-[var(--marca-azul-profundo)]">{resumo.quantidadeRegistradas}</dd></div><div><dt className="text-xs text-muted-foreground">Clientes</dt><dd className="mt-1 text-base font-semibold tabular-nums text-[var(--marca-azul-profundo)]">{resumo.clientesUnicos}</dd></div><div><dt className="text-xs text-muted-foreground">Valor informado</dt><dd className="mt-1 text-base font-semibold tabular-nums text-[var(--marca-azul-profundo)]">{moeda.format(resumo.valorInformado)}</dd></div></dl>
-      {ultimoRegistro ? <div className="border-t pt-3"><p className="text-xs text-muted-foreground">Último registro</p><div className="mt-1 flex items-center justify-between gap-3 text-sm"><strong className="truncate">{ultimoRegistro.nomeCliente}</strong><span className="shrink-0 tabular-nums">{moeda.format(ultimoRegistro.valorTotal)}</span></div></div> : <p className="border-t pt-3 text-xs text-muted-foreground">Nenhuma movimentação válida foi registrada hoje.</p>}
+      {ultimoRegistro ? <div className="border-t pt-3"><p className="text-xs text-muted-foreground">Último atendimento</p><div className="mt-1 flex items-center justify-between gap-3 text-sm"><strong className="truncate">{ultimoRegistro.nomeCliente}</strong><span className="shrink-0 tabular-nums">{moeda.format(ultimoRegistro.valorTotal)}</span></div></div> : <p className="border-t pt-3 text-xs text-muted-foreground">Nenhum atendimento válido foi registrado hoje.</p>}
       {resumo.quantidadeCanceladas > 0 ? <p className="flex items-center gap-2 rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive"><TriangleAlert className="size-3.5 shrink-0" />{plural(resumo.quantidadeCanceladas, "registro cancelado", "registros cancelados")}</p> : null}
-      <Button asChild variant="outline" className="w-full justify-between"><Link href="/movimentacoes">Ver movimentações<ArrowRight /></Link></Button>
+      <Button asChild variant="outline" className="w-full justify-between"><Link href="/movimentacoes">Ver atendimentos<ArrowRight /></Link></Button>
     </CardContent>
   </Card>;
 }
