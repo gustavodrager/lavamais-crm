@@ -36,9 +36,20 @@ A implantacao anterior revelava `X-Powered-By` e nao devolvia a politica minima 
 - depois da reimplantacao, a superficie publica passou novamente sem falhas e o indicador de primeiro acesso retornou `disponivel: true`;
 - WhatsApp e Worker permaneceram desligados durante toda a configuracao.
 
+Em seguida, os tres perfis realizaram o primeiro acesso. O encerramento da ativacao foi confirmado sem consultar credenciais: o indicador publico passou a retornar `disponivel: false` e as chamadas autenticadas de Acoes Comerciais e Movimentacoes Comerciais retornaram `200`.
+
+## Destinatarios autorizados para o ensaio de WhatsApp
+
+- Gustavo Drager, com telefone autorizado terminado em `2540`;
+- Vanessa Drager, autorizada para o mesmo ensaio, com telefone ainda pendente de configuracao;
+- a autorizacao foi informada pelo responsavel do projeto em 2 de setembro de 2026 e se limita a homologacao;
+- nenhum numero completo foi registrado nesta evidencia;
+- nenhum envio foi realizado: API e Worker ainda nao possuem a instancia, a chave e o segredo de webhook do WhatsMiau.
+
 ## Proximas validacoes
 
-1. cada usuario autorizado definir sua propria senha no primeiro acesso;
-2. executar os fluxos autenticados sem usar dados pessoais nao autorizados;
-3. homologar WhatsMiau e Worker somente com destinatario autorizado;
-4. ensaiar backup e restauracao isolada no provedor.
+1. executar os fluxos autenticados usando apenas dados controlados;
+2. receber o telefone autorizado da Vanessa e cadastrar os dois clientes de homologacao;
+3. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
+4. homologar envio individual, entrega, leitura e idempotencia somente com os destinatarios autorizados;
+5. ensaiar backup e restauracao isolada no provedor.
