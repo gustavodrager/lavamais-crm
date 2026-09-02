@@ -40,7 +40,7 @@ public sealed class GerenciadorDeRoteiros(
     {
         await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         var roteiro = await Carregar(roteiroId, ct); ValidarVersao(roteiro, versaoEsperada);
-        var agora = relogio.GetUtcNow(); roteiro.AlterarMotorista(motorista, agora); await banco.SaveChangesAsync(ct);
+        var agora = relogio.GetUtcNow(); roteiro.AlterarMotorista(motorista, agora); await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("RoteiroMotoristaAlterado", "RoteiroDiario", roteiro.Id, new { motorista }, transacao, agora, ct); await transacao.CommitAsync(ct);
     }
 
@@ -49,7 +49,7 @@ public sealed class GerenciadorDeRoteiros(
         await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         var roteiro = await Carregar(roteiroId, ct); ValidarVersao(roteiro, versaoEsperada);
         if (roteiro.Situacao != SituacaoDoRoteiro.EmPreparacao || roteiro.Paradas.Any(x => x.Situacao != SituacaoDaParada.Pendente)) throw new ExcecaoDeConflito("roteiro_em_uso", "Somente um roteiro vazio ou em preparacao pode ser excluido.");
-        banco.Remove(roteiro); await banco.SaveChangesAsync(ct);
+        banco.Remove(roteiro); await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("RoteiroExcluido", "RoteiroDiario", roteiro.Id, new { roteiro.Data }, transacao, relogio.GetUtcNow(), ct); await transacao.CommitAsync(ct);
     }
 
@@ -61,7 +61,7 @@ public sealed class GerenciadorDeRoteiros(
         var cliente = await clientes.ObterAtivo(dados.ClienteId, ct) ?? throw new ExcecaoDeRegraDeNegocio("cliente_indisponivel", "Cliente nao encontrado ou sem endereco operacional.");
         var agora = relogio.GetUtcNow();
         var parada = roteiro.Adicionar(cliente.Id, cliente.Nome, cliente.Whatsapp, cliente.EnderecoCompleto, dados.Tipo, dados.Periodo, dados.Observacao, agora);
-        await banco.SaveChangesAsync(ct);
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("ParadaAdicionada", "ParadaDoRoteiro", parada.Id, new { roteiroId, parada.Tipo }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
     }
@@ -73,7 +73,7 @@ public sealed class GerenciadorDeRoteiros(
         ValidarVersao(roteiro, versaoEsperada);
         var agora = relogio.GetUtcNow();
         roteiro.Reordenar(paradas, agora);
-        await banco.SaveChangesAsync(ct);
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("RoteiroReordenado", "RoteiroDiario", roteiro.Id, new { quantidade = paradas.Count }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
     }
@@ -85,7 +85,7 @@ public sealed class GerenciadorDeRoteiros(
         ValidarVersao(roteiro, versaoEsperada);
         var agora = relogio.GetUtcNow();
         roteiro.AtualizarParada(paradaId, dados.Tipo, dados.Periodo, dados.Observacao, agora);
-        await banco.SaveChangesAsync(ct);
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("ParadaAtualizada", "ParadaDoRoteiro", paradaId, new { roteiroId }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
     }
@@ -96,7 +96,7 @@ public sealed class GerenciadorDeRoteiros(
         var roteiro = await Carregar(roteiroId, ct);
         ValidarVersao(roteiro, versaoEsperada);
         roteiro.RemoverParada(paradaId, relogio.GetUtcNow());
-        await banco.SaveChangesAsync(ct);
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("ParadaRemovida", "ParadaDoRoteiro", paradaId, new { roteiroId }, transacao, relogio.GetUtcNow(), ct);
         await transacao.CommitAsync(ct);
     }
@@ -108,7 +108,7 @@ public sealed class GerenciadorDeRoteiros(
         ValidarVersao(roteiro, versaoEsperada);
         var agora = relogio.GetUtcNow();
         roteiro.Publicar(agora);
-        await banco.SaveChangesAsync(ct);
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("RoteiroPublicado", "RoteiroDiario", roteiro.Id, new { quantidade = roteiro.Paradas.Count }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
     }
@@ -124,7 +124,7 @@ public sealed class GerenciadorDeRoteiros(
         ValidarVersao(roteiro, versaoEsperada);
         var agora = relogio.GetUtcNow();
         roteiro.Adiar(id, agora);
-        await banco.SaveChangesAsync(ct);
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria("ParadaAdiada", "ParadaDoRoteiro", id, new { roteiroId = roteiro.Id }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
     }
@@ -138,8 +138,7 @@ public sealed class GerenciadorDeRoteiros(
         var agora = relogio.GetUtcNow();
         acao(roteiro.Paradas.Single(x => x.Id == paradaId), agora);
         roteiro.AtualizarSituacao(agora);
-        try { await banco.SaveChangesAsync(ct); }
-        catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "O roteiro foi alterado por outro usuario."); }
+        await SalvarComConcorrencia(ct);
         await RegistrarAuditoria(evento, "ParadaDoRoteiro", paradaId, new { roteiroId = roteiro.Id }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
     }
@@ -161,6 +160,12 @@ public sealed class GerenciadorDeRoteiros(
     private static void ValidarVersao(RoteiroDiario roteiro, uint versaoEsperada)
     {
         if (roteiro.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "O roteiro foi alterado por outro usuario. Atualize a tela.");
+    }
+
+    private async Task SalvarComConcorrencia(CancellationToken ct)
+    {
+        try { await banco.SaveChangesAsync(ct); }
+        catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "O roteiro foi alterado por outro usuario. Atualize a tela."); }
     }
 
     private Task RegistrarAuditoria(string tipo, string recurso, Guid recursoId, object dados, Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transacao, DateTimeOffset agora, CancellationToken ct) =>

@@ -9,6 +9,55 @@ public sealed class RoteirosPersistenciaTestes(PostgresCompartilhado postgres)
 {
     [Fact]
     [Trait("Categoria", "RequerDocker")]
+    public async Task Deve_adicionar_parada_em_roteiro_ja_persistido()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = Guid.NewGuid();
+        var data = new DateOnly(2026, 9, 3);
+        var opcoes = new DbContextOptionsBuilder<ContextoDeRoteiros>()
+            .UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(
+                ContextoDeRoteiros.Historico,
+                ContextoDeRoteiros.Schema))
+            .Options;
+        Guid roteiroId;
+        uint versaoInicial;
+
+        await using (var preparacao = new ContextoDeRoteiros(opcoes, new UsuarioDeTeste(tenantId)))
+        {
+            await preparacao.Database.MigrateAsync(ct);
+            var roteiro = RoteiroDiario.Criar(tenantId, data, "Carlos", DateTimeOffset.UtcNow);
+            preparacao.Add(roteiro);
+            await preparacao.SaveChangesAsync(ct);
+            roteiroId = roteiro.Id;
+            versaoInicial = roteiro.Versao;
+        }
+
+        await using (var inclusao = new ContextoDeRoteiros(opcoes, new UsuarioDeTeste(tenantId)))
+        {
+            var roteiro = await inclusao.Roteiros.Include(x => x.Paradas).SingleAsync(x => x.Id == roteiroId, ct);
+            roteiro.Adicionar(
+                Guid.NewGuid(),
+                "Ana Martins",
+                "5513999999999",
+                "Av. Presidente Kennedy, 1240",
+                TipoDaParada.Entrega,
+                "10h–12h",
+                "Teste de persistencia",
+                DateTimeOffset.UtcNow);
+
+            await inclusao.SaveChangesAsync(ct);
+        }
+
+        await using (var verificacao = new ContextoDeRoteiros(opcoes, new UsuarioDeTeste(tenantId)))
+        {
+            var roteiro = await verificacao.Roteiros.AsNoTracking().Include(x => x.Paradas).SingleAsync(x => x.Id == roteiroId, ct);
+            Assert.True(roteiro.Versao > versaoInicial);
+            Assert.Equal("Ana Martins", Assert.Single(roteiro.Paradas).NomeCliente);
+        }
+    }
+
+    [Fact]
+    [Trait("Categoria", "RequerDocker")]
     public async Task Deve_isolar_por_tenant_preservar_snapshots_e_detectar_concorrencia()
     {
         var ct = TestContext.Current.CancellationToken;
