@@ -18,6 +18,7 @@ catalogo
 comunicacao
 acoes_comerciais
 movimentacoes_comerciais
+roteiros
 importacoes
 identidade
 autorizacao
@@ -35,7 +36,9 @@ tenant_id
 tipo
 nome
 nome_fantasia
-documento_normalizado
+codigo_externo
+data_cadastro_origem
+data_nascimento
 situacao
 data_criacao
 data_atualizacao
@@ -101,15 +104,11 @@ objetivo
 item_de_catalogo_id
 nome_item_snapshot
 versao_modelo_id
-canal
 criterios_segmentacao_json
 situacao
 data_preparacao
 data_inicio_processamento
-data_conclusao
 quantidade_destinatarios
-quantidade_enviada
-quantidade_com_falha
 usuario_criacao_id
 data_criacao
 data_atualizacao
@@ -124,19 +123,20 @@ tenant_id
 acao_comercial_id
 cliente_id
 nome_cliente_snapshot
-contato_id
 destino_snapshot
-conteudo_preview_snapshot
+conteudo_pre_visualizacao_snapshot
+chave_template_notificacao_snapshot
+payload_notificacao_json
 situacao_envio
 resultado_comercial
 valor_convertido
+data_resultado_comercial
+usuario_resultado_id
 chave_idempotencia
 notificacao_id
 servico_notificacao
-data_solicitacao
 data_ultima_reconciliacao
 codigo_falha
-descricao_falha
 versao
 ```
 
@@ -149,6 +149,46 @@ Restricao unica: `tenant_id + acao_comercial_id + cliente_id`.
 Uma movimentacao representa uma visita comercial e registra cliente, valor total calculado, data, origem, codigo externo opcional e dados de cancelamento. Cada linha registra oferta, artigo, servico, quantidade, precos e snapshots comerciais. O registro e informativo e nao representa caixa, pagamento, producao ou pedido operacional.
 
 O codigo externo e unico dentro do tenant quando informado. O agregado usa `xmin` para concorrencia otimista e nunca e excluido fisicamente.
+
+## Roteiros
+
+### `roteiros.roteiros_diarios`
+
+```text
+id
+tenant_id
+data
+nome_motorista
+situacao
+data_criacao
+data_atualizacao
+versao
+```
+
+Existe no maximo um roteiro por `tenant_id + data`.
+
+### `roteiros.paradas`
+
+```text
+id
+tenant_id
+roteiro_id
+cliente_id
+nome_cliente
+whatsapp
+endereco_completo
+tipo
+periodo
+observacao
+ordem
+situacao
+data_criacao
+data_inicio
+data_conclusao
+motivo_nao_realizacao
+```
+
+Nome, WhatsApp e endereco sao snapshots operacionais. A alteracao posterior do cadastro nao muda silenciosamente uma parada ja planejada. O agregado do roteiro usa `xmin` para concorrencia otimista.
 
 ## Importacoes
 
@@ -170,4 +210,4 @@ O codigo externo e unico dentro do tenant quando informado. O agregado usa `xmin
 
 ## Dados futuros
 
-Pedidos operacionais, interacoes, oportunidades, funil e campanhas recorrentes nao fazem parte das migrations iniciais. Eles serao modelados quando entrarem no escopo.
+Pedidos operacionais, solicitacoes de delivery, metas, relatorios consolidados, oportunidades, funil, campanhas recorrentes e assistente contextual nao fazem parte das migrations iniciais. Eles serao modelados somente quando entrarem em um novo escopo aprovado.

@@ -76,10 +76,19 @@ public sealed class RoteiroDiario
 public sealed class ParadaDoRoteiro
 {
     private ParadaDoRoteiro() { }
-    public Guid Id { get; private set; } public Guid TenantId { get; private set; } public Guid RoteiroId { get; private set; } public Guid ClienteId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid TenantId { get; private set; }
+    public Guid RoteiroId { get; private set; }
+    public Guid ClienteId { get; private set; }
     public string NomeCliente { get; private set; } = string.Empty; public string Whatsapp { get; private set; } = string.Empty; public string EnderecoCompleto { get; private set; } = string.Empty;
-    public TipoDaParada Tipo { get; private set; } public string Periodo { get; private set; } = string.Empty; public string? Observacao { get; private set; } public int Ordem { get; private set; }
-    public SituacaoDaParada Situacao { get; private set; } public DateTimeOffset DataCriacao { get; private set; } public DateTimeOffset? DataInicio { get; private set; } public DateTimeOffset? DataConclusao { get; private set; } public string? MotivoNaoRealizacao { get; private set; }
+    public TipoDaParada Tipo { get; private set; }
+    public string Periodo { get; private set; } = string.Empty; public string? Observacao { get; private set; }
+    public int Ordem { get; private set; }
+    public SituacaoDaParada Situacao { get; private set; }
+    public DateTimeOffset DataCriacao { get; private set; }
+    public DateTimeOffset? DataInicio { get; private set; }
+    public DateTimeOffset? DataConclusao { get; private set; }
+    public string? MotivoNaoRealizacao { get; private set; }
     internal static ParadaDoRoteiro Criar(Guid tenant, Guid roteiro, Guid cliente, string nome, string whatsapp, string endereco, TipoDaParada tipo, string periodo, string? observacao, int ordem, DateTimeOffset agora) => new() { Id = Guid.NewGuid(), TenantId = tenant, RoteiroId = roteiro, ClienteId = cliente, NomeCliente = Limpar(nome, 200), Whatsapp = Limpar(whatsapp, 30), EnderecoCompleto = Limpar(endereco, 500), Tipo = tipo, Periodo = Limpar(periodo, 80), Observacao = Opcional(observacao, 500), Ordem = ordem, Situacao = SituacaoDaParada.Pendente, DataCriacao = agora };
     internal void DefinirOrdem(int ordem) => Ordem = ordem;
     internal void Atualizar(TipoDaParada tipo, string periodo, string? observacao) { Tipo = tipo; Periodo = Limpar(periodo, 80); Observacao = Opcional(observacao, 500); }

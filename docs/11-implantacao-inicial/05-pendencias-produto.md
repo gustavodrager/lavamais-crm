@@ -26,3 +26,10 @@
 - validar o fluxo curto aprovado pelo ADR-012 com a recepcao;
 - confirmar campos, origens e motivo de cancelamento;
 - validar que o registro nao substitui caixa, producao, fiscal ou Essence GO Industrial.
+
+## Roteiro diario manual
+
+- validar a organizacao e a execucao do roteiro com a equipe;
+- confirmar quem pode criar, replanejar, publicar e executar cada roteiro;
+- confirmar periodos, motivos de nao realizacao e rotina de reagendamento;
+- validar que a parada manual nao sera tratada como pedido ou roteirizacao automatica.

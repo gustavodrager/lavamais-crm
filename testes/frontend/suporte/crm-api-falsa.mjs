@@ -10,8 +10,10 @@ const criteriosVazios = { versaoSchema: 2, modo: "Filtros", tipoCliente: null, c
 const acao = { id, nome: "Ação integrada de edredons", objetivo: "Validar o fluxo real", itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", versaoModeloId: null, criterios: criteriosVazios, situacao: "EmProcessamento", dataAtualizacao: "2026-08-18T12:00:00Z", versao: 3, quantidadeDestinatarios: 12, mensagensParaEnviar: 0, falhasParaRevisar: 2, retornosParaRegistrar: 4, resultadosRegistrados: 6 };
 let acaoCriada = null;
 const totais = { destinatarios: 12, pendentes: 0, aguardandoSolicitacao: 0, solicitados: 0, enviados: 2, entregues: 2, lidos: 6, falhos: 2, naoInformados: 6, semRetorno: 2, responderam: 0, interessados: 2, convertidos: 2, semInteresse: 0, valorConvertido: 150 };
-let destinatarioCriado = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId, nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana Martins!", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
-let clienteDetalhado = { id: clienteId, nome: "Ana Martins", nomeFantasia: "Ana Casa", whatsapp: "5513999999999", email: "ana@example.com", dataNascimento: "1988-05-12", tipo: "Residencial", situacao: "Ativo", permiteMarketingWhatsapp: true, endereco: { logradouro: "Av. Presidente Kennedy", numero: "1240", complemento: "Apto 42", bairro: "Boqueirão", cidade: "Praia Grande", estado: "SP", cep: "11700-000" }, etiquetaIds: ["3bf773d6-f28c-4165-92b5-3b1b153a2c32"], codigoExterno: "1001", dataCadastroOrigem: "2024-02-10T12:00:00Z", dataCriacao: "2026-08-15T13:30:00Z", dataAtualizacao: "2026-08-29T11:57:16Z" };
+const destinatarioCriadoInicial = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId, nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana Martins!", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
+let destinatarioCriado = structuredClone(destinatarioCriadoInicial);
+const clienteDetalhadoInicial = { id: clienteId, nome: "Ana Martins", nomeFantasia: "Ana Casa", whatsapp: "5513999999999", email: "ana@example.com", dataNascimento: "1988-05-12", tipo: "Residencial", situacao: "Ativo", permiteMarketingWhatsapp: true, endereco: { logradouro: "Av. Presidente Kennedy", numero: "1240", complemento: "Apto 42", bairro: "Boqueirão", cidade: "Praia Grande", estado: "SP", cep: "11700-000" }, etiquetaIds: ["3bf773d6-f28c-4165-92b5-3b1b153a2c32"], codigoExterno: "1001", dataCadastroOrigem: "2024-02-10T12:00:00Z", dataCriacao: "2026-08-15T13:30:00Z", dataAtualizacao: "2026-08-29T11:57:16Z" };
+let clienteDetalhado = structuredClone(clienteDetalhadoInicial);
 const clientesAdicionais = [];
 const dataHoje = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 const [anoHoje, mesHoje, diaHoje] = dataHoje.split("-").map(Number);
@@ -41,10 +43,11 @@ const roteiroAmanha = { id: "8d3d0d64-a111-4cff-8db8-222222222221", data: dataAm
   { id: "8d3d0d64-a111-4cff-8db8-222222222222", clienteId: "6d3d0d64-a111-4cff-8db8-111111111116", nomeCliente: "Fernanda Lima", whatsapp: "5513966666666", enderecoCompleto: "Rua Iporanga, 45", tipo: "Coleta", periodo: "8h–10h", observacao: null, ordem: 1, situacao: "Pendente", motivoNaoRealizacao: null, dataInicio: null, dataConclusao: null },
   { id: "8d3d0d64-a111-4cff-8db8-222222222223", clienteId: "6d3d0d64-a111-4cff-8db8-111111111117", nomeCliente: "Paulo Mendes", whatsapp: "5513955555555", enderecoCompleto: "Av. Paris, 210", tipo: "Entrega", periodo: "10h–12h", observacao: null, ordem: 2, situacao: "Pendente", motivoNaoRealizacao: null, dataInicio: null, dataConclusao: null },
 ] };
-const movimentacoesHoje = [
+const movimentacoesIniciais = [
   { id: "7d3d0d64-a111-4cff-8db8-111111111111", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", valorTotal: 75, dataMovimentacao: `${dataHoje}T15:00:00Z`, codigoExterno: null, observacao: null, origem: "Recepcao", situacao: "Registrada", versao: 1, linhas: [{ id: "7d3d0d64-a111-4cff-8db8-111111111112", ofertaDeServicoId: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", quantidade: 1, precoTabela: 75, precoUnitario: 75, subtotal: 75 }] },
   { id: "7d3d0d64-a111-4cff-8db8-111111111121", clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nomeCliente: "Patricia Souza", valorTotal: 40, dataMovimentacao: `${dataHoje}T14:00:00Z`, codigoExterno: null, observacao: "Registro corrigido", origem: "Recepcao", situacao: "Cancelada", versao: 2, linhas: [] },
 ];
+let movimentacoesHoje = structuredClone(movimentacoesIniciais);
 const ofertasDoCatalogoDeLavanderia = [
   { id: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom", categoria: "Cama, mesa e banho", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", precoUnitario: 75, situacao: "Ativo", versao: 1 },
   { id: "5d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "6d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Camisa", categoria: "Vestuario", servicoDeLavanderiaId: "7d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem e passadoria", precoUnitario: 16.2, situacao: "Ativo", versao: 1 },
@@ -52,6 +55,15 @@ const ofertasDoCatalogoDeLavanderia = [
 http.createServer((req, res) => {
   res.setHeader("content-type", "application/json");
   if (req.headers.authorization !== "Bearer token-controlado-e2e") { res.statusCode = 401; return res.end(JSON.stringify({ title: "Nao autenticado" })); }
+  if (req.url === "/__test/reset" && req.method === "POST") {
+    acaoCriada = null;
+    destinatarioCriado = structuredClone(destinatarioCriadoInicial);
+    clienteDetalhado = structuredClone(clienteDetalhadoInicial);
+    clientesAdicionais.splice(0);
+    movimentacoesHoje = structuredClone(movimentacoesIniciais);
+    res.statusCode = 204;
+    return res.end();
+  }
   if (req.url === "/api/v1/capacidades") return res.end(JSON.stringify({ envioNotificacoesHabilitado: true }));
   if (req.url === "/api/v1/catalogo-lavanderia/ofertas") return res.end(JSON.stringify(ofertasDoCatalogoDeLavanderia));
   if (req.url === "/api/v1/itens-de-catalogo?situacao=Ativo" || req.url === "/api/v1/itens-de-catalogo") return res.end(JSON.stringify([{ id: itemCatalogoId, tipo: "Servico", nome: "Lavagem de edredom", descricao: null, categoria: "Casa", valorReferencia: 50, situacao: "Ativo", codigoExterno: "SRV-1" }]));

@@ -75,4 +75,28 @@
 - backup e restauracao testados;
 - runbook de implantacao.
 
+## Fatia 10 — Movimentacoes comerciais
+
+- catalogo de lavanderia com artigos, servicos e ofertas;
+- registro manual do atendimento com total calculado no servidor;
+- historico e indicadores descritivos no cliente;
+- cancelamento rastreavel por Gestor;
+- autorizacao, tenant, migration, API, interface e testes.
+
+## Fatia 11 — Roteiro diario manual
+
+- roteiro por data e motorista;
+- paradas de coleta e entrega com snapshot operacional do cliente;
+- reordenacao, publicacao, impressao e execucao no celular;
+- estados de deslocamento, conclusao, adiamento e nao realizacao;
+- tenant, migration, API, interface e testes.
+
+## Fatia 12 — Consolidacao da Versao 1.0
+
+- fechar os limites funcionais e os papeis;
+- alinhar documentacao de arquitetura, API e banco ao codigo;
+- atualizar a matriz de prontidao e o roadmap;
+- estabilizar os testes ponta a ponta da interface atual;
+- manter producao bloqueada ate a homologacao formal.
+
 Cada fatia deve terminar utilizavel e testada antes da proxima.

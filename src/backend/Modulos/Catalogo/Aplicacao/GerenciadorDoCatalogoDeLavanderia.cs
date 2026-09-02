@@ -178,12 +178,12 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
         var existentes = await banco.OfertasDeServico.Select(x => new { x.ArtigoDeLavanderiaId, x.ServicoDeLavanderiaId }).ToListAsync(ct);
         var chaves = existentes.Select(x => (x.ArtigoDeLavanderiaId, x.ServicoDeLavanderiaId)).ToHashSet();
         foreach (var artigo in Artigos)
-        foreach (var nomeServico in artigo.Servicos)
-        {
-            var entidadeArtigo = artigosExistentes[artigo.Nome.ToUpperInvariant()]; var servico = servicosExistentes[nomeServico.ToUpperInvariant()];
-            if (!chaves.Add((entidadeArtigo.Id, servico.Id))) continue;
-            banco.Add(OfertaDeServico.Criar(usuario.TenantId, entidadeArtigo.Id, servico.Id, CalcularPreco(artigo.PrecoBase, nomeServico), agora)); ofertasCriadas++;
-        }
+            foreach (var nomeServico in artigo.Servicos)
+            {
+                var entidadeArtigo = artigosExistentes[artigo.Nome.ToUpperInvariant()]; var servico = servicosExistentes[nomeServico.ToUpperInvariant()];
+                if (!chaves.Add((entidadeArtigo.Id, servico.Id))) continue;
+                banco.Add(OfertaDeServico.Criar(usuario.TenantId, entidadeArtigo.Id, servico.Id, CalcularPreco(artigo.PrecoBase, nomeServico), agora)); ofertasCriadas++;
+            }
         await banco.SaveChangesAsync(ct);
         return new(artigosCriados, servicosCriados, ofertasCriadas);
     }

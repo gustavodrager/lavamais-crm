@@ -17,4 +17,6 @@
 - a chave de sessao e exclusiva por ambiente e sua rotacao encerra sessoes existentes;
 - flags de desenvolvimento e teste devem falhar ou permanecer inacessiveis em producao;
 - a disponibilidade do envio vem de `/api/v1/capacidades`; nao existe flag duplicada no Next.js;
-- o BFF acessa somente o schema tecnico `web`; dados empresariais passam pela CRM API.
+- o BFF acessa somente o schema tecnico `web`; dados empresariais passam pela CRM API;
+- respostas publicas definem CSP minima, bloqueio de `iframe`, `nosniff`, politica de referencia e permissoes restritas;
+- o cabecalho `X-Powered-By` permanece desabilitado.

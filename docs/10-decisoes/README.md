@@ -25,6 +25,7 @@ Esta pasta registra decisoes arquiteturais e de produto que orientam todas as co
 | [ADR-017](ADR-017-notificacoes-locais-com-whatsmiau.md) | Envio local pelo WhatsMiau atras de porta compativel com a futura Central de Notificacao |
 | [ADR-018](ADR-018-usuarios-iniciais-por-perfil.md) | Usuarios iniciais por perfil para homologacao |
 | [ADR-019](ADR-019-composicao-sintetica-de-produtos-em-homologacao.md) | Composicao sintetica e reversivel de produtos em tickets de homologacao |
+| [ADR-020](ADR-020-perfis-operacionais-da-versao-1.md) | Limites de Administrador, Gerente e Operador na Versao 1.0 |
 
 ## Regra
 

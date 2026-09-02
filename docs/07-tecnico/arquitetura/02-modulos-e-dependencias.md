@@ -4,12 +4,14 @@
 
 | Modulo | Responsabilidade |
 |---|---|
+| `Identidade` | credenciais locais e sessoes opacas |
 | `Clientes` | cadastro, contatos, enderecos, etiquetas e permissoes |
 | `Catalogo` | produtos e servicos oferecidos |
 | `Segmentacao` | criterios, simulacao e elegibilidade |
 | `ModelosDeMensagem` | modelos comerciais e versoes publicadas |
 | `AcoesComerciais` | fluxo, audiencia, envios e resultados |
 | `MovimentacoesComerciais` | historico comercial manual sem controle operacional |
+| `Roteiros` | organizacao e execucao manual das coletas e entregas do dia |
 | `Importacoes` | entrada de clientes por CSV |
 | `Autorizacao` | papeis especificos do CRM |
 | `Auditoria` | registro imutavel de eventos sensiveis |
@@ -19,6 +21,7 @@
 
 ```mermaid
 flowchart LR
+    ID[Identidade] -. autentica .-> AU[Autorizacao]
     I[Importacoes] --> C[Clientes]
     C --> S[Segmentacao]
     G[Catalogo] --> A[AcoesComerciais]
@@ -33,6 +36,8 @@ flowchart LR
     AD -. observa eventos .-> C
     C -->|porta de consulta| MV[MovimentacoesComerciais]
     G -->|porta de consulta| MV
+    C -->|porta de consulta| R[Roteiros]
+    AD -. observa eventos .-> R
 ```
 
 As setas representam contratos de aplicacao, nao acesso a tabelas ou entidades internas.

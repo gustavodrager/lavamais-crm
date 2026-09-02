@@ -9,7 +9,8 @@ Esta pasta e a referencia operacional para construir a Versao 1.0.
 - [Definicao de pronto](03-definicao-de-pronto.md)
 - [Pendencias controladas](04-pendencias-controladas.md)
 - [Matriz de prontidao](09-matriz-prontidao.md)
+- [Fechamento da Fase 1](10-fechamento-fase-1.md)
 
 ## Resultado esperado
 
-Ao final, um Gerente consegue importar ou cadastrar clientes, criar uma Acao Comercial, revisar o publico, enviar WhatsApp por um template aprovado e acompanhar o resultado sem apoio tecnico.
+Ao final, a equipe consegue cadastrar clientes, registrar atendimentos, consultar o historico, criar e executar uma Acao Comercial com mensagem individual aprovada e organizar o roteiro diario manual sem apoio tecnico. A importacao permanece exclusiva do Administrador.

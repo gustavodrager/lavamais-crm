@@ -2,6 +2,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.Modulos.Roteiros.Dominio;
 
 namespace LavaMais.Crm.Testes.Unidade;
+
 public sealed class RoteiroDiarioTestes
 {
     [Fact]

@@ -25,9 +25,9 @@ Documentos marcados como `Historico` registram fases anteriores e nao definem o 
 
 O LavaMais CRM e uma plataforma de relacionamento comercial. Nao e um sistema de producao, estoque, caixa, financeiro ou logistica da lavanderia.
 
-A implantacao inicial entrega uma unica capacidade ponta a ponta: criar e executar uma `AcaoComercial` para um publico selecionado da base de clientes.
+A implantacao inicial entrega tres fluxos conectados: clientes e `MovimentacaoComercial`, criacao e execucao individual de `AcaoComercial` e roteiro diario manual de coletas e entregas.
 
-Como nao existe historico inicial de pedidos ou movimentacoes, nao implementar classificacoes baseadas em frequencia, ticket, inatividade ou recuperacao. Essas regras pertencem ao roadmap.
+`MovimentacaoComercial` e um registro informativo do atendimento e nao substitui pedido, caixa, producao ou fiscal. Nao implementar classificacoes automaticas baseadas em frequencia, ticket, inatividade ou recuperacao nesta versao; essas regras pertencem ao roadmap.
 
 ## Arquitetura definida
 
@@ -48,11 +48,14 @@ Nao introduzir microsservicos, Kafka, Kubernetes, Redis ou um segundo mecanismo 
 
 Modulos iniciais:
 
+- `Identidade`;
 - `Clientes`;
 - `Catalogo`;
 - `Segmentacao`;
 - `ModelosDeMensagem`;
 - `AcoesComerciais`;
+- `MovimentacoesComerciais`;
+- `Roteiros`;
 - `Importacoes`;
 - `Autorizacao`;
 - `Auditoria`;

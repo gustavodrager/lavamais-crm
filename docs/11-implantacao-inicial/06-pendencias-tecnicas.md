@@ -17,15 +17,15 @@
 - iniciar o Worker com uma replica somente depois dessa validacao;
 - homologar o adaptador `Central` antes de uma migracao futura.
 
-## Movimentacoes comerciais
+## Auditoria
 
-- concluir migration e snapshot do novo modulo;
-- adicionar testes de dominio, persistencia, autorizacao e tenant;
-- atualizar OpenAPI e frontend;
-- incluir o modulo no Migrador e nos testes arquiteturais;
-- atualizar documentacao de dados e API quando a implementacao estiver concluida.
+- definir a matriz minima de eventos criticos por modulo;
+- completar a instrumentacao de identidade, usuarios, clientes, importacoes e Movimentacoes Comerciais;
+- adicionar testes que comprovem tenant, autor, recurso e ausencia de dados sensiveis nos detalhes;
+- decidir se a consulta pela API e suficiente para a Versao 1.0 ou se uma tela administrativa sera exigida antes da producao.
 
 ## Contratos
 
 - decidir entre cliente TypeScript gerado pelo OpenAPI ou contratos manuais com teste de compatibilidade;
 - manter mudancas HTTP acompanhadas de testes e documentacao.
+- publicar e conferir o OpenAPI do ambiente de homologacao depois de cada deploy.

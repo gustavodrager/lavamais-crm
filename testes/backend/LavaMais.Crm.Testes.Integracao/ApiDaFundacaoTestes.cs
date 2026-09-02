@@ -60,6 +60,8 @@ public sealed class ApiDaFundacaoTestes
         Assert.Equal("application/json", resposta.Content.Headers.ContentType?.MediaType);
         var contrato = await resposta.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/enviar", contrato);
+        Assert.Contains("/api/v1/movimentacoes-comerciais", contrato);
+        Assert.Contains("/api/v1/roteiros", contrato);
         Assert.Contains("/api/v1/capacidades", contrato);
         Assert.DoesNotContain("/api/v1/webhooks/whatsmiau", contrato);
         Assert.DoesNotContain("/api/v1/acoes-comerciais/{id}/iniciar", contrato);
@@ -104,6 +106,9 @@ public sealed class ApiDaFundacaoTestes
     [InlineData("/api/v1/itens-de-catalogo")]
     [InlineData("/api/v1/modelos-de-mensagem")]
     [InlineData("/api/v1/acoes-comerciais")]
+    [InlineData("/api/v1/clientes")]
+    [InlineData("/api/v1/movimentacoes-comerciais")]
+    [InlineData("/api/v1/roteiros?data=2026-09-02")]
     [InlineData("/api/v1/auditoria")]
     [InlineData("/api/v1/capacidades")]
     public async Task Deve_exigir_autenticacao_nos_endpoints_empresariais(string rota)

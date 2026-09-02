@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LavaMais.Crm.Modulos.Roteiros.Api;
+
 public static class ExtensoesDoModuloRoteiros
 {
     public static IServiceCollection AdicionarModuloRoteiros(this IServiceCollection s, IConfiguration c) { s.AdicionarContextoDoModulo<ContextoDeRoteiros>(c, ContextoDeRoteiros.Historico, ContextoDeRoteiros.Schema); s.AddScoped<GerenciadorDeRoteiros>(); return s; }
@@ -31,7 +32,8 @@ public static class ExtensoesDoModuloRoteiros
         g.MapPost("/paradas/{id:guid}/adiar", async (Guid id, [FromBody] ComandoDeVersao d, GerenciadorDeRoteiros x, CancellationToken ct) => { await x.AdiarParada(id, d.Versao, ct); return Results.NoContent(); });
         g.MapPost("/paradas/{id:guid}/nao-realizar", async (Guid id, [FromBody] NaoRealizar d, GerenciadorDeRoteiros x, CancellationToken ct) => { await x.NaoRealizarParada(id, d.Motivo, d.Versao, ct); return Results.NoContent(); }); return e;
     }
-    public sealed record CriarRoteiro(DateOnly Data, string NomeMotorista); public sealed record AtualizarRoteiro(string NomeMotorista, uint Versao); public sealed record ComandoDeVersao(uint Versao); public sealed record DadosDaParada(Guid ClienteId, TipoDaParada Tipo, string Periodo, string? Observacao, uint Versao) { public LavaMais.Crm.Modulos.Roteiros.Aplicacao.DadosDaParada Dados => new(ClienteId, Tipo, Periodo, Observacao); } public sealed record AlterarOrdem(IReadOnlyList<Guid> ParadaIds, uint Versao); public sealed record NaoRealizar(string Motivo, uint Versao);
+    public sealed record CriarRoteiro(DateOnly Data, string NomeMotorista); public sealed record AtualizarRoteiro(string NomeMotorista, uint Versao); public sealed record ComandoDeVersao(uint Versao); public sealed record DadosDaParada(Guid ClienteId, TipoDaParada Tipo, string Periodo, string? Observacao, uint Versao) { public LavaMais.Crm.Modulos.Roteiros.Aplicacao.DadosDaParada Dados => new(ClienteId, Tipo, Periodo, Observacao); }
+    public sealed record AlterarOrdem(IReadOnlyList<Guid> ParadaIds, uint Versao); public sealed record NaoRealizar(string Motivo, uint Versao);
     public sealed record Resposta(Guid Id, DateOnly Data, string NomeMotorista, SituacaoDoRoteiro Situacao, uint Versao, IReadOnlyList<RespostaParada> Paradas)
     { public static Resposta Criar(RoteiroDiario r) => new(r.Id, r.Data, r.NomeMotorista, r.Situacao, r.Versao, r.Paradas.OrderBy(x => x.Ordem).Select(RespostaParada.Criar).ToArray()); }
     public sealed record RespostaParada(Guid Id, Guid ClienteId, string NomeCliente, string Whatsapp, string EnderecoCompleto, TipoDaParada Tipo, string Periodo, string? Observacao, int Ordem, SituacaoDaParada Situacao, string? MotivoNaoRealizacao, DateTimeOffset? DataInicio, DateTimeOffset? DataConclusao)

@@ -2,6 +2,17 @@
 
 Todos os endpoints empresariais usam `/api/v1`, exigem access token valido e derivam o tenant da sessao. O webhook tecnico e a unica excecao anonima e usa segredo proprio.
 
+## Autenticacao
+
+```text
+GET    /api/v1/autenticacao/primeiro-acesso
+POST   /api/v1/autenticacao/primeiro-acesso
+POST   /api/v1/autenticacao/entrar
+POST   /api/v1/autenticacao/sair
+```
+
+Os dois primeiros comandos anonimos que recebem credenciais possuem limitacao de taxa. `entrar` e `primeiro-acesso` devolvem um token opaco, que o BFF guarda na sessao server-side. `sair` revoga a sessao corrente.
+
 ## Capacidades e webhook
 
 ```text
@@ -109,6 +120,26 @@ POST   /api/v1/movimentacoes-comerciais/{id}/cancelar
 
 O registro representa uma visita comercial. Recebe um cliente ativo e uma ou mais linhas com `ofertaDeServicoId`, quantidade e preco unitario praticado opcional. A oferta associa um artigo ao servico aplicavel e fornece o preco de tabela; o total e calculado no servidor. Data, codigo externo e observacao sao opcionais. O tenant, o usuario e a origem `Recepcao` sao derivados no servidor. O cancelamento exige `Administrador` ou `Gerente`, motivo e a versao atual do agregado; concorrencia retorna `409`.
 
+## Roteiros diarios
+
+```text
+GET    /api/v1/roteiros?data={yyyy-MM-dd}
+POST   /api/v1/roteiros
+PUT    /api/v1/roteiros/{id}
+DELETE /api/v1/roteiros/{id}
+POST   /api/v1/roteiros/{id}/paradas
+PUT    /api/v1/roteiros/{id}/paradas/{paradaId}
+DELETE /api/v1/roteiros/{id}/paradas/{paradaId}
+PUT    /api/v1/roteiros/{id}/ordem
+POST   /api/v1/roteiros/{id}/publicar
+POST   /api/v1/roteiros/paradas/{id}/iniciar
+POST   /api/v1/roteiros/paradas/{id}/concluir
+POST   /api/v1/roteiros/paradas/{id}/adiar
+POST   /api/v1/roteiros/paradas/{id}/nao-realizar
+```
+
+O roteiro e unico por tenant e data. As paradas guardam snapshots de nome, WhatsApp e endereco do cliente para preservar a sequencia publicada. Comandos de alteracao recebem a versao atual e retornam `409` em conflito. Essa superficie organiza um roteiro manual; nao calcula rota, distancia ou previsao de chegada.
+
 ## Autorizacao
 
 ```text
@@ -141,4 +172,4 @@ Disponivel somente para `Administrador`, com paginacao e filtros controlados.
 - `422` para regra de negocio que impede a operacao;
 - `X-Correlation-Id` propagado entre Web, API, Worker e integracoes quando o contrato externo permitir.
 
-Os schemas detalhados serao gerados no OpenAPI junto com a implementacao e nao devem duplicar diretamente entidades de persistencia.
+Os schemas detalhados sao expostos pelo OpenAPI da aplicacao e nao devem duplicar diretamente entidades de persistencia.

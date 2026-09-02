@@ -10,6 +10,7 @@ lavamais-crm/
 │       ├── LavaMais.Crm.Api/        # API HTTP
 │       ├── LavaMais.Crm.Worker/     # outbox e integracoes
 │       ├── LavaMais.Crm.Migrador/   # migrations controladas
+│       ├── LavaMais.Crm.ImportadorEssence/ # importacao controlada por arquivo
 │       ├── BlocosDeConstrucao/      # contratos e infraestrutura compartilhada
 │       └── Modulos/                 # monolito modular
 ├── testes/
@@ -22,11 +23,12 @@ lavamais-crm/
 └── prototipo_v1/                    # prototipo historico
 ```
 
-## Aplicacoes implantaveis
+## Aplicacoes e processos executaveis
 
 - `LavaMais.Crm.Api`: autenticacao, contratos HTTP e casos de uso do CRM;
-- `LavaMais.Crm.Worker`: processamento da outbox e comunicacao com o Notification Hub;
+- `LavaMais.Crm.Worker`: processamento da outbox e comunicacao com WhatsMiau ou futura Central de Notificacao;
 - `LavaMais.Crm.Migrador`: aplicacao controlada das migrations;
+- `LavaMais.Crm.ImportadorEssence`: importacao assistida por arquivo, executada somente quando autorizada;
 - `src/web`: interface e BFF, com sessoes server-side.
 
 ## Modulos do backend
@@ -39,6 +41,8 @@ lavamais-crm/
 - `ModelosDeMensagem`;
 - `Segmentacao`;
 - `AcoesComerciais`;
+- `MovimentacoesComerciais`;
+- `Roteiros`;
 - `Auditoria`;
 - `Integracoes`.
 

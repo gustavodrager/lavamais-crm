@@ -23,6 +23,7 @@
     <ProjectReference Include="../../../src/backend/Modulos/Identidade/LavaMais.Crm.Modulos.Identidade.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/ModelosDeMensagem/LavaMais.Crm.Modulos.ModelosDeMensagem.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/MovimentacoesComerciais/LavaMais.Crm.Modulos.MovimentacoesComerciais.csproj" />
+    <ProjectReference Include="../../../src/backend/Modulos/Roteiros/LavaMais.Crm.Modulos.Roteiros.csproj" />
     <ProjectReference Include="../../../src/backend/Modulos/Segmentacao/LavaMais.Crm.Modulos.Segmentacao.csproj" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 # Matriz de Prontidao da Versao 1.0
 
-Atualizada em 24 de agosto de 2026. `Concluido` representa implementacao e testes no repositorio; nao significa liberacao para producao.
+Atualizada em 2 de setembro de 2026. `Concluido` representa implementacao, documentacao e testes no repositorio; nao significa liberacao para producao.
 
 | Capacidade | Backend | Frontend | Testes | Homologacao | Producao |
 |---|---|---|---|---|---|
@@ -15,10 +15,14 @@ Atualizada em 24 de agosto de 2026. `Concluido` representa implementacao e teste
 | Envio individual e outbox | Concluido | Concluido | Concluido | Desabilitado por configuracao | Bloqueada |
 | Reconciliacao pelo Worker | Concluido | Acompanhamento concluido | Concluido | Worker com zero replicas | Bloqueada |
 | Resultado comercial | Concluido | Concluido | Concluido | Pendente de validacao operacional | Bloqueada |
-| Auditoria | Concluido | Sem tela dedicada | Parcial | Pendente de validacao | Bloqueada |
-| Movimentacoes comerciais manuais | Em desenvolvimento | Nao iniciado | Pendente | Nao disponivel | Bloqueada |
+| Movimentacoes comerciais manuais | Concluido | Concluido | Concluido | Pendente de publicar e validar | Bloqueada |
+| Historico comercial do cliente | Concluido | Concluido | Concluido | Pendente de validacao operacional | Bloqueada |
+| Roteiro diario manual | Concluido | Concluido | Concluido | Pendente de publicar e validar | Bloqueada |
+| Paineis gerencial e operacional | Consultas concluidas | Concluido | Concluido | Pendente de validacao por perfil | Bloqueada |
+| Auditoria | Parcial | Sem tela dedicada | Parcial | Pendente de matriz de eventos criticos | Bloqueada |
 | Backup e restauracao | Scripts validados localmente | Nao se aplica | Prova local concluida | Ensaio no provedor pendente | Bloqueada |
 | Observabilidade e alertas | Fundacao concluida | Nao se aplica | Parcial | Alertas pendentes | Bloqueada |
+| Escopo e documentacao da Versao 1.0 | Concluido | Concluido | Verificacoes locais concluidas | Pronta para revisao | Bloqueada |
 
 ## Criterio para alterar status
 

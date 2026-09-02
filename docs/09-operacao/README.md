@@ -8,6 +8,7 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF 
 - [Producao](02-checklist-producao.md)
 - [Migrations e scripts PostgreSQL](03-migrations-e-scripts.md)
 - [Rollback e recuperacao](04-rollback.md)
+- [Evidencias de homologacao](evidencias/README.md)
 
 ## Implantacao
 

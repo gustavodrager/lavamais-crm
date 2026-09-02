@@ -1,6 +1,9 @@
 import { expect, test } from "../../../src/web/node_modules/@playwright/test";
 
-test.beforeEach(async ({ context, page }) => {
+test.beforeEach(async ({ context, page, request }) => {
+  await request.post("http://127.0.0.1:4310/__test/reset", {
+    headers: { authorization: "Bearer token-controlado-e2e" },
+  });
   await context.addCookies([{ name: "lavamais-sessao-teste", value: "sessao-controlada-e2e", url: "http://127.0.0.1:3000", httpOnly: true, sameSite: "Lax" }]);
   await page.goto("/acoes-comerciais");
 });
@@ -42,19 +45,29 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }) 
   await expect(page.getByText("Mensagem solicitada", { exact: true })).toBeVisible();
 });
 
-test("oferece acesso às demais areas pelo menu principal", async ({ page }, testInfo) => {
+test("oferece ao gerente as areas permitidas pelo menu principal", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "mobile", "O menu compacto possui fluxo dedicado");
   await page.goto("/acoes-comerciais");
   await page.getByRole("link", { name: "Clientes" }).click();
   await expect(page.getByRole("heading", { name: "Clientes" })).toBeVisible();
-  await page.getByRole("link", { name: "Importação" }).click();
-  await expect(page.getByRole("heading", { name: "Importação de clientes" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Importação" })).toHaveCount(0);
   await page.getByRole("link", { name: "Configurações" }).click();
   await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Canal de mensagens" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Catálogo" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Etiquetas" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Mensagens aprovadas" })).toHaveCount(0);
+});
+
+test("reserva a importação de clientes ao administrador", async ({ context, page }, testInfo) => {
+  await context.addCookies([{ name: "lavamais-sessao-teste", value: "sessao-controlada-admin-e2e", url: "http://127.0.0.1:3000", httpOnly: true, sameSite: "Lax" }]);
+  await page.goto("/importacao");
+  await expect(page.getByRole("heading", { name: "Importação de clientes" })).toBeVisible();
+  if (testInfo.project.name === "mobile") {
+    await page.getByRole("button", { name: "Mais" }).click();
+  }
+  const navegacaoPrincipal = page.getByRole("navigation", { name: "Navegação principal" });
+  await expect(navegacaoPrincipal.getByRole("link", { name: "Importação" })).toHaveAttribute("aria-current", "page");
 });
 
 test("oferece ao gerente a mesma gestão de mensagens do administrador", async ({ page }) => {
@@ -100,16 +113,15 @@ test("resume pendências e resultados relevantes no painel gerencial", async ({ 
 test("mostra o painel operacional para a recepção", async ({ context, page }) => {
   await context.addCookies([{ name: "lavamais-sessao-teste", value: "sessao-controlada-operador-e2e", url: "http://127.0.0.1:3000", httpOnly: true, sameSite: "Lax" }]);
   await page.goto("/inicio");
-  await expect(page.getByRole("heading", { name: "Atendimento da recepção" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Operação de hoje" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Importação" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Registrar movimentação" }).first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Registrar retornos comerciais" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Registrar atendimento" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Atendimentos recentes" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Buscar cliente" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Novo cliente" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Movimentação", exact: true })).toBeVisible();
-  await expect(page.getByText("Movimentações registradas hoje")).toBeVisible();
-  await expect(page.getByText("Valor informado")).toBeVisible();
-  await expect(page.getByText("1 registro cancelado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Cadastrar cliente" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Executar roteiro" }).first()).toBeVisible();
+  await expect(page.getByText("Atendimentos hoje")).toBeVisible();
+  await expect(page.getByText("1 registro cancelado hoje", { exact: true })).toBeVisible();
 });
 
 test("operador visualiza telefone e detalhes dos clientes", async ({ context, page }, testInfo) => {
@@ -141,12 +153,13 @@ test("operador visualiza telefone e detalhes dos clientes", async ({ context, pa
   await expect(endereco.getByText("SP", { exact: true })).toBeVisible();
   await expect(endereco.getByText("11700-000", { exact: true })).toBeVisible();
 
+  await page.getByText("Informações complementares", { exact: true }).click();
   const cadastro = page.getByRole("region", { name: "Cadastro" });
   await expect(cadastro.getByText("Ana Casa", { exact: true })).toBeVisible();
   await expect(cadastro.getByText("Residencial", { exact: true })).toBeVisible();
   await expect(cadastro.getByText("12/05/1988", { exact: true })).toBeVisible();
   await expect(cadastro.getByText("1001", { exact: true })).toBeVisible();
-  await expect(cadastro.getByText("15/08/2026 às 10:30", { exact: true })).toBeVisible();
+  await expect(cadastro.getByText("Criado no CRM", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Etiquetas" }).getByText("Cliente recorrente")).toBeVisible();
 });
 
@@ -158,6 +171,8 @@ test("mostra ações comerciais como fila para o operador", async ({ context, pa
   await expect(page.getByRole("link", { name: "Mensagens aprovadas" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Nova ação comercial" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Para enviar" })).toBeVisible();
+  await page.goto("/acoes-comerciais?filtro=Retornos");
+  await expect(page.getByRole("button", { name: "Retornos" })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("link", { name: /Abrir fila: Ação integrada de edredons/ }).click();
   await expect(page.getByText("Fila de atendimento")).toBeVisible();
   await expect(page.getByText("Olá, Cliente 1!")).toBeVisible();
@@ -170,8 +185,52 @@ test("administrador alterna a visualizacao para conferir a experiencia do operad
   await page.goto("/inicio");
   await expect(page.getByRole("combobox", { name: "Alterar visão do perfil" })).toBeVisible();
   await expect(page.getByText("Vendo como Operador")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Atendimento da recepção" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Operação de hoje" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Importação" })).toHaveCount(0);
+});
+
+test("registra um atendimento comercial e exibe a confirmação", async ({ page }) => {
+  await page.goto("/movimentacoes?busca=Ana&clienteId=6d3d0d64-a111-4cff-8db8-111111111113");
+  await expect(page.getByRole("heading", { name: "Atendimentos" })).toBeVisible();
+  await expect(page.getByText("Montar atendimento", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: /Selecionar Edredom, Lavagem/ }).click();
+  await page.getByLabel("Quantidade").fill("2");
+  await page.getByRole("button", { name: "Revisar atendimento" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText("R$ 150,00");
+  await page.getByRole("button", { name: "Confirmar atendimento" }).click();
+  await expect(page.getByText("Atendimento registrado", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ana Martins · R$ 150,00", { exact: true })).toBeVisible();
+});
+
+test("apresenta o roteiro manual em modo de execução", async ({ page }) => {
+  await page.goto("/meu-roteiro");
+  await expect(page.getByRole("heading", { name: "Roteiro em execução" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Maria Helena Costa" })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Progresso do roteiro: 33%" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Abrir no mapa" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "WhatsApp" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sequência do dia" })).toBeVisible();
+});
+
+test("redireciona visitantes sem sessão para a entrada", async ({ context, page }) => {
+  await context.clearCookies();
+  await page.goto("/clientes");
+  await expect(page).toHaveURL(/\/entrar$/);
+  await expect(page.getByRole("heading", { name: "Acesse o LavaMais CRM" })).toBeVisible();
+});
+
+test("protege as respostas publicas do BFF", async ({ request }) => {
+  const resposta = await request.get("/entrar");
+  const cabecalhos = resposta.headers();
+
+  expect(resposta.ok()).toBeTruthy();
+  expect(cabecalhos["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(cabecalhos["cross-origin-opener-policy"]).toBe("same-origin");
+  expect(cabecalhos["permissions-policy"]).toBe("camera=(), geolocation=(), microphone=()");
+  expect(cabecalhos["referrer-policy"]).toBe("no-referrer");
+  expect(cabecalhos["x-content-type-options"]).toBe("nosniff");
+  expect(cabecalhos["x-frame-options"]).toBe("DENY");
+  expect(cabecalhos["x-powered-by"]).toBeUndefined();
 });
 
 test("abre a navegacao em tela pequena", async ({ page }, testInfo) => {
