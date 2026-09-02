@@ -1,7 +1,9 @@
 # ADR-002 — Stack e monolito modular
 
-- Status: aceito
+- Status: aceito; Worker e outbox de mensagens substituidos pelo ADR-021
 - Data: 2026-08-15
+
+> Registro historico: Next.js, .NET, PostgreSQL e monolito modular permanecem vigentes. O ADR-021 removeu o Worker e a outbox do fluxo de WhatsApp.
 
 ## Contexto
 

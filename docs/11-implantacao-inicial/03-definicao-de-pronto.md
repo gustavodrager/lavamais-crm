@@ -21,9 +21,9 @@ Para a Versao 1.0 estar pronta, tambem e necessario:
 - validar importacao com amostra real autorizada;
 - configurar de forma segura o telefone permitido e o primeiro administrador;
 - validar primeiro acesso, login, expiracao, revogacao e persistencia das sessoes em homologacao;
-- provisionar e homologar a instancia, a chave e o webhook do WhatsMiau;
-- validar que o modo pode ser trocado para `Central` sem alterar Acoes Comerciais;
-- testar idempotencia em repeticao de requisicao;
-- testar falha parcial de destinatarios;
+- homologar a estacao autorizada e a vinculacao do WhatsApp Web da loja;
+- validar popup permitido, popup bloqueado e sessao expirada sem confirmacao indevida;
+- testar concorrencia e repeticao da confirmacao manual;
+- confirmar que o CRM nao afirma entrega ou leitura;
 - executar restauracao de backup em ambiente controlado;
 - obter validacao operacional do fluxo pela LavaMais.

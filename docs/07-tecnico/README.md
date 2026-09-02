@@ -2,18 +2,15 @@
 
 ## Visao geral
 
-O LavaMais CRM esta organizado em um monorepo com tres aplicacoes implantaveis e um banco exclusivo:
+O LavaMais CRM esta organizado em um monorepo com Web/BFF, API, ferramentas controladas e um banco exclusivo:
 
 ```mermaid
 flowchart LR
     U["Usuario"] --> W["Web Next.js e BFF"]
     W --> A["CRM API .NET 10"]
+    W -->|"wa.me em janela auxiliar"| WA["WhatsApp oficial"]
     A --> I["Modulo Identidade"]
     A --> D[("PostgreSQL do CRM")]
-    A --> O["Outbox"]
-    K["CRM Worker"] --> O
-    K --> N["WhatsMiau ou Central de Notificacao"]
-    K --> D
 ```
 
 ## Componentes
@@ -33,14 +30,6 @@ flowchart LR
 - validacao da sessao opaca emitida pelo modulo Identidade;
 - regras de dominio e persistencia do CRM.
 
-### Worker
-
-- processo .NET separado usando os mesmos modulos de aplicacao;
-- consome a outbox;
-- solicita notificacoes pela porta configurada;
-- reconcilia estados pendentes;
-- executara futuras importacoes e integracoes demoradas.
-
 ### Banco
 
 - PostgreSQL exclusivo do CRM;
@@ -59,7 +48,7 @@ flowchart LR
 - [Configuracao por aplicacao e ambiente](configuracao/README.md)
 - [Identidade local](../10-decisoes/ADR-011-identidade-local-do-crm.md)
 - [Identity Hub — historico](integracoes/identity-hub.md)
-- [Notificacoes: WhatsMiau local e futura Central](integracoes/notificacoes.md)
+- [WhatsApp Web assistido](integracoes/notificacoes.md)
 - [Hybex e Essence GO Industrial](integracoes/hybex-essence-go.md)
 
 ## Restricoes atuais
@@ -69,4 +58,5 @@ flowchart LR
 - sem banco compartilhado com os hubs;
 - sem acesso direto ao banco de outro sistema;
 - sem scraping do Essence GO Industrial;
-- sem credenciais externas no frontend.
+- sem provedor, webhook, Worker ou credenciais de WhatsApp no CRM;
+- sem incorporacao do WhatsApp Web em `iframe`.

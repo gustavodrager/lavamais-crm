@@ -12,8 +12,7 @@ Atualizada em 2 de setembro de 2026. `Concluido` representa implementacao, docum
 | Modelos de mensagem | Concluido | Concluido | Concluido | Um modelo publicado validado | Bloqueada |
 | Rascunho e segmentacao | Concluido | Concluido | Concluido | Audiencia manual controlada validada | Bloqueada |
 | Preparacao da audiencia | Concluido | Concluido | Concluido | Validada com dois destinatarios autorizados | Bloqueada |
-| Envio individual e outbox | Concluido | Concluido | Concluido | Desabilitado por configuracao | Bloqueada |
-| Reconciliacao pelo Worker | Concluido | Acompanhamento concluido | Concluido | Worker com zero replicas | Bloqueada |
+| WhatsApp Web assistido | Confirmacao e auditoria concluidas | Janela auxiliar concluida | Concluido | Pendente de ensaio com conta da loja | Bloqueada |
 | Resultado comercial | Concluido | Concluido | Concluido | Pendente de validacao operacional | Bloqueada |
 | Movimentacoes comerciais manuais | Concluido | Concluido | Concluido | Registro e consulta validados; cancelamento nao executado | Bloqueada |
 | Historico comercial do cliente | Concluido | Concluido | Concluido | Validado com dados controlados | Bloqueada |

@@ -25,7 +25,7 @@ Cada oportunidade deve permitir:
 
 - visualizar contexto do cliente;
 - abrir Perfil 360°;
-- enviar WhatsApp;
+- abrir mensagem no WhatsApp Web e confirmar o envio manualmente;
 - registrar interação;
 - marcar como resolvida;
 - reagendar contato.

@@ -8,14 +8,14 @@
 - definir recuperacao controlada enquanto nao existe fluxo automatico de senha;
 - remover configuracoes residuais de OIDC do backend quando nao houver conflito com outra frente.
 
-## Notificacoes
+## WhatsApp Web assistido
 
-- provisionar uma instancia autorizada e a `apikey` do WhatsMiau por ambiente;
-- cadastrar a URL de `messages.update` com segredo exclusivo;
-- revisar os modelos e confirmar o uso operacional de `sendText` antes da producao;
-- validar envio, entrega, leitura, falha e resultado incerto com destinatario autorizado;
-- iniciar o Worker com uma replica somente depois dessa validacao;
-- homologar o adaptador `Central` antes de uma migracao futura.
+- definir as estacoes autorizadas a usar a conta da loja;
+- vincular o WhatsApp Web e documentar a revogacao de dispositivo perdido;
+- revisar modelos e consentimentos antes do uso real;
+- validar popup, nova aba, QR Code e confirmacao manual com destinatarios autorizados;
+- treinar a equipe para nunca confirmar uma mensagem que nao foi enviada;
+- definir como tratar indisponibilidade ou expiracao da sessao sem alterar dados do CRM.
 
 ## Auditoria
 

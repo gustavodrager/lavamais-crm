@@ -3,7 +3,6 @@ using System.Data;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
-using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 using LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura;
 using LavaMais.Crm.Modulos.Catalogo.Aplicacao;
@@ -15,7 +14,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
 
-public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco, ConsultaDeCatalogo catalogo, ConsultaDeModelos modelos, SimuladorDePublico simulador, IRegistradorDeAuditoria auditoria, IPublicadorDeOutbox outbox, IContextoDoUsuario usuario, TimeProvider relogio) : IProjecaoDeEnvios
+public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco, ConsultaDeCatalogo catalogo, ConsultaDeModelos modelos, SimuladorDePublico simulador, IRegistradorDeAuditoria auditoria, IContextoDoUsuario usuario, TimeProvider relogio)
 {
     private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     public Task<List<AcaoComercial>> Listar(CancellationToken ct) => banco.Acoes.AsNoTracking().Include(x => x.Destinatarios).OrderByDescending(x => x.DataCriacao).ToListAsync(ct);
@@ -59,8 +58,11 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         var primeira = await simulador.Simular(criterios, 1, 100, ct, transacaoBanco); var elegiveis = primeira.Clientes.Where(x => x.Elegivel).ToList();
         var totalPaginas = (int)Math.Ceiling(primeira.QuantidadeEncontrada / 100m);
         for (var pagina = 2; pagina <= totalPaginas; pagina++) elegiveis.AddRange((await simulador.Simular(criterios, pagina, 100, ct, transacaoBanco)).Clientes.Where(x => x.Elegivel));
-        var destinatarios = elegiveis.Select(x => new DestinatarioPreparado(x.ClienteId, x.Nome, x.Whatsapp!, Renderizar(modelo.ConteudoPreVisualizacao, x.Nome, item?.Nome), modelo.ChaveTemplateNotificacao,
-            JsonSerializer.Serialize(modelo.Variaveis.ToDictionary(v => v, v => v == "nomeCliente" ? x.Nome : item?.Nome ?? string.Empty), OpcoesJson))).ToArray();
+        var destinatarios = elegiveis.Select(x => new DestinatarioPreparado(
+            x.ClienteId,
+            x.Nome,
+            x.Whatsapp!,
+            Renderizar(modelo.ConteudoPreVisualizacao, x.Nome, item?.Nome))).ToArray();
         var agora = relogio.GetUtcNow(); acao.Preparar(item?.Nome, destinatarios, agora); banco.AddRange(acao.Destinatarios);
         try { await banco.SaveChangesAsync(ct); }
         catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario."); }
@@ -78,7 +80,28 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
 
     public Task<List<DestinatarioDaAcao>> ListarDestinatarios(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Where(x => x.Id == id).SelectMany(x => x.Destinatarios).OrderBy(x => x.NomeClienteSnapshot).ToListAsync(ct);
 
-    public async Task<EnvioIndividualAceito> EnviarDestinatario(Guid acaoId, Guid destinatarioId, uint versaoEsperada, CancellationToken ct)
+    public async Task RegistrarAberturaWhatsapp(Guid acaoId, Guid destinatarioId, uint versaoEsperada, CancellationToken ct)
+    {
+        await using var tx = await banco.Database.BeginTransactionAsync(ct);
+        var acao = await banco.Acoes.AsNoTracking().Include(x => x.Destinatarios)
+            .SingleOrDefaultAsync(x => x.Id == acaoId && x.Destinatarios.Any(d => d.Id == destinatarioId), ct)
+            ?? throw new ExcecaoDeRecursoNaoEncontrado("Destinatario da acao nao encontrado.");
+        var destinatario = acao.Destinatarios.Single(x => x.Id == destinatarioId);
+        if (destinatario.Versao != versaoEsperada)
+            throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario.");
+        if (acao.Situacao is not (SituacaoDaAcaoComercial.Preparada or SituacaoDaAcaoComercial.EmProcessamento)
+            || destinatario.SituacaoEnvio != SituacaoDoEnvio.Pendente)
+            throw new ExcecaoDeConflito("destinatario_indisponivel_para_abertura", "A conversa deste destinatario nao esta disponivel para abertura.");
+
+        var agora = relogio.GetUtcNow();
+        await auditoria.Registrar(
+            new("ConversaWhatsappAberta", "DestinatarioDaAcao", destinatario.Id, JsonSerializer.Serialize(new { acaoId }, OpcoesJson), agora),
+            tx.GetDbTransaction(),
+            ct);
+        await tx.CommitAsync(ct);
+    }
+
+    public async Task<EnvioManualConfirmado> ConfirmarEnvioWhatsapp(Guid acaoId, Guid destinatarioId, uint versaoEsperada, CancellationToken ct)
     {
         await using var tx = await banco.Database.BeginTransactionAsync(ct);
         var acao = await banco.Acoes.Include(x => x.Destinatarios)
@@ -89,27 +112,12 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
             throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario.");
 
         var agora = relogio.GetUtcNow();
-        acao.SolicitarEnvio(destinatarioId, agora);
+        acao.ConfirmarEnvio(destinatarioId, usuario.UsuarioIdentidadeId, agora);
         try
         {
             await banco.SaveChangesAsync(ct);
-            var solicitacao = new SolicitacaoDeNotificacao(
-                "Whatsapp",
-                destinatario.ChaveTemplateNotificacaoSnapshot,
-                destinatario.ChaveIdempotencia!,
-                destinatario.NomeClienteSnapshot,
-                destinatario.DestinoSnapshot,
-                destinatario.ConteudoPreVisualizacaoSnapshot,
-                JsonSerializer.Deserialize<Dictionary<string, string>>(destinatario.PayloadNotificacaoJson, OpcoesJson)!);
-            var mensagem = new MensagemDeOutboxSolicitada(
-                acao.TenantId,
-                "SolicitarNotificacao",
-                destinatario.ChaveIdempotencia!,
-                JsonSerializer.Serialize(new MensagemDeEnvioOutbox(acao.TenantId, destinatario.Id, solicitacao), OpcoesJson),
-                agora);
             var dbtx = tx.GetDbTransaction();
-            await outbox.Publicar(mensagem, dbtx, ct);
-            await auditoria.Registrar(new("EnvioIndividualSolicitado", "DestinatarioDaAcao", destinatario.Id, JsonSerializer.Serialize(new { acaoId }, OpcoesJson), agora), dbtx, ct);
+            await auditoria.Registrar(new("EnvioWhatsappConfirmadoManualmente", "DestinatarioDaAcao", destinatario.Id, JsonSerializer.Serialize(new { acaoId }, OpcoesJson), agora), dbtx, ct);
             await tx.CommitAsync(ct);
         }
         catch (DbUpdateConcurrencyException)
@@ -117,65 +125,7 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
             throw new ExcecaoDeConflito("versao_desatualizada", "O destinatario foi alterado por outro usuario.");
         }
 
-        return new(destinatario.Id, destinatario.SituacaoEnvio, destinatario.Versao);
-    }
-
-    public async Task RegistrarSolicitacao(Guid tenantId, Guid destinatarioId, ReferenciaDeNotificacao referencia, System.Data.Common.DbTransaction transacao, CancellationToken ct)
-    {
-        banco.Database.SetDbConnection(transacao.Connection!, false);
-        await banco.Database.UseTransactionAsync(transacao, ct);
-        var destinatario = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct);
-        destinatario.RegistrarSolicitacao(referencia);
-        await banco.SaveChangesAsync(ct);
-    }
-
-    public async Task RegistrarFalhaNaSolicitacao(Guid tenantId, Guid destinatarioId, string codigoFalha, System.Data.Common.DbTransaction transacao, CancellationToken ct)
-    {
-        banco.Database.SetDbConnection(transacao.Connection!, false);
-        await banco.Database.UseTransactionAsync(transacao, ct);
-        var destinatario = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct);
-        var agora = relogio.GetUtcNow();
-        destinatario.RegistrarFalhaNaSolicitacao(codigoFalha, agora);
-        var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == destinatario.AcaoComercialId, ct);
-        acao.RecalcularConclusao(agora);
-        await banco.SaveChangesAsync(ct);
-    }
-
-    public async Task<IReadOnlyCollection<NotificacaoPendente>> ListarPendentes(int limite, CancellationToken ct) =>
-        await banco.Set<DestinatarioDaAcao>()
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .Where(x => x.NotificacaoId != null
-                && x.ServicoNotificacao != null
-                && x.SituacaoEnvio != SituacaoDoEnvio.Entregue
-                && x.SituacaoEnvio != SituacaoDoEnvio.Lido
-                && x.SituacaoEnvio != SituacaoDoEnvio.Falhou)
-            .OrderBy(x => x.DataUltimaReconciliacao ?? DateTimeOffset.MinValue)
-            .ThenBy(x => x.Id)
-            .Take(limite)
-            .Select(x => new NotificacaoPendente(
-                x.TenantId,
-                x.Id,
-                new ReferenciaDeNotificacao(x.ServicoNotificacao!.Value, x.NotificacaoId!)))
-            .ToListAsync(ct);
-
-    public async Task AtualizarEstado(Guid tenantId, Guid destinatarioId, EstadoConsolidadoDaNotificacao estadoTecnico, CancellationToken ct)
-    {
-        var destinatario = await banco.Set<DestinatarioDaAcao>().IgnoreQueryFilters().SingleAsync(x => x.TenantId == tenantId && x.Id == destinatarioId, ct);
-        var estado = estadoTecnico.Situacao switch
-        {
-            SituacaoTecnicaDaNotificacao.Pendente or SituacaoTecnicaDaNotificacao.Processando => SituacaoDoEnvio.Solicitado,
-            SituacaoTecnicaDaNotificacao.Enviada => SituacaoDoEnvio.Enviado,
-            SituacaoTecnicaDaNotificacao.Entregue => SituacaoDoEnvio.Entregue,
-            SituacaoTecnicaDaNotificacao.Lida => SituacaoDoEnvio.Lido,
-            SituacaoTecnicaDaNotificacao.Falhou => SituacaoDoEnvio.Falhou,
-            _ => destinatario.SituacaoEnvio
-        };
-        var agora = relogio.GetUtcNow();
-        destinatario.AtualizarEstado(estado, estadoTecnico.CodigoFalha, agora);
-        var acao = await banco.Acoes.IgnoreQueryFilters().Include(x => x.Destinatarios).SingleAsync(x => x.TenantId == tenantId && x.Id == destinatario.AcaoComercialId, ct);
-        acao.RecalcularConclusao(agora);
-        await banco.SaveChangesAsync(ct);
+        return new(destinatario.Id, destinatario.SituacaoEnvio, destinatario.DataEnvioConfirmado!.Value, destinatario.Versao);
     }
 
     public async Task RegistrarResultado(Guid acaoId, Guid destinatarioId, ResultadoComercial resultado, decimal? valorConvertido, uint versaoEsperada, CancellationToken ct)
@@ -202,4 +152,4 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
 }
 
 public sealed record DadosDoRascunho(string Nome, string? Objetivo, Guid? ItemDeCatalogoId, Guid? VersaoModeloId, CriteriosDeSegmentacao Criterios);
-public sealed record EnvioIndividualAceito(Guid Id, SituacaoDoEnvio SituacaoEnvio, uint Versao);
+public sealed record EnvioManualConfirmado(Guid Id, SituacaoDoEnvio SituacaoEnvio, DateTimeOffset DataEnvioConfirmado, uint Versao);

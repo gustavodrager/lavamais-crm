@@ -36,7 +36,6 @@ describe("aprovação de mensagens em Ações Comerciais", () => {
     expect(dependencias.criarEPublicarModelo).toHaveBeenCalledWith({
       nome: modelo.nome,
       conteudoPreVisualizacao: modelo.conteudoPreVisualizacao,
-      chaveTemplateNotificacao: modelo.chaveTemplateNotificacao,
     });
   });
 

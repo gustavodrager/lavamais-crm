@@ -1,63 +1,42 @@
 # Backend do LavaMais CRM
 
-Fundacao da CRM API e do CRM Worker em .NET 10, organizada como monolito modular.
+CRM API e ferramentas controladas em .NET 10, organizadas como monolito modular.
 
 ## Requisitos
 
 - SDK .NET definido em `global.json`;
 - Docker com Compose;
-- PostgreSQL 17 (o Compose fornece a instancia local).
+- PostgreSQL 17, fornecido localmente pelo Compose.
 
 ## Executar localmente
 
-Na raiz do repositorio:
+Na raiz do repositório:
 
 ```bash
 docker compose -f infraestrutura/compose.yml up -d
 dotnet run --project src/backend/LavaMais.Crm.Api
 ```
 
-A API publica:
+A API publica OpenAPI em `/openapi/v1.json`, vida em `/saude/vivo` e prontidão em `/saude/pronto`. Os logs registram método, caminho sem query string, status, duração e correlação; não registram corpos, tokens, telefone ou conteúdo de mensagem.
 
-- OpenAPI em `/openapi/v1.json`;
-- verificacao de vida em `/saude/vivo`;
-- verificacao de prontidao, incluindo PostgreSQL, em `/saude/pronto`.
+Não existe Worker de WhatsApp. O envio assistido acontece no navegador pelo link oficial `wa.me`; a API apenas registra abertura, confirmação manual e resultado comercial.
 
-As respostas incluem correlacao e cabecalhos defensivos. Os logs JSON registram apenas metodo, caminho sem query string, status e duracao; corpos, tokens e dados pessoais nao sao registrados.
+## Configuração
 
-Para iniciar o Worker que processa a outbox e reconcilia o estado das notificacoes:
-
-```bash
-dotnet run --project src/backend/LavaMais.Crm.Worker
-```
-
-## Configuracao
-
-A conexao PostgreSQL aceita, nesta ordem:
+A conexão PostgreSQL aceita, nesta ordem:
 
 1. `DATABASE_URL`, no formato `postgresql://` fornecido pelo Railway;
 2. `ConnectionStrings__Crm`, no formato nativo do Npgsql.
 
-O backend converte `DATABASE_URL` sem registrar usuario, senha ou URL nos logs. A conexao local existe apenas em `appsettings.Development.json`; homologacao e producao falham na inicializacao quando nenhuma conexao externa e fornecida.
-
-Os bancos remotos estao no projeto Railway `lavamais-crm` (`5263440b-433f-477d-ab43-2696c55e6392`):
-
-| Ambiente da aplicacao | Ambiente Railway | ID do ambiente | Servico PostgreSQL |
-|---|---|---|---|
-| `Homologacao` | `homologacao` | `cde26ae6-2a51-4511-a15a-8bb6d51e1d27` | `Postgres` (`6f47b0bb-4af2-4ee0-b26a-e3d1abbcb47d`) |
-| `Production` | `production` | `90b94695-e749-4868-9e9a-e2891a5d0e2f` | `Postgres` (`6f47b0bb-4af2-4ee0-b26a-e3d1abbcb47d`) |
-
-Quando os servicos da API e do Worker forem criados no Railway, cada um deve receber a variavel de referencia `DATABASE_URL=${{Postgres.DATABASE_URL}}`. A API usa `ASPNETCORE_ENVIRONMENT`; o Worker usa `DOTNET_ENVIRONMENT`. Nao usar `DATABASE_PUBLIC_URL`, porque o PostgreSQL permanece privado.
-
-O envio usa `Notificacoes__Modo=Desabilitado|Local|Central`. O modo local exige `Notificacoes__WhatsMiau__BaseUrl`, `ApiKey`, `NomeInstancia` e `SegredoWebhook`; o modo central exige `Notificacoes__Central__BaseUrl`, `ApiKey` e `Origem=lavamais-crm`. API e Worker devem receber o mesmo modo e as mesmas credenciais por configuracao externa. Segredos permanecem vazios no repositorio.
+Homologação e produção falham na inicialização quando nenhuma conexão externa é fornecida. Não existem variáveis, chaves ou segredos de provedor de WhatsApp.
 
 ### Identidade local
 
-Configure `IdentidadeLocal__TenantId`, `IdentidadeLocal__NomeTenant` e `IdentidadeLocal__UsuariosIniciais`. Cada item de `UsuariosIniciais` define telefone, nome e papel inicial (`Administrador`, `Gerente` ou `Operador`), e cada usuario define sua propria senha no primeiro acesso. `TelefonePermitido` e `NomeUsuario` permanecem como compatibilidade para ambientes com um unico administrador inicial. A senha protegida e os hashes das sessoes ficam no schema `identidade`; tokens em claro permanecem apenas no BFF.
+Configure `IdentidadeLocal__TenantId`, `IdentidadeLocal__NomeTenant` e `IdentidadeLocal__UsuariosIniciais`. Cada usuário inicial possui telefone, nome e papel `Administrador`, `Gerente` ou `Operador`, e define sua própria senha no primeiro acesso. Senhas protegidas e hashes de sessão ficam no schema `identidade`; tokens em claro permanecem apenas na sessão server-side do BFF.
 
-Com `Notificacoes__Modo=Desabilitado`, o Worker nao processa a outbox e o endpoint de envio responde `503` antes de alterar o destinatario ou gravar a intencao. Para homologar o modo local, configure o WhatsMiau na API e no Worker, publique o webhook `/api/v1/webhooks/whatsmiau/{segredo}` e inicie uma unica replica do Worker.
+## Ações Comerciais e WhatsApp Web
 
-Cada confirmacao individual muda somente o destinatario escolhido para `AguardandoSolicitacao` e gera uma mensagem de outbox na mesma transacao. A primeira confirmacao muda a Acao Comercial para `EmProcessamento`; nao existe comando coletivo. O Worker processa uma intencao por vez, reutiliza a chave `acao:{acaoId}:destinatario:{destinatarioId}:v1` e recupera leases interrompidos. No modo local, o CRM guarda o identificador do WhatsMiau e recebe seus estados tecnicos; no modo central, essa responsabilidade volta ao servico externo.
+Cada destinatário começa como `Pendente`. A interface abre a mensagem congelada em `https://wa.me/{telefone}?text={mensagem}`. Abertura não muda estado. Depois que a pessoa envia no WhatsApp, o endpoint de confirmação muda somente aquele destinatário para `Enviado`, registra usuário e horário e mantém concorrência otimista. O CRM não representa entrega ou leitura.
 
 ## Build e testes
 
@@ -67,16 +46,14 @@ dotnet build LavaMais.Crm.slnx --configuration Release --no-restore
 dotnet test LavaMais.Crm.slnx --configuration Release --no-build
 ```
 
-Os testes de integracao usam PostgreSQL real por Testcontainers e, portanto, exigem Docker em execucao.
-
-O pipeline tambem verifica formatacao e pacotes com vulnerabilidades conhecidas. O [runbook operacional](../../docs/09-operacao/README.md) descreve implantacao, alertas e os scripts validados de backup e restauracao.
+Os testes de integração usam PostgreSQL real por Testcontainers e exigem Docker.
 
 ## Migrations
 
-Cada modulo possui seu proprio `DbContext`, schema e historico de migrations. O bloco `AdicionarContextoDoModulo` centraliza a configuracao do provedor sem criar um contexto compartilhado. API e Worker nao aplicam migrations automaticamente durante a inicializacao; a implantacao deve executa-las como etapa controlada.
+Cada módulo possui `DbContext`, schema e histórico próprios. A API não aplica migrations ao iniciar; a implantação usa `LavaMais.Crm.Migrador` como etapa controlada.
 
-As fabricas de design dos modulos tambem reconhecem `DATABASE_URL`. Assim, a etapa controlada de migrations pode usar a mesma referencia privada do Railway sem converter ou copiar a senha manualmente.
+O contexto vazio de `Integracoes` é temporário e existe somente para aplicar, em bancos anteriores, a migration que remove outbox e notificações locais. Ele não é referenciado pela API.
 
 ## Primeiro administrador
 
-Os usuarios iniciais sao ativados pela tela de primeiro acesso usando os telefones permitidos na configuracao. Depois que a senha de um usuario e definida, o endpoint recusa nova ativacao daquele telefone.
+Usuários iniciais são ativados pela tela de primeiro acesso usando os telefones permitidos. Depois que a senha é definida, nova ativação do mesmo telefone é recusada.

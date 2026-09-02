@@ -3,10 +3,10 @@
 ## Pre-condicoes
 
 - usuario autenticado no tenant correto;
-- usuario com papel `Administrador` ou `Gerente` para criar/preparar a acao; `Operador` pode consultar a acao, solicitar envio individual de mensagens ja preparadas e registrar resultados;
+- usuario com papel `Administrador` ou `Gerente` para criar/preparar a acao; `Operador` pode consultar a acao, abrir conversas, confirmar envios individuais e registrar resultados;
 - clientes ativos com WhatsApp e permissao de comunicacao;
 - item de catalogo ativo, quando informado ou exigido pelo modelo;
-- versao publicada de modelo vinculada a template tecnico existente.
+- versao publicada de modelo de mensagem.
 
 ## 1. Criar rascunho
 
@@ -54,40 +54,36 @@ Depois disso, criterios, item e modelo nao podem ser alterados.
 
 O usuario seleciona um destinatario congelado da acao. Para o `Operador`, a interface prioriza uma fila simples e ja abre o proximo destinatario pendente. O CRM apresenta nome, WhatsApp e conteudo final montado. O template e seus parametros ja estao congelados e nao permitem edicao livre.
 
-## 7. Solicitar envio individual
+## 7. Abrir a conversa
 
-Depois de uma confirmacao explicita, o sistema muda somente aquele destinatario para `AguardandoSolicitacao` e cria uma unica mensagem de outbox. A confirmacao individual pode ser feita por `Administrador`, `Gerente` ou `Operador`. A primeira solicitacao muda a acao para `EmProcessamento`. Nao existe comando de disparo coletivo na Versao 1.0.
+O CRM abre `wa.me` em uma janela auxiliar com telefone e conteudo congelados. Se o navegador bloquear o popup, oferece uma nova aba. A abertura registra auditoria e mantem o destinatario `Pendente`.
 
-## 8. Solicitar notificacao
+## 8. Enviar no WhatsApp
 
-O Worker chama a porta de notificacoes com chave do modelo, telefone, conteudo congelado, parametros e chave de idempotencia. No modo local, o WhatsMiau recebe o texto e seu identificador e salvo junto da origem `Local`; no modo futuro, a mesma referencia indica `Central`.
+A pessoa confere a conversa e envia dentro do WhatsApp oficial. O WhatsApp pode solicitar QR Code quando a sessao nao estiver vinculada. O CRM nao le a sessao nem a conversa.
 
-Resposta HTTP temporaria mantem a outbox elegivel para nova tentativa com a mesma chave. Falha de rede com resultado incerto termina em falha para evitar duplicidade automatica.
+## 9. Confirmar manualmente
 
-## 9. Reconciliar
+Depois do envio real, a pessoa volta ao CRM e confirma `Sim, eu enviei`. O sistema muda somente aquele destinatario de `Pendente` para `Enviado`, registra usuario e horario e inicia a acao na primeira confirmacao. A confirmacao pode ser feita por `Administrador`, `Gerente` ou `Operador`.
 
-O Worker consulta notificacoes nao finalizadas no adaptador que as criou e atualiza a projecao do CRM para `Enviado`, `Entregue`, `Lido` ou `Falhou`. No modo local, o webhook `messages.update` alimenta o estado tecnico antes da reconciliacao.
+O CRM nao possui entrega ou leitura tecnica. Repeticao concorrente e versao desatualizada retornam conflito.
 
 ## 10. Concluir
 
-Quando todos os destinatarios congelados foram solicitados e terminam:
-
-- sem falhas: `Concluida`;
-- com pelo menos uma falha: `ConcluidaComFalhas`.
+Quando todos os destinatarios congelados estao `Enviado`, a acao muda para `Concluida`.
 
 Enquanto existir destinatario `Pendente`, a acao permanece disponivel para novos envios individuais.
 
 ## 11. Registrar resultado
 
-Operadores registram o retorno comercial independentemente do estado tecnico. Uma conversao pode receber valor opcional, sem criar pedido ou faturamento.
+Operadores registram o retorno comercial depois da confirmacao do envio. Uma conversao pode receber valor opcional, sem criar pedido ou faturamento.
 
 ## Invariantes
 
 - tenant nunca muda durante o fluxo;
 - cliente aparece uma vez por acao;
 - acao preparada e imutavel no conteudo comercial;
-- repetir a solicitacao nao duplica notificacao;
-- cada confirmacao humana solicita no maximo um destinatario;
+- abrir a conversa nao confirma o envio;
+- cada confirmacao humana altera no maximo um destinatario;
 - nao existe disparo coletivo na Versao 1.0;
-- falha de um destinatario nao bloqueia os demais;
 - resultado comercial nao e inferido automaticamente.

@@ -27,15 +27,13 @@ Status: aceita. Consulte [ADR-002](../../10-decisoes/ADR-002-stack-e-monolito-mo
 ## Dados e processamento
 
 - PostgreSQL;
-- outbox transacional;
-- Worker .NET;
 - `jsonb` apenas para estruturas tipadas e versionadas.
 
 ## Integracoes
 
 - autenticacao local por telefone e senha definida no primeiro acesso;
 - sessao opaca validada pela API e mantida no BFF;
-- HTTP com `apikey` para o WhatsMiau e adaptador `X-Api-Key` preservado para a futura Central de Notificacao;
+- Click to Chat oficial por `wa.me`, aberto pelo navegador em janela auxiliar;
 - importacao CSV como primeira entrada de dados externa.
 
 ## Operacao

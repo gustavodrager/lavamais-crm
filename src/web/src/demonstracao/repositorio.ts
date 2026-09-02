@@ -2,9 +2,6 @@ import { acoesDemonstracao, clientesDemonstracao } from "@/demonstracao/dados";
 import type { PortaCrmApi } from "@/portas/crm-api";
 
 export const repositorioDemonstracao: PortaCrmApi = {
-  async obterCapacidades() {
-    return { envioNotificacoesHabilitado: true };
-  },
   async listarItensDeCatalogoAtivos() {
     return [
       { id: "6d3d0d64-a111-4cff-8db8-111111111112", nome: "Lavagem de edredom", tipo: "Servico", categoria: "Casa" },
@@ -19,7 +16,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   },
   async obter(id) {
     const acao = acoesDemonstracao.find((item) => item.id === id);
-    return acao ? { ...acao, totais: { destinatarios: acao.totalDestinatarios ?? 0, pendentes: 0, aguardandoSolicitacao: 0, solicitados: 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 }, destinatarios: [] } : null;
+    return acao ? { ...acao, totais: { destinatarios: acao.totalDestinatarios ?? 0, pendentes: 0, enviados: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 }, destinatarios: [] } : null;
   },
   async criar() {
     return { id: crypto.randomUUID() };
@@ -29,7 +26,8 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async atualizarModelo() {},
   async preparar() {},
   async cancelarAcao() {},
-  async enviarDestinatario(_id, destinatarioId, versao) { return { id: destinatarioId, situacaoEnvio: "AguardandoSolicitacao", versao: versao + 1 }; },
+  async registrarAberturaWhatsapp() {},
+  async confirmarEnvioWhatsapp(_id, destinatarioId, versao) { return { id: destinatarioId, situacaoEnvio: "Enviado", dataEnvioConfirmado: new Date().toISOString(), versao: versao + 1 }; },
   async registrarResultado() {},
   async simularPublico() {
     return {

@@ -5,7 +5,7 @@
 - migrations EF pertencem ao modulo que possui o schema;
 - `LavaMais.Crm.Migrador` aplica migrations do backend;
 - scripts em `infraestrutura/postgresql/` pertencem ao schema tecnico do BFF;
-- API, Worker e Web nao alteram schema no startup;
+- API e Web nao alteram schema no startup;
 - apenas um executor aplica mudancas por ambiente.
 
 ## Ordem

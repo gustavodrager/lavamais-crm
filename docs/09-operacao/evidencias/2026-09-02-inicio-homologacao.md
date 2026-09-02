@@ -1,5 +1,7 @@
 # Inicio da Homologacao — 2 de setembro de 2026
 
+> Evidencia historica do estado observado antes do ADR-021. As proximas acoes relativas a provedor, webhook e Worker foram canceladas e nao devem ser executadas.
+
 ## Escopo da verificacao
 
 Verificacao publica inicial e, depois da ativacao dos perfis, ensaio autenticado com dados controlados. O Worker e o WhatsApp permaneceram desligados.
@@ -44,7 +46,7 @@ Em seguida, os tres perfis realizaram o primeiro acesso. O encerramento da ativa
 - Vanessa Drager, com telefone autorizado terminado em `5526` e cadastro preexistente na base;
 - a autorizacao foi informada pelo responsavel do projeto em 2 de setembro de 2026 e se limita a homologacao;
 - nenhum numero completo foi registrado nesta evidencia;
-- nenhum envio foi realizado: API e Worker ainda nao possuem a instancia, a chave e o segredo de webhook do WhatsMiau.
+- nenhum envio foi realizado nesta evidencia; a integracao automatica entao avaliada permaneceu desativada e foi depois descartada pelo ADR-021.
 
 ## Ensaio autenticado do Gerente
 
@@ -114,6 +116,6 @@ A lista autenticada apresentou `3.523` clientes. O ensaio nao alterou registros 
 2. obter o aceite operacional da equipe sobre periodos, replanejamento e significado de conclusao das paradas do roteiro;
 3. decidir se a tela administrativa de Auditoria e Usuarios entra antes do piloto assistido ou permanece como operacao tecnica da Versao 1.0;
 4. validar os endpoints administrativos autenticados sem retirar o token opaco do BFF;
-5. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
-6. homologar envio individual, entrega, leitura e idempotencia somente com os destinatarios autorizados;
+5. validar a estacao da loja, a abertura oficial do WhatsApp Web e o comportamento da sessao ou do QR Code;
+6. homologar a confirmacao manual de envio e o registro do resultado comercial somente com os destinatarios autorizados;
 7. ensaiar backup e restauracao isolada no provedor.

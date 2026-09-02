@@ -12,7 +12,7 @@ namespace LavaMais.Crm.Modulos.Identidade.Aplicacao;
 public sealed class OpcoesDeIdentidadeLocal
 {
     public bool Habilitada { get; set; } = true;
-    public string TelefonePermitido { get; set; } = "11997372540";
+    public string TelefonePermitido { get; set; } = "11900000001";
     public Guid TenantId { get; set; }
     public string NomeTenant { get; set; } = "LavaMais";
     public string NomeUsuario { get; set; } = "Administrador LavaMais";

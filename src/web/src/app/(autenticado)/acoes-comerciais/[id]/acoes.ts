@@ -17,6 +17,7 @@ export type ResultadoAlterarExclusao = { sucesso: true; simulacao: SimulacaoDePu
 export type ResultadoPrepararAcao = { sucesso: false; mensagem: string };
 export type ResultadoCancelarAcao = { sucesso: true } | { sucesso: false; mensagem: string };
 export type ResultadoEnviarMensagem = { sucesso: true } | { sucesso: false; mensagem: string };
+export type ResultadoRegistrarAbertura = { sucesso: true } | { sucesso: false; mensagem: string };
 export type ResultadoRegistrarResultado = { sucesso: true } | { sucesso: false; mensagem: string };
 const criteriosSemFiltros = { versaoSchema: 2 as const, modo: "Filtros" as const, tipoCliente: null, cidades: null, bairros: null, etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null };
 
@@ -161,14 +162,27 @@ export async function cancelarAcao(entrada: { acaoId: string; motivo: string; ve
   redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
 }
 
-export async function enviarMensagemIndividual(entrada: { acaoId: string; destinatarioId: string; versao: number }): Promise<ResultadoEnviarMensagem> {
+export async function registrarAberturaWhatsapp(entrada: { acaoId: string; destinatarioId: string; versao: number }): Promise<ResultadoRegistrarAbertura> {
   const validacao = z.object({ acaoId: z.string().uuid(), destinatarioId: z.string().uuid(), versao: z.number().int().nonnegative() }).safeParse(entrada);
   if (!validacao.success) return { sucesso: false, mensagem: "Os dados do destinatário estão desatualizados. Atualize a página." };
   const sessao = await obterPortaSessao().obterSessao();
   if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
-  try { await obterPortaCrmApi().enviarDestinatario(validacao.data.acaoId, validacao.data.destinatarioId, validacao.data.versao); }
+  try { await obterPortaCrmApi().registrarAberturaWhatsapp(validacao.data.acaoId, validacao.data.destinatarioId, validacao.data.versao); }
   catch (erro) {
-    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para enviar esta mensagem." : erro.status === 404 ? "O destinatário não foi encontrado nesta ação." : erro.status === 409 ? "Esta mensagem já foi solicitada ou o destinatário foi alterado. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível solicitar esta mensagem agora." };
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para abrir esta conversa." : erro.status === 404 ? "O destinatário não foi encontrado nesta ação." : erro.status === 409 ? "Esta conversa não está mais pendente. Atualize a página." : "A conversa foi aberta, mas não foi possível registrar essa abertura no CRM." };
+    throw erro;
+  }
+  return { sucesso: true };
+}
+
+export async function confirmarEnvioWhatsapp(entrada: { acaoId: string; destinatarioId: string; versao: number }): Promise<ResultadoEnviarMensagem> {
+  const validacao = z.object({ acaoId: z.string().uuid(), destinatarioId: z.string().uuid(), versao: z.number().int().nonnegative() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Os dados do destinatário estão desatualizados. Atualize a página." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${validacao.data.acaoId}`);
+  try { await obterPortaCrmApi().confirmarEnvioWhatsapp(validacao.data.acaoId, validacao.data.destinatarioId, validacao.data.versao); }
+  catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para confirmar este envio." : erro.status === 404 ? "O destinatário não foi encontrado nesta ação." : erro.status === 409 ? "Este envio já foi confirmado ou o destinatário foi alterado. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível confirmar o envio agora." };
     throw erro;
   }
   revalidatePath(`/acoes-comerciais/${validacao.data.acaoId}`);

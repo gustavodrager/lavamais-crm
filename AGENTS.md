@@ -34,12 +34,11 @@ A implantacao inicial entrega tres fluxos conectados: clientes e `MovimentacaoCo
 - Monorepo.
 - Frontend/BFF em Next.js e TypeScript.
 - API em ASP.NET Core com .NET 10.
-- Worker em .NET 10.
 - Monolito modular no backend.
 - PostgreSQL com Entity Framework Core.
 - Autenticacao local por telefone, senha e sessao opaca, conforme ADR-011.
-- Envio de mensagens pelo WhatsMiau no modo local, atras de porta preparada para a futura Central de Notificacao, conforme ADR-017.
-- Outbox transacional no CRM para efeitos externos.
+- WhatsApp Web oficial aberto em janela auxiliar pelo frontend, com confirmacao manual auditada, conforme ADR-021.
+- O CRM nao possui provedor, webhook, Worker ou outbox para mensagens de WhatsApp.
 - OpenAPI para o contrato HTTP.
 
 Nao introduzir microsservicos, Kafka, Kubernetes, Redis ou um segundo mecanismo de filas sem um ADR aprovado e uma necessidade medida.
@@ -59,7 +58,7 @@ Modulos iniciais:
 - `Importacoes`;
 - `Autorizacao`;
 - `Auditoria`;
-- `Integracoes`.
+- `Integracoes`, somente enquanto sua migration de remocao precisa ser aplicada a bancos existentes.
 
 Cada modulo organiza `Dominio`, `Aplicacao`, `Infraestrutura` e sua exposicao HTTP. Um modulo nao acessa diretamente o `DbContext`, entidades ou tabelas internas de outro modulo. Integracoes entre modulos usam contratos de aplicacao, identificadores e eventos internos.
 
@@ -73,15 +72,17 @@ Cada modulo organiza `Dominio`, `Aplicacao`, `Infraestrutura` e sua exposicao HT
 - Os papeis `Administrador`, `Gerente` e `Operador` sao especificos do CRM e ficam no banco do CRM.
 - O BFF guarda o token opaco na sessao server-side e entrega ao navegador somente um cookie `HttpOnly`.
 
-## Notificacoes
+## WhatsApp Web assistido
 
-- Credenciais ficam apenas na API ou no Worker.
-- Usar chave de idempotencia deterministica por tenant e guardar a origem `Local` ou `Central` junto ao identificador.
-- A outbox transacional existente e a unica fila; `notificacoes_locais` guarda estado tecnico, nao agenda trabalho.
-- No modo local, enviar o conteudo congelado pelo WhatsMiau e converter somente os eventos conhecidos de `messages.update`.
-- Nao registrar telefone, conteudo, `apikey` ou segredo do webhook em logs.
-- No modo `Central`, usar `source=lavamais-crm` e delegar tentativas e webhooks tecnicos ao servico externo.
-- Mensagens proativas de WhatsApp usam modelos revisados e parametros controlados, sem edicao livre depois da preparacao.
+- Usar somente o link oficial `https://wa.me/{telefone}?text={mensagem}`.
+- Abrir a conversa em janela auxiliar ou, se bloqueada, em nova aba; nao tentar incorporar `web.whatsapp.com` em `iframe`.
+- QR Code, cookies, sessao e conversas pertencem ao WhatsApp e nunca sao lidos ou armazenados pelo CRM.
+- Abrir a conversa registra auditoria, mas nao muda o destinatario para enviado.
+- Mudar `Pendente` para `Enviado` somente depois de `Sim, eu enviei`, registrando usuario e horario.
+- `Enviado` e uma declaracao humana; nao afirmar entrega, leitura ou resposta tecnica.
+- Nao criar provedor, webhook, Worker, outbox, envio coletivo ou automacao sem novo ADR.
+- Nao registrar telefone ou conteudo da mensagem em logs tecnicos.
+- Mensagens usam modelos revisados e parametros controlados, sem edicao livre depois da preparacao.
 
 ## Persistencia
 

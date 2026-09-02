@@ -38,8 +38,9 @@ Este documento define requisitos tecnicos iniciais. Base legal, textos de consen
 
 - elegibilidade verifica permissao de comunicacao;
 - destinatarios sao congelados para auditoria;
-- conteudo e dados enviados ao WhatsMiau ou a futura Central sao limitados ao necessario para a mensagem congelada;
-- WhatsMiau e demais operadores externos devem constar da avaliacao juridica e contratual;
+- o link oficial recebe somente telefone e conteudo congelado necessarios para abrir a conversa;
+- QR Code, sessao, cookies e conversas permanecem no WhatsApp e nao sao armazenados pelo CRM;
+- o papel do WhatsApp como operador externo deve constar da avaliacao juridica e contratual;
 - revogacao futura impede novas acoes, sem apagar automaticamente o historico necessario a auditoria.
 
 ## Pendencias obrigatorias antes da producao

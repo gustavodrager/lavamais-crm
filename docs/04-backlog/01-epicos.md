@@ -1,6 +1,6 @@
 # Epicos da Versao 1.0
 
-> Status: backlog historico de descoberta. Validar cada item contra o escopo vigente e os ADRs antes de implementar. A identidade pelo Identity Hub foi substituida pelo ADR-011.
+> Status: atualizado conforme as decisoes vigentes da Versao 1.0.
 
 ## EP01 — Fundacao tecnica
 
@@ -8,7 +8,7 @@ Monorepo, ambientes, banco, observabilidade, CI/CD e estrutura do monolito modul
 
 ## EP02 — Identidade e autorizacao
 
-Login pelo Identity Hub, contexto de tenant e papeis locais do CRM.
+Login local, contexto de tenant e papeis do CRM.
 
 ## EP03 — Clientes
 
@@ -24,7 +24,7 @@ Cadastro de produtos e servicos usados nas acoes comerciais.
 
 ## EP06 — Modelos de mensagem
 
-Modelos comerciais vinculados aos templates tecnicos do Notification Hub.
+Modelos comerciais aprovados, versionados e congelados na preparacao da acao.
 
 ## EP07 — Segmentacao
 
@@ -34,9 +34,9 @@ Filtros simples, simulacao de audiencia e regras de elegibilidade.
 
 Criacao, preparacao, congelamento de destinatarios, execucao e acompanhamento.
 
-## EP09 — Integracao com Notification Hub
+## EP09 — WhatsApp Web assistido
 
-Outbox, idempotencia, solicitacao de envio e reconciliacao de estados.
+Abertura individual da mensagem por link oficial, confirmacao manual do envio e auditoria, sem incorporacao, provedor ou automacao.
 
 ## EP10 — Resultado comercial
 

@@ -1,6 +1,6 @@
 # Operacao do Backend
 
-Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-008.
+Este runbook cobre a operacao tecnica inicial da CRM API, do BFF e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-008.
 
 ## Checklists
 
@@ -15,19 +15,19 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do CRM Worker, do BFF 
 1. fornecer segredos por variaveis do ambiente, sem arquivos versionados;
 2. executar migrations e os scripts de `infraestrutura/postgresql/` em ordem numerica como etapa unica e controlada antes de liberar a nova versao;
 3. iniciar a API e validar `/saude/vivo` e `/saude/pronto`;
-4. configurar o mesmo `Notificacoes__Modo` na API e no Worker e, no modo local, cadastrar o webhook do WhatsMiau;
-5. iniciar uma unica instancia do Worker e confirmar processamento da outbox;
-6. executar uma acao de homologacao com destinatario autorizado e conferir idempotencia, webhook e reconciliacao.
+4. validar em uma estacao autorizada que o link abre somente o WhatsApp oficial;
+5. vincular a conta da loja no proprio WhatsApp Web quando solicitado;
+6. executar uma acao com destinatario autorizado, enviar manualmente e conferir abertura, confirmacao e auditoria.
 
-Em 20 de agosto de 2026, a homologacao foi publicada no Railway com componentes separados. A API responde em `https://lavamais-crm-api-homologacao.up.railway.app` e o BFF em `https://lavamais-crm-web-homologacao.up.railway.app`. O migrador concluiu e encerrou com sucesso. O Worker foi validado contra o banco e permaneceu com zero replicas. Depois do ADR-017, ele pode ser ativado com uma replica quando instancia, credenciais e webhook do WhatsMiau forem homologados.
+Em 20 de agosto de 2026, a homologacao foi publicada no Railway com API e BFF separados. A API responde em `https://lavamais-crm-api-homologacao.up.railway.app` e o BFF em `https://lavamais-crm-web-homologacao.up.railway.app`. O migrador concluiu e encerrou com sucesso. Um servico antigo de processamento permaneceu com zero replicas; depois do ADR-021 ele e obsoleto, nunca deve ser ativado e pode ser removido em operacao controlada.
 
-O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige login local validado, canal de notificacoes seguro e homologado e ensaio de restauracao.
+O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige login local validado, procedimento do WhatsApp Web homologado e ensaio de restauracao.
 
 Rollback de aplicacao deve reutilizar uma versao compatível com o schema já aplicado. Migrations destrutivas exigem plano específico e backup validado; não se executa `database update` automaticamente no startup.
 
 ### Conexao dos componentes no Railway
 
-Para a API e o Worker, criar em cada ambiente uma variavel de referencia `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Usar `ASPNETCORE_ENVIRONMENT=Homologacao` e `DOTNET_ENVIRONMENT=Homologacao` em homologacao; em producao, usar `Production` nos dois componentes.
+Para a API e o Migrador, criar em cada ambiente uma variavel de referencia `DATABASE_URL=${{Postgres.DATABASE_URL}}`. Usar `ASPNETCORE_ENVIRONMENT=Homologacao` na API e `DOTNET_ENVIRONMENT=Homologacao` no Migrador; em producao, usar `Production`.
 
 Para o BFF, criar `LAVAMAIS_SESSOES_DATABASE_URL=${{Postgres.DATABASE_URL}}` e uma chave aleatoria Base64 de 32 bytes em `LAVAMAIS_CHAVE_CRIPTOGRAFIA_SESSAO`. A chave nao pode ser compartilhada entre ambientes ou registrada em logs; sua rotacao encerra as sessoes existentes.
 
@@ -41,10 +41,9 @@ Alertar ao menos para:
 
 - `/saude/pronto` indisponível;
 - aumento de respostas 5xx;
-- mensagens da outbox sem conclusão ou com lease expirando repetidamente;
-- destinatários em estado não final por período superior ao acordado com o canal configurado;
-- falhas ou ausência de eventos `messages.update` do WhatsMiau no modo local;
-- falhas recorrentes do ciclo do Worker.
+- erros recorrentes nos endpoints de abertura ou confirmacao do WhatsApp;
+- destinatarios pendentes por periodo superior ao acordado com a operacao;
+- confirmacoes duplicadas ou conflitos de concorrencia acima do esperado.
 
 ## Backup e restauração
 
@@ -70,7 +69,7 @@ Antes da produção ainda é obrigatório definir e testar com o provedor: agend
 ## Incidentes
 
 1. preservar `CorrelationId`, horário UTC, versão e tenant afetado, sem copiar tokens ou dados pessoais;
-2. interromper apenas o componente necessário; parar o Worker não remove mensagens da outbox;
+2. interromper apenas o componente necessario;
 3. confirmar banco e tenant antes de qualquer correção de dados;
 4. registrar ações e responsáveis;
 5. em suspeita de vazamento, revogar credenciais envolvidas e seguir o procedimento jurídico e operacional de resposta a incidente.

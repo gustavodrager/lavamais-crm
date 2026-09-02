@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, MessageCircle, Search, Send, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ArrowRight, MessageCircle, Search, Send, type LucideIcon } from "lucide-react";
 import type { ResumoAcaoComercial, SituacaoAcaoComercial } from "@/contratos/apresentacao";
 import { SituacaoAcao } from "@/components/situacao-acao";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { rotuloProximaAcao } from "@/lib/acoes-comerciais";
 import { cn } from "@/lib/utils";
 
-const filtros: Array<{ rotulo: string; valor: "Todas" | SituacaoAcaoComercial | "Falhas" }> = [
-  { rotulo: "Todas", valor: "Todas" }, { rotulo: "Rascunhos", valor: "Rascunho" }, { rotulo: "Preparadas", valor: "Preparada" }, { rotulo: "Em andamento", valor: "EmProcessamento" }, { rotulo: "Com falhas", valor: "Falhas" }, { rotulo: "Concluídas", valor: "Concluida" },
+const filtros: Array<{ rotulo: string; valor: "Todas" | SituacaoAcaoComercial }> = [
+  { rotulo: "Todas", valor: "Todas" }, { rotulo: "Rascunhos", valor: "Rascunho" }, { rotulo: "Preparadas", valor: "Preparada" }, { rotulo: "Em andamento", valor: "EmProcessamento" }, { rotulo: "Concluídas", valor: "Concluida" },
 ];
 
-export type FiltroOperador = "ParaEnviar" | "Retornos" | "Falhas" | "Concluidas";
+export type FiltroOperador = "ParaEnviar" | "Retornos" | "Concluidas";
 const filtrosOperador: Array<{ rotulo: string; valor: FiltroOperador }> = [
-  { rotulo: "Para enviar", valor: "ParaEnviar" }, { rotulo: "Retornos", valor: "Retornos" }, { rotulo: "Falhas", valor: "Falhas" }, { rotulo: "Finalizadas", valor: "Concluidas" },
+  { rotulo: "Para enviar", valor: "ParaEnviar" }, { rotulo: "Retornos", valor: "Retornos" }, { rotulo: "Finalizadas", valor: "Concluidas" },
 ];
 
 export function ListaAcoes({ acoes, modoOperador = false, filtroInicial = "ParaEnviar" }: { acoes: ResumoAcaoComercial[]; modoOperador?: boolean; filtroInicial?: FiltroOperador }) {
@@ -34,22 +34,20 @@ export function ListaAcoes({ acoes, modoOperador = false, filtroInicial = "ParaE
     if (modoOperador) {
       if (filtroOperador === "ParaEnviar") return acao.mensagensParaEnviar > 0;
       if (filtroOperador === "Retornos") return acao.retornosParaRegistrar > 0;
-      if (filtroOperador === "Falhas") return acao.falhasParaRevisar > 0;
-      return acao.mensagensParaEnviar === 0 && acao.retornosParaRegistrar === 0 && acao.falhasParaRevisar === 0;
+      return acao.mensagensParaEnviar === 0 && acao.retornosParaRegistrar === 0;
     }
-    return filtro === "Todas" || acao.situacao === filtro || (filtro === "Concluida" && acao.situacao === "ConcluidaComFalhas") || (filtro === "Falhas" && acao.situacao === "ConcluidaComFalhas");
+    return filtro === "Todas" || acao.situacao === filtro || (filtro === "Concluida" && acao.situacao === "ConcluidaComFalhas");
   });
   if (modoOperador) return <div className="space-y-4">
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
       <ResumoFila icone={Send} rotulo="Mensagens para enviar" valor={acoesOperacionais.reduce((total, acao) => total + acao.mensagensParaEnviar, 0)} />
       <ResumoFila icone={MessageCircle} rotulo="Retornos para registrar" valor={acoesOperacionais.reduce((total, acao) => total + acao.retornosParaRegistrar, 0)} />
-      <ResumoFila icone={TriangleAlert} rotulo="Falhas para revisar" valor={acoesOperacionais.reduce((total, acao) => total + acao.falhasParaRevisar, 0)} />
     </div>
     <div className="relative max-w-xl"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" /><Input value={busca} onChange={(evento) => setBusca(evento.target.value)} className="h-11 pl-9" placeholder="Buscar fila por ação ou objetivo" aria-label="Buscar fila de mensagens" /></div>
     <div className="flex gap-2 overflow-x-auto rounded-xl border bg-secondary/70 p-2 sm:flex-wrap sm:p-3" aria-label="Filtrar fila de mensagens">
       {filtrosOperador.map((item) => <Button key={item.valor} type="button" size="sm" className="min-h-11" variant={filtroOperador === item.valor ? "default" : "ghost"} aria-pressed={filtroOperador === item.valor} onClick={() => setFiltroOperador(item.valor)}>{item.rotulo}</Button>)}
     </div>
-    {visiveis.length === 0 ? <Card><p className="p-8 text-center text-sm text-muted-foreground">Nenhuma tarefa corresponde a este filtro.</p></Card> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{visiveis.map((acao) => <Link key={acao.id} href={`/acoes-comerciais/${acao.id}`} aria-label={`Abrir fila: ${acao.nome}`} className="rounded-lg border bg-card p-4 transition-colors hover:border-primary active:bg-secondary/60"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-[var(--marca-azul-profundo)]">{acao.nome}</p><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{acao.objetivo ?? "Mensagem pronta para atendimento."}</p></div><SituacaoAcao situacao={acao.situacao} /></div><dl className="mt-4 grid grid-cols-3 gap-2 border-y py-3 text-center"><Tarefa rotulo="Enviar" valor={acao.mensagensParaEnviar} /><Tarefa rotulo="Retornos" valor={acao.retornosParaRegistrar} /><Tarefa rotulo="Falhas" valor={acao.falhasParaRevisar} /></dl><div className="mt-3 flex items-center justify-between gap-3 text-sm"><span className="text-muted-foreground">{acao.totalDestinatarios ?? acao.quantidadeDestinatarios ?? 0} clientes</span><span className="flex items-center gap-1 font-medium text-primary">Abrir fila<ArrowRight className="size-4" /></span></div></Link>)}</div>}
+    {visiveis.length === 0 ? <Card><p className="p-8 text-center text-sm text-muted-foreground">Nenhuma tarefa corresponde a este filtro.</p></Card> : <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{visiveis.map((acao) => <Link key={acao.id} href={`/acoes-comerciais/${acao.id}`} aria-label={`Abrir fila: ${acao.nome}`} className="rounded-lg border bg-card p-4 transition-colors hover:border-primary active:bg-secondary/60"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate font-semibold text-[var(--marca-azul-profundo)]">{acao.nome}</p><p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{acao.objetivo ?? "Mensagem pronta para atendimento."}</p></div><SituacaoAcao situacao={acao.situacao} /></div><dl className="mt-4 grid grid-cols-2 gap-2 border-y py-3 text-center"><Tarefa rotulo="Enviar" valor={acao.mensagensParaEnviar} /><Tarefa rotulo="Retornos" valor={acao.retornosParaRegistrar} /></dl><div className="mt-3 flex items-center justify-between gap-3 text-sm"><span className="text-muted-foreground">{acao.totalDestinatarios ?? acao.quantidadeDestinatarios ?? 0} clientes</span><span className="flex items-center gap-1 font-medium text-primary">Abrir fila<ArrowRight className="size-4" /></span></div></Link>)}</div>}
   </div>;
   return <div className="space-y-4">
     <div className="relative max-w-xl"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" /><Input value={busca} onChange={(evento) => setBusca(evento.target.value)} className="h-11 pl-9" placeholder="Buscar ação por nome ou objetivo" aria-label="Buscar ações" /></div>

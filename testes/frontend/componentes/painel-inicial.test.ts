@@ -19,22 +19,19 @@ import {
 const criterios = { versaoSchema: 2 as const, modo: "Filtros" as const, tipoCliente: null, cidades: null, bairros: null, etiquetaIds: null, cadastradoApartirDe: null, dataNascimentoDe: null, dataNascimentoAte: null, clienteIds: null, clienteIdsExcluidos: null };
 
 describe("painel inicial", () => {
-  it("separa mensagens, falhas e retornos que realmente precisam de ação", () => {
+  it("separa mensagens pendentes e retornos depois dos envios confirmados", () => {
     const detalhe = criarDetalhe([
       criarDestinatario("Pendente", "NaoInformado"),
-      criarDestinatario("AguardandoSolicitacao", "NaoInformado"),
       criarDestinatario("Enviado", "NaoInformado"),
-      criarDestinatario("Entregue", "Interessado", "2026-08-20T15:00:00Z"),
-      criarDestinatario("Lido", "Convertido", "2026-08-21T15:00:00Z", 120),
-      criarDestinatario("Falhou", "NaoInformado"),
-      criarDestinatario("Lido", "Convertido", "2026-07-31T15:00:00Z", 80),
+      criarDestinatario("Enviado", "Interessado", "2026-08-20T15:00:00Z"),
+      criarDestinatario("Enviado", "Convertido", "2026-08-21T15:00:00Z", 120),
+      criarDestinatario("Enviado", "Convertido", "2026-07-31T15:00:00Z", 80),
     ]);
 
     const resumo = resumirAcoesNoPainel([detalhe], new Date("2026-08-26T15:00:00Z"));
 
     expect(resumo).toMatchObject({
       mensagensParaEnviar: 1,
-      falhasParaRevisar: 1,
       retornosParaRegistrar: 1,
       resultadosRegistrados: 2,
       interessados: 1,
@@ -46,23 +43,23 @@ describe("painel inicial", () => {
   it("resume a fila operacional sem consultar cada ação novamente", () => {
     const base: ResumoAcaoComercial = {
       id: "acao-1", nome: "Ação 1", objetivo: null, itemDeCatalogoId: null, versaoModeloId: null, criterios,
-      situacao: "EmProcessamento", totalDestinatarios: 10, mensagensParaEnviar: 3, falhasParaRevisar: 1,
+      situacao: "EmProcessamento", totalDestinatarios: 10, mensagensParaEnviar: 3,
       retornosParaRegistrar: 2, resultadosRegistrados: 4, dataAtualizacao: "2026-08-26T12:00:00Z", versao: 1,
     };
 
     const resumo = resumirAcoesOperacionais([
       base,
-      { ...base, id: "acao-2", mensagensParaEnviar: 2, falhasParaRevisar: 0, retornosParaRegistrar: 1, resultadosRegistrados: 5, dataAtualizacao: "2026-08-27T12:00:00Z" },
+      { ...base, id: "acao-2", mensagensParaEnviar: 2, retornosParaRegistrar: 1, resultadosRegistrados: 5, dataAtualizacao: "2026-08-27T12:00:00Z" },
       { ...base, id: "rascunho", situacao: "Rascunho", mensagensParaEnviar: 99 },
     ]);
 
-    expect(resumo).toMatchObject({ mensagensParaEnviar: 5, falhasParaRevisar: 1, retornosParaRegistrar: 3, resultadosRegistrados: 9 });
+    expect(resumo).toMatchObject({ mensagensParaEnviar: 5, retornosParaRegistrar: 3, resultadosRegistrados: 9 });
     expect(resumo.porAcao.map((acao) => acao.acaoId)).toEqual(["acao-2", "acao-1"]);
   });
 
   it("considera o mês e o dia no horário de São Paulo", () => {
     const detalhe = criarDetalhe([
-      criarDestinatario("Lido", "Convertido", "2026-09-01T02:30:00Z", 50),
+      criarDestinatario("Enviado", "Convertido", "2026-09-01T02:30:00Z", 50),
     ]);
     const agora = new Date("2026-08-31T15:00:00Z");
 
@@ -117,7 +114,10 @@ function criarDetalhe(destinatarios: DestinatarioDaAcao[]): DetalheAcaoComercial
   return {
     id: "acao", nome: "Ação de teste", objetivo: null, itemDeCatalogoId: null, versaoModeloId: null, criterios,
     situacao: "EmProcessamento", totalDestinatarios: destinatarios.length, dataAtualizacao: "2026-08-26T12:00:00Z", versao: 1,
-    totais: { destinatarios: destinatarios.length, pendentes: 0, aguardandoSolicitacao: 0, solicitados: 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 },
+    mensagensParaEnviar: destinatarios.filter((item) => item.situacaoEnvio === "Pendente").length,
+    retornosParaRegistrar: destinatarios.filter((item) => item.situacaoEnvio === "Enviado" && item.resultadoComercial === "NaoInformado").length,
+    resultadosRegistrados: destinatarios.filter((item) => item.resultadoComercial !== "NaoInformado").length,
+    totais: { destinatarios: destinatarios.length, pendentes: 0, enviados: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 },
     destinatarios,
   };
 }
@@ -125,7 +125,7 @@ function criarDetalhe(destinatarios: DestinatarioDaAcao[]): DetalheAcaoComercial
 let sequenciaDestinatario = 0;
 function criarDestinatario(situacaoEnvio: DestinatarioDaAcao["situacaoEnvio"], resultadoComercial: DestinatarioDaAcao["resultadoComercial"], dataResultadoComercial: string | null = null, valorConvertido: number | null = null): DestinatarioDaAcao {
   sequenciaDestinatario += 1;
-  return { id: `destinatario-${sequenciaDestinatario}`, clienteId: `cliente-${sequenciaDestinatario}`, nomeCliente: "Ana", destino: "+5513999999999", conteudoPreVisualizacao: "Olá", situacaoEnvio, resultadoComercial, valorConvertido, dataResultadoComercial, codigoFalha: situacaoEnvio === "Falhou" ? "falha_teste" : null, versao: 1 };
+  return { id: `destinatario-${sequenciaDestinatario}`, clienteId: `cliente-${sequenciaDestinatario}`, nomeCliente: "Ana", destino: "+5513999999999", conteudoPreVisualizacao: "Olá", situacaoEnvio, dataEnvioConfirmado: situacaoEnvio === "Enviado" ? "2026-08-20T14:00:00Z" : null, resultadoComercial, valorConvertido, dataResultadoComercial, versao: 1 };
 }
 
 function criarParada(id: string, ordem: number, situacao: RoteiroDiario["paradas"][number]["situacao"]): RoteiroDiario["paradas"][number] {

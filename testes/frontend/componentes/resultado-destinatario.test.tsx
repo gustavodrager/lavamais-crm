@@ -3,7 +3,7 @@ import { ResultadoDestinatario } from "../../../src/web/src/app/(autenticado)/ac
 import { registrarResultado } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
 
 vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({ registrarResultado: vi.fn() }));
-const destinatario = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá!", situacaoEnvio: "Entregue" as const, resultadoComercial: "Convertido" as const, valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
+const destinatario = { id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá!", situacaoEnvio: "Enviado" as const, dataEnvioConfirmado: "2026-09-02T17:00:00Z", resultadoComercial: "Convertido" as const, valorConvertido: null, dataResultadoComercial: null, versao: 1 };
 
 describe("ResultadoDestinatario", () => {
   it("solicita valor somente para conversão e confirma o salvamento", async () => {

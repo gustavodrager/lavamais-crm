@@ -64,7 +64,7 @@ A movimentacao comercial alimenta o historico do CRM. Ela nao substitui pedido, 
 - congelamento da audiencia antes do envio;
 - escolha de modelo de mensagem publicado;
 - fila operacional para a Operadora;
-- acompanhamento do estado tecnico de cada destinatario;
+- acompanhamento de pendencia e confirmacao manual por destinatario;
 - registro manual de retorno, interesse, conversao e valor convertido.
 
 ### WhatsApp e modelos de mensagem
@@ -73,11 +73,11 @@ A movimentacao comercial alimenta o historico do CRM. Ela nao substitui pedido, 
 - criacao e publicacao por Administrador ou Gerente;
 - variaveis controladas, como nome do cliente e item do catalogo;
 - pre-visualizacao antes da preparacao;
-- envio imediato e individual pelo WhatsMiau, atras de uma porta preparada para a futura Central de Notificacao;
-- outbox, idempotencia, webhook e reconciliacao tecnica pelo Worker;
+- abertura individual da conversa pelo link oficial `wa.me` em janela auxiliar;
+- confirmacao manual auditada depois que a pessoa envia no WhatsApp;
 - nenhum comando de disparo coletivo.
 
-O envio real permanece desligado ate a homologacao de instancia, credenciais, modelos e destinatario autorizado.
+O uso real permanece restrito a destinatarios autorizados ate a homologacao da estacao, da sessao oficial da loja e do procedimento operacional.
 
 ### Roteiro diario manual
 

@@ -15,7 +15,7 @@
 | `Importacoes` | entrada de clientes por CSV |
 | `Autorizacao` | papeis especificos do CRM |
 | `Auditoria` | registro imutavel de eventos sensiveis |
-| `Integracoes` | adaptadores para servicos externos |
+| `Integracoes` | contexto temporario de migration para remover a infraestrutura antiga |
 
 ## Relacoes permitidas
 
@@ -27,9 +27,8 @@ flowchart LR
     G[Catalogo] --> A[AcoesComerciais]
     S --> A
     M[ModelosDeMensagem] --> A
-    A --> P[Porta de Notificacoes]
-    P --> W[WhatsMiau]
-    P -. migracao futura .-> H[Central de Notificacao]
+    WEB[Web e BFF] --> A
+    WEB -->|wa.me em janela auxiliar| W[WhatsApp oficial]
     AU[Autorizacao] -. protege .-> A
     AU -. protege .-> C
     AD[Auditoria] -. observa eventos .-> A
@@ -67,7 +66,7 @@ Modulo/
 - referencias externas ao modulo sao IDs e snapshots necessarios ao historico;
 - integridade entre modulos e validada por contratos de aplicacao;
 - transacoes que alteram um unico agregado permanecem no modulo proprietario;
-- efeitos externos sao publicados pela outbox.
+- abertura e confirmacao do WhatsApp sao registradas como auditoria no mesmo fluxo autenticado.
 
 ## Extracao futura
 

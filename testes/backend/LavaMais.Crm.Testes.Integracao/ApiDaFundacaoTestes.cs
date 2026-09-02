@@ -59,23 +59,26 @@ public sealed class ApiDaFundacaoTestes
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         Assert.Equal("application/json", resposta.Content.Headers.ContentType?.MediaType);
         var contrato = await resposta.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        Assert.Contains("/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/enviar", contrato);
+        Assert.Contains("/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/abrir-whatsapp", contrato);
+        Assert.Contains("/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/confirmar-envio-whatsapp", contrato);
         Assert.Contains("/api/v1/movimentacoes-comerciais", contrato);
         Assert.Contains("/api/v1/roteiros", contrato);
-        Assert.Contains("/api/v1/capacidades", contrato);
-        Assert.DoesNotContain("/api/v1/webhooks/whatsmiau", contrato);
+        Assert.DoesNotContain("/api/v1/capacidades", contrato);
+        Assert.DoesNotContain("/api/v1/webhooks/", contrato);
         Assert.DoesNotContain("/api/v1/acoes-comerciais/{id}/iniciar", contrato);
     }
 
     [Fact]
-    public void Deve_permitir_envio_individual_para_operacao_e_remover_inicio_coletivo()
+    public void Deve_permitir_fluxo_assistido_individual_para_operacao_e_remover_inicio_coletivo()
     {
         using var fabrica = CriarFabrica();
         var rotas = fabrica.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>().ToArray();
 
-        var envio = Assert.Single(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{acaoId:guid}/destinatarios/{destinatarioId:guid}/enviar");
+        var abertura = Assert.Single(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{acaoId:guid}/destinatarios/{destinatarioId:guid}/abrir-whatsapp");
+        var confirmacao = Assert.Single(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{acaoId:guid}/destinatarios/{destinatarioId:guid}/confirmar-envio-whatsapp");
 
-        Assert.Contains(envio.Metadata.GetOrderedMetadata<IAuthorizeData>(), x => x.Policy == PoliticasDeAutorizacao.EnvioIndividual);
+        Assert.Contains(abertura.Metadata.GetOrderedMetadata<IAuthorizeData>(), x => x.Policy == PoliticasDeAutorizacao.EnvioIndividual);
+        Assert.Contains(confirmacao.Metadata.GetOrderedMetadata<IAuthorizeData>(), x => x.Policy == PoliticasDeAutorizacao.EnvioIndividual);
         Assert.DoesNotContain(rotas, x => x.RoutePattern.RawText == "/api/v1/acoes-comerciais/{id:guid}/iniciar");
     }
 
@@ -110,7 +113,6 @@ public sealed class ApiDaFundacaoTestes
     [InlineData("/api/v1/movimentacoes-comerciais")]
     [InlineData("/api/v1/roteiros?data=2026-09-02")]
     [InlineData("/api/v1/auditoria")]
-    [InlineData("/api/v1/capacidades")]
     public async Task Deve_exigir_autenticacao_nos_endpoints_empresariais(string rota)
     {
         await using var fabrica = CriarFabrica();
@@ -119,21 +121,6 @@ public sealed class ApiDaFundacaoTestes
         using var resposta = await cliente.GetAsync(rota, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
-    }
-
-    [Fact]
-    public async Task Webhook_deve_responder_ok_sem_revelar_segredo_valido()
-    {
-        await using var fabrica = CriarFabrica();
-        using var cliente = fabrica.CreateClient();
-        using var conteudo = new StringContent("{\"event\":\"messages.update\"}", System.Text.Encoding.UTF8, "application/json");
-
-        using var resposta = await cliente.PostAsync(
-            "/api/v1/webhooks/whatsmiau/segredo-incorreto",
-            conteudo,
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
     }
 
     [Fact]

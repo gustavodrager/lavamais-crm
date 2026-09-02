@@ -36,10 +36,9 @@ interface PainelGerencialProps {
 }
 
 export function PainelGerencial({ acoes, resumo, roteiro, roteiroAmanha, resumoMovimentacoes, dataHoje, dataAmanha, rotuloMes }: PainelGerencialProps) {
-  const acaoComFalhasId = resumo.porAcao.find((item) => item.falhasParaRevisar > 0)?.acaoId;
   const acaoComMensagensId = resumo.porAcao.find((item) => item.mensagensParaEnviar > 0)?.acaoId;
   const acaoComRetornosId = resumo.porAcao.find((item) => item.retornosParaRegistrar > 0)?.acaoId;
-  const destaqueId = acaoComFalhasId ?? acaoComMensagensId ?? acaoComRetornosId;
+  const destaqueId = acaoComMensagensId ?? acaoComRetornosId;
   const destaque = acoes.find((acao) => acao.id === destaqueId) ?? selecionarAcaoPrioritaria(acoes);
   const resumoDestaque = resumo.porAcao.find((item) => item.acaoId === destaque?.id);
   const conteudoDestaque = criarConteudoDestaque(destaque, resumoDestaque);
@@ -75,9 +74,8 @@ export function PainelGerencial({ acoes, resumo, roteiro, roteiroAmanha, resumoM
 
     <section className="mt-6" aria-labelledby="titulo-pendencias-painel">
       <CabecalhoSecao id="titulo-pendencias-painel" titulo="Pendências" descricao="Trabalho que exige uma ação da equipe." complemento="Atualizado agora" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Indicador className="col-span-2 sm:col-span-1" icone={Send} rotulo="Mensagens para enviar" valor={resumo.mensagensParaEnviar} href={caminhoDaAcao(acaoComMensagensId)} />
-        <Indicador icone={TriangleAlert} rotulo="Falhas para revisar" valor={resumo.falhasParaRevisar} href={caminhoDaAcao(acaoComFalhasId)} destaque="perigo" />
+      <div className="grid grid-cols-2 gap-3">
+        <Indicador icone={Send} rotulo="Mensagens para enviar" valor={resumo.mensagensParaEnviar} href={caminhoDaAcao(acaoComMensagensId)} />
         <Indicador icone={ClipboardCheck} rotulo="Retornos para registrar" valor={resumo.retornosParaRegistrar} href={caminhoDaAcao(acaoComRetornosId)} />
       </div>
     </section>
@@ -180,14 +178,13 @@ function CabecalhoSecao({ id, titulo, descricao, complemento }: { id: string; ti
 
 function criarConteudoDestaque(acao: ResumoAcaoComercial | null, resumo?: ResumoComercialDoPainel["porAcao"][number]) {
   if (!acao) return { sobretitulo: "Tudo em dia", titulo: "Nenhuma pendência agora", descricao: "Comece uma nova ação comercial quando houver uma oportunidade de contato.", acao: "Criar ação", atencao: false };
-  if (resumo?.falhasParaRevisar) return { sobretitulo: "Atenção agora", titulo: plural(resumo.falhasParaRevisar, "falha precisa", "falhas precisam") + " de revisão", descricao: `Confira os problemas de envio em “${acao.nome}”.`, acao: "Revisar falhas", atencao: true };
   if (resumo?.mensagensParaEnviar) return { sobretitulo: "Próxima tarefa", titulo: plural(resumo.mensagensParaEnviar, "mensagem aguarda", "mensagens aguardam") + " envio", descricao: `Continue “${acao.nome}” e confira cada mensagem antes de enviar.`, acao: "Continuar envios", atencao: false };
   if (resumo?.retornosParaRegistrar) return { sobretitulo: "Próxima tarefa", titulo: plural(resumo.retornosParaRegistrar, "retorno aguarda", "retornos aguardam") + " registro", descricao: `Registre o resultado dos contatos de “${acao.nome}”.`, acao: "Registrar retornos", atencao: false };
-  return { sobretitulo: "Próxima tarefa", titulo: acao.nome, descricao: descricaoProximaAcao(acao), acao: rotuloProximaAcao(acao.situacao), atencao: acao.situacao === "ConcluidaComFalhas" };
+  return { sobretitulo: "Próxima tarefa", titulo: acao.nome, descricao: descricaoProximaAcao(acao), acao: rotuloProximaAcao(acao.situacao), atencao: false };
 }
 
 function descricaoProximaAcao(acao: ResumoAcaoComercial) {
-  if (acao.situacao === "ConcluidaComFalhas") return "Confira as falhas antes de seguir com outras ações.";
+  if (acao.situacao === "ConcluidaComFalhas") return "Revise esta ação histórica antes de seguir.";
   if (acao.situacao === "Preparada") return "A lista e a mensagem estão prontas para os envios individuais.";
   if (acao.situacao === "Rascunho") return "Continue a configuração da ação mais recente.";
   return "Acompanhe os envios e registre os resultados comerciais.";

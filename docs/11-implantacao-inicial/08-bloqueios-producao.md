@@ -20,11 +20,11 @@ Producao nao recebe aplicacao nem dados empresariais enquanto qualquer bloqueio 
 
 ## Comunicacao
 
-- [ ] WhatsMiau autenticado e idempotencia do CRM homologada;
-- [ ] instancia, chave e segredo de webhook exclusivos provisionados;
-- [ ] modelos, parametros e uso de `sendText` aprovados;
-- [ ] envio individual homologado com destinatario autorizado;
-- [ ] Worker liberado formalmente para iniciar.
+- [ ] conta oficial da loja e estacoes autorizadas definidas;
+- [ ] vinculacao, revogacao de dispositivo e sessao expirada homologadas;
+- [ ] modelos, parametros, consentimento e procedimento aprovados;
+- [ ] abertura e confirmacao manual homologadas com destinatario autorizado;
+- [ ] equipe treinada sobre o significado limitado de `Enviado`.
 
 ## Produto e operacao
 

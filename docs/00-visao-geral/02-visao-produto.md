@@ -27,9 +27,9 @@ Modelo de mensagem
         ↓
 Revisao dos destinatarios
         ↓
-Envio pelo canal de notificacoes configurado
+Abertura individual no WhatsApp Web
         ↓
-Entrega e resultado comercial
+Confirmacao manual de envio e resultado comercial
 ```
 
 Sem historico de pedidos, o sistema nao fingira possuir inteligencia que os dados ainda nao permitem. As primeiras sugestoes e segmentacoes usam:
@@ -66,7 +66,7 @@ Depois da implantacao inicial, o produto podera evoluir para:
 - rastreavel e auditavel;
 - multitenant desde a base;
 - preparado para crescer sem complexidade prematura;
-- integracoes externas sempre isoladas por contratos.
+- integracoes externas futuras sempre isoladas por contratos.
 
 ## Fora do dominio
 

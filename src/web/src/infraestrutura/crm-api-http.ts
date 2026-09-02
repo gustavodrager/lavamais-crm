@@ -26,21 +26,19 @@ const esquemaAcaoApi = z.object({
   dataAtualizacao: z.string().datetime({ offset: true }),
   versao: z.number().int().nonnegative(), quantidadeDestinatarios: z.number().int().nonnegative().optional(),
   mensagensParaEnviar: z.number().int().nonnegative().default(0),
-  falhasParaRevisar: z.number().int().nonnegative().default(0),
   retornosParaRegistrar: z.number().int().nonnegative().default(0),
   resultadosRegistrados: z.number().int().nonnegative().default(0),
 });
 const esquemaTotais = z.object({
-  destinatarios: z.number().int().nonnegative(), pendentes: z.number().int().nonnegative(), aguardandoSolicitacao: z.number().int().nonnegative(), solicitados: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
-  entregues: z.number().int().nonnegative(), lidos: z.number().int().nonnegative(),
-  falhos: z.number().int().nonnegative(), naoInformados: z.number().int().nonnegative(), semRetorno: z.number().int().nonnegative(), responderam: z.number().int().nonnegative(), interessados: z.number().int().nonnegative(), convertidos: z.number().int().nonnegative(), semInteresse: z.number().int().nonnegative(),
+  destinatarios: z.number().int().nonnegative(), pendentes: z.number().int().nonnegative(), enviados: z.number().int().nonnegative(),
+  naoInformados: z.number().int().nonnegative(), semRetorno: z.number().int().nonnegative(), responderam: z.number().int().nonnegative(), interessados: z.number().int().nonnegative(), convertidos: z.number().int().nonnegative(), semInteresse: z.number().int().nonnegative(),
   valorConvertido: z.number().nonnegative(),
 }).passthrough();
 const esquemaDestinatario = z.object({
   id: z.string().uuid(), clienteId: z.string().uuid(), nomeCliente: z.string(), destino: z.string(), conteudoPreVisualizacao: z.string(),
-  situacaoEnvio: z.enum(["Pendente", "AguardandoSolicitacao", "Solicitado", "Enviado", "Entregue", "Lido", "Falhou"]),
+  situacaoEnvio: z.enum(["Pendente", "Enviado"]), dataEnvioConfirmado: z.string().datetime({ offset: true }).nullable(),
   resultadoComercial: z.enum(["NaoInformado", "SemRetorno", "Respondeu", "Interessado", "Convertido", "NaoTemInteresse"]),
-  valorConvertido: z.number().nullable(), dataResultadoComercial: z.string().datetime({ offset: true }).nullable(), codigoFalha: z.string().nullable(), versao: z.number().int().nonnegative(),
+  valorConvertido: z.number().nullable(), dataResultadoComercial: z.string().datetime({ offset: true }).nullable(), versao: z.number().int().nonnegative(),
 });
 const esquemaDetalhe = z.object({ acao: esquemaAcaoApi, totais: esquemaTotais, destinatarios: z.array(esquemaDestinatario) }).passthrough();
 const esquemaClienteApi = z.object({
@@ -76,8 +74,7 @@ const esquemaResultadoImportacao = z.object({
   })),
 }).passthrough();
 const esquemaEtiqueta = z.object({ id: z.string().uuid(), nome: z.string() });
-const esquemaEnvioIndividual = z.object({ id: z.string().uuid(), situacaoEnvio: z.literal("AguardandoSolicitacao"), versao: z.number().int().nonnegative() });
-const esquemaCapacidades = z.object({ envioNotificacoesHabilitado: z.boolean() });
+const esquemaEnvioIndividual = z.object({ id: z.string().uuid(), situacaoEnvio: z.literal("Enviado"), dataEnvioConfirmado: z.string().datetime({ offset: true }), versao: z.number().int().nonnegative() });
 const esquemaSimulacao = z.object({
   quantidadeEncontrada: z.number().int().nonnegative(),
   quantidadeElegivel: z.number().int().nonnegative(),
@@ -99,7 +96,7 @@ const esquemaModelo = z.object({
   versaoAtualId: z.string().uuid().nullable(),
   versoes: z.array(z.object({
     id: z.string().uuid(), numero: z.number().int().positive(), conteudoPreVisualizacao: z.string(),
-    variaveis: z.array(z.string()), chaveTemplateNotificacao: z.string(), dataPublicacao: z.string().datetime({ offset: true }),
+    variaveis: z.array(z.string()), dataPublicacao: z.string().datetime({ offset: true }),
   })),
 });
 const esquemaMovimentacao = z.object({
@@ -141,10 +138,6 @@ type ObterAccessToken = () => Promise<string | null>;
 
 export class CrmApiHttp implements PortaCrmApi {
   constructor(private readonly urlBase: string, private readonly obterAccessToken: ObterAccessToken) {}
-
-  async obterCapacidades() {
-    return esquemaCapacidades.parse(await this.requisitar("/api/v1/capacidades"));
-  }
 
   async listarAcoes() {
     const itens = z.array(esquemaAcaoApi).parse(await this.requisitar("/api/v1/acoes-comerciais"));
@@ -233,10 +226,10 @@ export class CrmApiHttp implements PortaCrmApi {
   async listarEtiquetas() { return z.array(esquemaEtiqueta).parse(await this.requisitar("/api/v1/etiquetas")); }
   async criarEtiqueta(nome: string) { return esquemaCriacao.parse(await this.requisitar("/api/v1/etiquetas", { metodo: "POST", corpo: { nome } })); }
 
-  async criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string; chaveTemplateNotificacao: string }) {
+  async criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string }) {
     const modelo = esquemaCriacao.parse(await this.requisitar("/api/v1/modelos-de-mensagem", { metodo: "POST", corpo: { nome: entrada.nome } }));
     const variaveis = ["nomeCliente", "itemCatalogo"].filter((variavel) => entrada.conteudoPreVisualizacao.includes(`{{${variavel}}}`));
-    await this.requisitar(`/api/v1/modelos-de-mensagem/${modelo.id}/publicar`, { metodo: "POST", corpo: { conteudoPreVisualizacao: entrada.conteudoPreVisualizacao, variaveis, chaveTemplateNotificacao: entrada.chaveTemplateNotificacao } });
+    await this.requisitar(`/api/v1/modelos-de-mensagem/${modelo.id}/publicar`, { metodo: "POST", corpo: { conteudoPreVisualizacao: entrada.conteudoPreVisualizacao, variaveis } });
     return modelo;
   }
 
@@ -294,8 +287,12 @@ export class CrmApiHttp implements PortaCrmApi {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/cancelar`, { metodo: "POST", corpo: { motivo, versao } });
   }
 
-  async enviarDestinatario(id: string, destinatarioId: string, versao: number) {
-    return esquemaEnvioIndividual.parse(await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/destinatarios/${encodeURIComponent(destinatarioId)}/enviar`, { metodo: "POST", corpo: { versao } }));
+  async registrarAberturaWhatsapp(id: string, destinatarioId: string, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/destinatarios/${encodeURIComponent(destinatarioId)}/abrir-whatsapp`, { metodo: "POST", corpo: { versao } });
+  }
+
+  async confirmarEnvioWhatsapp(id: string, destinatarioId: string, versao: number) {
+    return esquemaEnvioIndividual.parse(await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/destinatarios/${encodeURIComponent(destinatarioId)}/confirmar-envio-whatsapp`, { metodo: "POST", corpo: { versao } }));
   }
 
   async registrarResultado(id: string, destinatarioId: string, resultado: Exclude<ResultadoComercial, "NaoInformado">, valorConvertido: number | null, versao: number) {

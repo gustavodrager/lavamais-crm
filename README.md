@@ -12,7 +12,7 @@ A primeira entrega possui tres fluxos conectados:
 2. registrar atendimentos comerciais com artigos, servicos, quantidade e valor;
 3. consultar o historico comercial no detalhe do cliente;
 4. criar uma Acao Comercial, selecionar o publico e congelar a audiencia;
-5. escolher uma mensagem aprovada, enviar individualmente e registrar o resultado;
+5. escolher uma mensagem aprovada, abrir a conversa individual no WhatsApp Web, confirmar o envio e registrar o resultado;
 6. organizar manualmente as coletas e entregas do dia;
 7. executar o roteiro no celular e registrar o resultado de cada parada.
 
@@ -34,10 +34,9 @@ Essas capacidades pertencem ao projeto futuro LavaMais Operacao e Producao.
 
 - Next.js, React e TypeScript no frontend/BFF;
 - ASP.NET Core com .NET 10 na API;
-- Worker em .NET 10;
 - PostgreSQL e Entity Framework Core;
 - identidade local por telefone, senha e sessao opaca;
-- WhatsMiau para o envio local de WhatsApp, atras de uma porta preparada para a futura Central de Notificacao;
+- WhatsApp Web oficial em janela auxiliar, com mensagem pronta e confirmacao manual no CRM;
 - xUnit, Testcontainers, Vitest e Playwright;
 - Docker e pipelines de CI.
 
@@ -57,8 +56,8 @@ Os prototipos e documentos marcados como historicos representam uma fase anterio
 
 ## Estado atual
 
-O backend implementa fundacao, identidade e tenant, autorizacao, clientes, importacao CSV, catalogo, modelos de mensagem, segmentacao, Acoes Comerciais, Movimentacoes Comerciais, Roteiros, auditoria e integracoes. O envio individual usa outbox, Worker e uma porta que preserva o adaptador da futura Central de Notificacao. O `ImportadorEssence` permanece como ferramenta controlada, sem ativar uma integracao permanente. Consulte as [instrucoes do backend](src/backend/README.md) e o [runbook operacional](docs/09-operacao/README.md).
+O backend implementa fundacao, identidade e tenant, autorizacao, clientes, importacao CSV, catalogo, modelos de mensagem, segmentacao, Acoes Comerciais, Movimentacoes Comerciais, Roteiros e auditoria. O envio e assistido pelo frontend: a API registra abertura, confirmacao manual e resultado comercial, sem provedor, webhook, outbox ou Worker. O `ImportadorEssence` permanece como ferramenta controlada, sem ativar uma integracao permanente. Consulte as [instrucoes do backend](src/backend/README.md) e o [runbook operacional](docs/09-operacao/README.md).
 
 O frontend em `src/web` cobre os fluxos da Versao 1.0: clientes, atendimento e historico comercial, Acoes Comerciais, fila individual de mensagens, roteiro diario manual, paineis por perfil e configuracoes. A integracao ocorre pelo BFF do Next.js, sem expor tokens ao JavaScript. Os testes de componentes e integracao usam Vitest; os fluxos principais usam Playwright.
 
-O escopo esta fechado para homologacao. Isso nao libera producao: os bloqueios de seguranca, dados, WhatsApp, backup e validacao operacional continuam em [Bloqueios de producao](docs/11-implantacao-inicial/08-bloqueios-producao.md).
+O escopo esta fechado para homologacao. Isso nao libera producao: os bloqueios de seguranca, dados, vinculacao do WhatsApp Web, backup e validacao operacional continuam em [Bloqueios de producao](docs/11-implantacao-inicial/08-bloqueios-producao.md).

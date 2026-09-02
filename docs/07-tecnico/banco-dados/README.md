@@ -90,7 +90,7 @@ Guarda nome, canal, situacao e versao atual do modelo comercial.
 
 ### `comunicacao.versoes_dos_modelos`
 
-Uma versao publicada e imutavel e guarda assunto, conteudo de pre-visualizacao, variaveis e `chave_template_notificacao`. A chave e estavel entre os adaptadores local e central.
+Uma versao publicada e imutavel e guarda assunto, conteudo de pre-visualizacao e variaveis controladas. Nao existe chave tecnica de provedor.
 
 ## Acoes comerciais
 
@@ -125,18 +125,13 @@ cliente_id
 nome_cliente_snapshot
 destino_snapshot
 conteudo_pre_visualizacao_snapshot
-chave_template_notificacao_snapshot
-payload_notificacao_json
 situacao_envio
+data_envio_confirmado
+usuario_envio_confirmado_id
 resultado_comercial
 valor_convertido
 data_resultado_comercial
 usuario_resultado_id
-chave_idempotencia
-notificacao_id
-servico_notificacao
-data_ultima_reconciliacao
-codigo_falha
 versao
 ```
 
@@ -199,9 +194,8 @@ Nome, WhatsApp e endereco sao snapshots operacionais. A alteracao posterior do c
 ## Autorizacao e auditoria
 
 - `autorizacao.usuarios_crm` vincula `sub + tenant_id` ao papel local;
-- `auditoria.registros_de_auditoria` guarda a trilha segura;
-- `integracoes.mensagens_da_outbox` persiste efeitos externos e controle de processamento;
-- `integracoes.notificacoes_locais` guarda snapshot, idempotencia por tenant, identificador do WhatsMiau e estado tecnico, sem funcionar como uma segunda fila.
+- `auditoria.registros_de_auditoria` guarda a trilha segura, incluindo abertura da conversa, confirmacao manual do envio e resultado comercial;
+- o schema `integracoes` nao possui tabelas ativas depois da migration de remocao da arquitetura automatizada.
 
 ## Identidade
 

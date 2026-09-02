@@ -17,7 +17,6 @@ export interface ResumoAcaoComercial {
   totalDestinatarios: number | null;
   quantidadeDestinatarios?: number | null;
   mensagensParaEnviar: number;
-  falhasParaRevisar: number;
   retornosParaRegistrar: number;
   resultadosRegistrados: number;
   dataAtualizacao: string;
@@ -65,12 +64,7 @@ export interface DetalheAcaoComercial extends ResumoAcaoComercial {
   totais: {
     destinatarios: number;
     pendentes: number;
-    aguardandoSolicitacao: number;
-    solicitados: number;
     enviados: number;
-    entregues: number;
-    lidos: number;
-    falhos: number;
     naoInformados: number;
     semRetorno: number;
     responderam: number;
@@ -82,7 +76,7 @@ export interface DetalheAcaoComercial extends ResumoAcaoComercial {
   destinatarios: DestinatarioDaAcao[];
 }
 
-export type SituacaoEnvio = "Pendente" | "AguardandoSolicitacao" | "Solicitado" | "Enviado" | "Entregue" | "Lido" | "Falhou";
+export type SituacaoEnvio = "Pendente" | "Enviado";
 export type ResultadoComercial = "NaoInformado" | "SemRetorno" | "Respondeu" | "Interessado" | "Convertido" | "NaoTemInteresse";
 export interface DestinatarioDaAcao {
   id: string;
@@ -91,10 +85,10 @@ export interface DestinatarioDaAcao {
   destino: string;
   conteudoPreVisualizacao: string;
   situacaoEnvio: SituacaoEnvio;
+  dataEnvioConfirmado: string | null;
   resultadoComercial: ResultadoComercial;
   valorConvertido: number | null;
   dataResultadoComercial: string | null;
-  codigoFalha: string | null;
   versao: number;
 }
 

@@ -1,10 +1,9 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
-using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
 public enum SituacaoDaAcaoComercial { Rascunho = 1, Preparada = 2, EmProcessamento = 3, Concluida = 4, ConcluidaComFalhas = 5, Cancelada = 6 }
-public enum SituacaoDoEnvio { Pendente = 1, AguardandoSolicitacao = 2, Solicitado = 3, Enviado = 4, Entregue = 5, Lido = 6, Falhou = 7 }
+public enum SituacaoDoEnvio { Pendente = 1, Enviado = 2 }
 public enum ResultadoComercial { NaoInformado = 1, SemRetorno = 2, Respondeu = 3, Interessado = 4, Convertido = 5, NaoTemInteresse = 6 }
 
 public sealed class AcaoComercial
@@ -52,7 +51,7 @@ public sealed class AcaoComercial
         if (VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Uma versao publicada de modelo e obrigatoria para preparar.");
         if (destinatarios.Count == 0) throw new ExcecaoDeRegraDeNegocio("publico_vazio", "A acao nao possui clientes elegiveis.");
         foreach (var destinatario in destinatarios.DistinctBy(x => x.ClienteId))
-            Destinatarios.Add(new DestinatarioDaAcao(TenantId, Id, destinatario.ClienteId, destinatario.NomeCliente, destinatario.Destino, destinatario.ConteudoPreVisualizacao, destinatario.ChaveTemplate, destinatario.PayloadJson));
+            Destinatarios.Add(new DestinatarioDaAcao(TenantId, Id, destinatario.ClienteId, destinatario.NomeCliente, destinatario.Destino, destinatario.ConteudoPreVisualizacao));
         NomeItemSnapshot = nomeItem; QuantidadeDestinatarios = Destinatarios.Count; Situacao = SituacaoDaAcaoComercial.Preparada; DataPreparacao = agora; DataAtualizacao = agora;
     }
 
@@ -66,41 +65,42 @@ public sealed class AcaoComercial
         DataAtualizacao = agora;
     }
 
-    public DestinatarioDaAcao SolicitarEnvio(Guid destinatarioId, DateTimeOffset agora)
+    public DestinatarioDaAcao ConfirmarEnvio(Guid destinatarioId, string usuarioId, DateTimeOffset agora)
     {
         if (Situacao is not (SituacaoDaAcaoComercial.Preparada or SituacaoDaAcaoComercial.EmProcessamento))
             throw new ExcecaoDeConflito("acao_nao_disponivel_para_envio", "A acao comercial nao esta disponivel para envio.");
 
         var destinatario = Destinatarios.SingleOrDefault(x => x.Id == destinatarioId)
             ?? throw new ExcecaoDeRecursoNaoEncontrado("Destinatario da acao nao encontrado.");
-        destinatario.SolicitarEnvio($"acao:{Id}:destinatario:{destinatario.Id}:v1");
+        destinatario.ConfirmarEnvio(usuarioId, agora);
+        DataAtualizacao = agora;
 
         if (Situacao == SituacaoDaAcaoComercial.Preparada)
         {
             Situacao = SituacaoDaAcaoComercial.EmProcessamento;
             DataInicioProcessamento = agora;
-            DataAtualizacao = agora;
         }
 
+        RecalcularConclusao(agora);
         return destinatario;
     }
 
     public void RecalcularConclusao(DateTimeOffset agora)
     {
         if (Situacao != SituacaoDaAcaoComercial.EmProcessamento || Destinatarios.Count == 0) return;
-        if (Destinatarios.Any(x => x.SituacaoEnvio is not (SituacaoDoEnvio.Entregue or SituacaoDoEnvio.Lido or SituacaoDoEnvio.Falhou))) return;
-        Situacao = Destinatarios.Any(x => x.SituacaoEnvio == SituacaoDoEnvio.Falhou) ? SituacaoDaAcaoComercial.ConcluidaComFalhas : SituacaoDaAcaoComercial.Concluida;
+        if (Destinatarios.Any(x => x.SituacaoEnvio != SituacaoDoEnvio.Enviado)) return;
+        Situacao = SituacaoDaAcaoComercial.Concluida;
         DataAtualizacao = agora;
     }
 }
 
-public sealed record DestinatarioPreparado(Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao, string ChaveTemplate, string PayloadJson);
+public sealed record DestinatarioPreparado(Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao);
 
 public sealed class DestinatarioDaAcao
 {
     private DestinatarioDaAcao() { }
-    internal DestinatarioDaAcao(Guid tenantId, Guid acaoId, Guid clienteId, string nome, string destino, string conteudo, string chaveTemplate, string payloadJson)
-    { Id = Guid.NewGuid(); TenantId = tenantId; AcaoComercialId = acaoId; ClienteId = clienteId; NomeClienteSnapshot = nome; DestinoSnapshot = destino; ConteudoPreVisualizacaoSnapshot = conteudo; ChaveTemplateNotificacaoSnapshot = chaveTemplate; PayloadNotificacaoJson = payloadJson; SituacaoEnvio = SituacaoDoEnvio.Pendente; }
+    internal DestinatarioDaAcao(Guid tenantId, Guid acaoId, Guid clienteId, string nome, string destino, string conteudo)
+    { Id = Guid.NewGuid(); TenantId = tenantId; AcaoComercialId = acaoId; ClienteId = clienteId; NomeClienteSnapshot = nome; DestinoSnapshot = destino; ConteudoPreVisualizacaoSnapshot = conteudo; SituacaoEnvio = SituacaoDoEnvio.Pendente; }
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
     public Guid AcaoComercialId { get; private set; }
@@ -109,74 +109,29 @@ public sealed class DestinatarioDaAcao
     public string DestinoSnapshot { get; private set; } = string.Empty;
     public string ConteudoPreVisualizacaoSnapshot { get; private set; } = string.Empty;
     public SituacaoDoEnvio SituacaoEnvio { get; private set; }
-    public string ChaveTemplateNotificacaoSnapshot { get; private set; } = string.Empty;
-    public string PayloadNotificacaoJson { get; private set; } = string.Empty;
-    public string? ChaveIdempotencia { get; private set; }
-    public string? NotificacaoId { get; private set; }
-    public ServicoDeNotificacao? ServicoNotificacao { get; private set; }
-    public DateTimeOffset? DataUltimaReconciliacao { get; private set; }
-    public string? CodigoFalha { get; private set; }
+    public DateTimeOffset? DataEnvioConfirmado { get; private set; }
+    public string? UsuarioEnvioConfirmadoId { get; private set; }
     public ResultadoComercial ResultadoComercial { get; private set; } = ResultadoComercial.NaoInformado;
     public decimal? ValorConvertido { get; private set; }
     public DateTimeOffset? DataResultadoComercial { get; private set; }
     public string? UsuarioResultadoId { get; private set; }
     public uint Versao { get; private set; }
-    internal void SolicitarEnvio(string chave)
+    internal void ConfirmarEnvio(string usuarioId, DateTimeOffset agora)
     {
         if (SituacaoEnvio != SituacaoDoEnvio.Pendente)
-            throw new ExcecaoDeConflito("destinatario_ja_solicitado", "O envio deste destinatario ja foi solicitado.");
-        ChaveIdempotencia = chave;
-        SituacaoEnvio = SituacaoDoEnvio.AguardandoSolicitacao;
-    }
-    public void RegistrarSolicitacao(ReferenciaDeNotificacao referencia)
-    {
-        if (SituacaoEnvio != SituacaoDoEnvio.AguardandoSolicitacao)
-            throw new ExcecaoDeConflito("destinatario_nao_aguarda_solicitacao", "O destinatario nao possui intencao de envio pendente.");
-        if (string.IsNullOrWhiteSpace(referencia.Id))
-            throw new ExcecaoDeRegraDeNegocio("notificacao_invalida", "O identificador da notificacao e obrigatorio.");
-        NotificacaoId = referencia.Id;
-        ServicoNotificacao = referencia.Servico;
-        SituacaoEnvio = SituacaoDoEnvio.Solicitado;
-    }
-    public void RegistrarFalhaNaSolicitacao(string codigo, DateTimeOffset agora)
-    {
-        if (SituacaoEnvio != SituacaoDoEnvio.AguardandoSolicitacao)
-            throw new ExcecaoDeConflito("destinatario_nao_aguarda_solicitacao", "O destinatario nao possui intencao de envio pendente.");
-        SituacaoEnvio = SituacaoDoEnvio.Falhou;
-        CodigoFalha = codigo;
-        DataUltimaReconciliacao = agora;
-    }
-    public void AtualizarEstado(SituacaoDoEnvio estado, string? codigo, DateTimeOffset agora)
-    {
-        DataUltimaReconciliacao = agora;
-        if (SituacaoEnvio == SituacaoDoEnvio.Falhou || SituacaoEnvio == SituacaoDoEnvio.Lido) return;
-        if (estado == SituacaoDoEnvio.Falhou)
-        {
-            if (SituacaoEnvio == SituacaoDoEnvio.Entregue) return;
-            SituacaoEnvio = estado;
-            CodigoFalha = codigo;
-            return;
-        }
-        if (Ordem(estado) <= Ordem(SituacaoEnvio)) return;
-        SituacaoEnvio = estado;
-        CodigoFalha = null;
+            throw new ExcecaoDeConflito("destinatario_ja_confirmado", "O envio deste destinatario ja foi confirmado.");
+        if (string.IsNullOrWhiteSpace(usuarioId))
+            throw new ExcecaoDeRegraDeNegocio("usuario_invalido", "O usuario que confirmou o envio e obrigatorio.");
+        SituacaoEnvio = SituacaoDoEnvio.Enviado;
+        DataEnvioConfirmado = agora;
+        UsuarioEnvioConfirmadoId = usuarioId;
     }
     public void RegistrarResultado(ResultadoComercial resultado, decimal? valorConvertido, string usuarioId, DateTimeOffset agora)
     {
+        if (SituacaoEnvio != SituacaoDoEnvio.Enviado) throw new ExcecaoDeConflito("envio_nao_confirmado", "Confirme o envio da mensagem antes de registrar o resultado comercial.");
         if (resultado == ResultadoComercial.NaoInformado) throw new ExcecaoDeRegraDeNegocio("resultado_invalido", "Informe um resultado comercial.");
         if (resultado != ResultadoComercial.Convertido && valorConvertido is not null) throw new ExcecaoDeRegraDeNegocio("valor_invalido", "O valor somente pode ser informado para resultado convertido.");
         if (valorConvertido < 0) throw new ExcecaoDeRegraDeNegocio("valor_invalido", "O valor convertido nao pode ser negativo.");
         ResultadoComercial = resultado; ValorConvertido = valorConvertido; UsuarioResultadoId = usuarioId; DataResultadoComercial = agora;
     }
-
-    private static int Ordem(SituacaoDoEnvio situacao) => situacao switch
-    {
-        SituacaoDoEnvio.Pendente => 0,
-        SituacaoDoEnvio.AguardandoSolicitacao => 1,
-        SituacaoDoEnvio.Solicitado => 2,
-        SituacaoDoEnvio.Enviado => 3,
-        SituacaoDoEnvio.Entregue => 4,
-        SituacaoDoEnvio.Lido => 5,
-        _ => -1
-    };
 }

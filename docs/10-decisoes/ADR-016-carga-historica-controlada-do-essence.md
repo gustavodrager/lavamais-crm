@@ -12,7 +12,7 @@ Uma carga direta sem conciliacao poderia unir clientes diferentes pelo mesmo Wha
 
 ## Decisao
 
-A carga historica usa arquivos CSV normalizados e um executor separado da API, do Worker e do Migrador. O executor exige tenant e ambiente explicitos, simula por padrao, grava um relatorio de reconciliacao e somente altera o banco com `--confirmar`. Producao permanece bloqueada; a carga pode ser ensaiada localmente e executada em homologacao apos autorizacao operacional.
+A carga historica usa arquivos CSV normalizados e um executor separado da API e do Migrador. O executor exige tenant e ambiente explicitos, simula por padrao, grava um relatorio de reconciliacao e somente altera o banco com `--confirmar`. Producao permanece bloqueada; a carga pode ser ensaiada localmente e executada em homologacao apos autorizacao operacional.
 
 Clientes sao identificados pelo codigo externo. A atualizacao controlada altera somente nome, WhatsApp e dados de origem informados, preservando endereco, email, tipo, etiquetas e consentimento ja registrados no CRM. Novos clientes recebem permissao de marketing por WhatsApp igual a `false`. Telefones compartilhados, ausentes ou invalidos ficam pendentes para conciliacao manual.
 

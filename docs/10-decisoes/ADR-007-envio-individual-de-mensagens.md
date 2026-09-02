@@ -1,8 +1,10 @@
 # ADR-007 — Envio individual de mensagens da Acao Comercial
 
-- Status: aceito
+- Status: aceito; mecanismo de envio e estados substituidos pelo ADR-021
 - Data: 2026-08-20
 - Substitui parcialmente: ADR-005, apenas quanto ao modo de iniciar o envio
+
+> Registro historico: a decisao de conferencia individual permanece vigente. Outbox, Worker, provedor e estados tecnicos descritos abaixo foram substituidos pelo [ADR-021](ADR-021-whatsapp-web-assistido.md).
 
 ## Contexto
 

@@ -27,7 +27,7 @@ public sealed class ContextoDeModelos(DbContextOptions<ContextoDeModelos> opcoes
         {
             e.ToTable("versoes_dos_modelos"); e.HasKey(x => x.Id); e.Property(x => x.Id).HasColumnName("id"); e.Property(x => x.TenantId).HasColumnName("tenant_id");
             e.Property(x => x.ModeloId).HasColumnName("modelo_id"); e.Property(x => x.Numero).HasColumnName("numero"); e.Property(x => x.ConteudoPreVisualizacao).HasColumnName("conteudo_pre_visualizacao").HasMaxLength(2000);
-            e.Property(x => x.Variaveis).HasColumnName("variaveis").HasColumnType("text[]"); e.Property(x => x.ChaveTemplateNotificacao).HasColumnName("chave_template_notificacao").HasMaxLength(200); e.Property(x => x.DataPublicacao).HasColumnName("data_publicacao");
+            e.Property(x => x.Variaveis).HasColumnName("variaveis").HasColumnType("text[]"); e.Property(x => x.DataPublicacao).HasColumnName("data_publicacao");
             e.HasQueryFilter(x => x.TenantId == usuario.TenantId); e.HasIndex(x => new { x.TenantId, x.ModeloId, x.Numero }).IsUnique();
         });
         base.OnModelCreating(b);

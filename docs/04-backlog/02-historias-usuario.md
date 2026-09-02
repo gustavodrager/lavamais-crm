@@ -1,12 +1,12 @@
 # Historias de Usuario da Versao 1.0
 
-> Status: backlog historico de descoberta. Validar cada historia contra o escopo vigente e os ADRs antes de implementar. A identidade pelo Identity Hub foi substituida pelo ADR-011.
+> Status: atualizado conforme as decisoes vigentes da Versao 1.0.
 
 ## Acesso
 
 ### HU01 — Entrar no CRM
 
-Como usuario autorizado, quero entrar pelo Identity Hub para acessar o tenant selecionado sem manter outra senha.
+Como usuario autorizado, quero definir minha senha no primeiro acesso e entrar no CRM da unidade com meu perfil correto.
 
 ## Clientes
 
@@ -56,11 +56,11 @@ Como gerente, quero congelar publico e modelo para impedir mudancas silenciosas 
 
 ### HU12 — Executar acao
 
-Como gerente, quero selecionar um cliente da audiencia, conferir a mensagem montada e confirmar seu envio individual para manter controle sobre cada contato.
+Como operador, quero selecionar um cliente da audiencia, conferir a mensagem aprovada, abri-la no WhatsApp Web e confirmar manualmente o envio para manter controle sobre cada contato.
 
 ### HU13 — Acompanhar envios
 
-Como operador, quero visualizar o estado de cada destinatario para entender o andamento da acao.
+Como operador, quero visualizar quais destinatarios estao pendentes ou tiveram o envio confirmado para entender o andamento da acao sem presumir entrega ou leitura.
 
 ### HU14 — Registrar resultado
 
@@ -70,4 +70,4 @@ Como operador, quero registrar resposta, interesse ou conversao para avaliar o r
 
 ### HU15 — Consultar trilha
 
-Como administrador, quero consultar operacoes sensiveis para investigar alteracoes e envios.
+Como administrador, quero consultar operacoes sensiveis para investigar alteracoes, aberturas do WhatsApp e confirmacoes manuais.

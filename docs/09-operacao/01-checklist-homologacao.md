@@ -8,8 +8,8 @@
 - [ ] revisar migrations novas e scripts PostgreSQL numerados;
 - [ ] confirmar backup ou ponto de restauracao anterior quando houver dados;
 - [ ] validar variaveis conforme `docs/07-tecnico/configuracao`;
-- [ ] manter `Notificacoes__Modo=Desabilitado` e Worker com zero replicas enquanto o WhatsMiau nao estiver homologado;
-- [ ] antes de habilitar `Local`, configurar os mesmos valores na API e no Worker e cadastrar o webhook com segredo exclusivo.
+- [ ] confirmar que nao existem variaveis, credenciais ou servico ativo de provedor de WhatsApp;
+- [ ] definir a estacao e a conta oficial usadas no ensaio.
 
 ## Banco
 
@@ -30,8 +30,10 @@
 - [ ] executar fluxo de clientes, importacao, catalogo, modelos e audiencia preparada;
 - [ ] registrar, consultar e cancelar uma Movimentacao Comercial conforme o perfil;
 - [ ] organizar, publicar e executar um roteiro diario manual;
-- [ ] com o modo local liberado, enviar para destinatario autorizado e confirmar `Enviado`, `Entregue` e `Lido`;
-- [ ] repetir a chave de idempotencia e confirmar uma unica chamada efetiva;
+- [ ] abrir a conversa para destinatario autorizado sem marcar envio automaticamente;
+- [ ] validar janela auxiliar, popup bloqueado e QR Code quando a sessao estiver expirada;
+- [ ] enviar manualmente e confirmar `Enviado` somente depois do envio real;
+- [ ] repetir a confirmacao e validar conflito sem duplicar auditoria de envio;
 
 ## Evidencias
 

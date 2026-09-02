@@ -35,7 +35,7 @@
 
 - itens de catalogo;
 - modelos comerciais e publicacao de versao;
-- vinculo com template tecnico provisionado.
+- variaveis controladas e conteudo revisado.
 
 ## Fatia 5 — Rascunho e segmentacao
 
@@ -53,12 +53,12 @@
 
 ## Fatia 7 — Envio
 
-- outbox;
-- Worker;
-- porta de notificacoes e adaptadores `Local/WhatsMiau` e `Central`;
-- persistencia tecnica local e webhook `messages.update`;
-- idempotencia;
-- reconciliacao.
+- URL oficial `wa.me` com telefone e mensagem congelados;
+- janela auxiliar reutilizavel e alternativa em nova aba;
+- auditoria da abertura sem mudanca de estado;
+- confirmacao manual com usuario, horario e concorrencia otimista;
+- estados `Pendente` e `Enviado`;
+- remocao de provedor, webhook, outbox e processamento em segundo plano.
 
 ## Fatia 8 — Resultado e acompanhamento
 

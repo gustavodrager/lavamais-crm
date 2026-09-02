@@ -1,43 +1,41 @@
-# Regras de WhatsApp
+# Regras do WhatsApp Web assistido
 
-## Canal e adaptador
+## Elegibilidade
 
-- A Versao 1.0 usa o WhatsMiau no modo `Local`.
-- O navegador nunca chama o WhatsMiau ou a Central diretamente.
-- Comunicacao proativa usa modelo revisado, parametros controlados e conteudo congelado.
-- O adaptador pode migrar de `Local` para `Central` sem mudar a Acao Comercial.
+- o cliente deve estar ativo;
+- o telefone deve estar normalizado e possuir de 10 a 15 dígitos;
+- a permissão de comunicação por WhatsApp deve estar ativa;
+- o destinatário e a mensagem devem ter sido congelados na preparação da ação.
 
-## Identificacao
+## Abertura
 
-- `chaveModelo`: chave tecnica estavel vinculada a versao do modelo comercial;
-- `chaveIdempotencia`: `acao:{acaoId}:destinatario:{destinatarioId}:v1`;
-- `telefoneDestinatario`: telefone normalizado e congelado no destinatario da acao;
-- `referencia`: origem `Local` ou `Central` junto ao identificador retornado.
+- somente `Administrador`, `Gerente` e `Operador` ativos podem abrir a conversa;
+- a URL usa exclusivamente `https://wa.me/{telefone}?text={mensagem}`;
+- o CRM tenta reutilizar uma janela auxiliar nomeada;
+- se o popup for bloqueado, oferece nova aba com `noopener noreferrer`;
+- a abertura registra auditoria;
+- a abertura não muda `Pendente` para `Enviado`.
 
-## Estados
+## Confirmação manual
 
-O CRM converte os estados do WhatsMiau para sua projecao de apresentacao:
+- a confirmação exige a ação explícita `Sim, eu enviei`;
+- o CRM registra usuário, horário, destinatário e ação;
+- somente um destinatário é alterado por vez;
+- concorrência otimista impede confirmação duplicada;
+- `Enviado` não significa entregue ou lido;
+- o resultado comercial só pode ser registrado depois da confirmação.
 
-| WhatsMiau | CRM |
-|---|---|
-| resposta com `key.id` ou `SERVER_ACK` | `Enviado` |
-| `DELIVERY_ACK` | `Entregue` |
-| `READ` ou `PLAYED` | `Lido` |
-| `ERROR`, `ERROR_ACK` ou `FAILED` | `Falhou` |
+## Sessão e QR Code
 
-No modo `Central`, `deliveryStatus` prevalece sobre o estado de processamento: `Delivered` vira `Entregue`, `Read` vira `Lido` e `Undeliverable` vira `Falhou`.
+- sessão, QR Code e cookies pertencem ao WhatsApp;
+- o CRM não tenta criar, ler, renovar ou armazenar a sessão;
+- o WhatsApp pode manter o dispositivo vinculado ou solicitar novo vínculo;
+- expiração da sessão não deve marcar a mensagem como enviada.
 
-## Confiabilidade
+## Segurança e LGPD
 
-- A outbox registra a intencao na mesma transacao da mudanca do destinatario.
-- Cada intencao nasce de uma confirmacao individual depois da conferencia da mensagem.
-- Um comando nunca cria intencoes para varios destinatarios.
-- A chave de idempotencia e unica por tenant.
-- A tabela de notificacoes locais guarda estado tecnico e nao constitui uma segunda fila.
-- Respostas HTTP temporarias do WhatsMiau podem reagendar a outbox.
-- Timeout ou falha de rede com resultado incerto termina em falha para evitar duplicidade automatica.
-- Atualizacoes de entrega sao idempotentes e nao regridem `Entregue` ou `Lido`.
-
-## Limites
-
-Agendamento, mensagens livres, e-mail e SMS nao aparecem na interface inicial. A integracao local nao autoriza edicao do texto depois da preparacao nem disparo coletivo.
+- telefone e conteúdo não entram em logs técnicos;
+- o tenant vem da sessão autenticada;
+- o navegador não recebe chaves externas porque não existem credenciais de provedor;
+- não há webhook ou leitura de conversa;
+- consentimento revogado exclui o cliente de novas audiências.

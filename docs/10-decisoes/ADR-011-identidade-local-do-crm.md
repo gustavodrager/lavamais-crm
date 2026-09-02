@@ -11,7 +11,7 @@ A dependencia da Central de Identidade aumentou a distancia ate a primeira opera
 ## Decisao
 
 - o CRM autentica localmente;
-- o usuario inicial permitido e configurado no servidor pelo telefone `11997372540`;
+- os usuarios iniciais permitidos sao configurados no servidor por variaveis de ambiente e seus telefones reais nao sao versionados;
 - no primeiro acesso, esse usuario define uma senha de pelo menos dez caracteres;
 - depois da ativacao, o primeiro acesso nao pode ser repetido;
 - senhas usam PBKDF2-SHA256 com salt individual e nunca sao armazenadas ou registradas em claro;

@@ -6,7 +6,7 @@ import type {
 } from "@/contratos/apresentacao";
 
 const fusoHorario = "America/Sao_Paulo";
-const estadosComContatoRealizado = new Set(["Enviado", "Entregue", "Lido"]);
+const estadosComContatoRealizado = new Set(["Enviado"]);
 
 const formatadorDia = new Intl.DateTimeFormat("en-CA", {
   timeZone: fusoHorario,
@@ -31,13 +31,11 @@ export interface ResumoPorAcaoNoPainel {
   acaoId: string;
   dataAtualizacao: string;
   mensagensParaEnviar: number;
-  falhasParaRevisar: number;
   retornosParaRegistrar: number;
 }
 
 export interface ResumoComercialDoPainel {
   mensagensParaEnviar: number;
-  falhasParaRevisar: number;
   retornosParaRegistrar: number;
   resultadosRegistrados: number;
   interessados: number;
@@ -48,7 +46,6 @@ export interface ResumoComercialDoPainel {
 
 export interface ResumoOperacionalDasAcoes {
   mensagensParaEnviar: number;
-  falhasParaRevisar: number;
   retornosParaRegistrar: number;
   resultadosRegistrados: number;
   porAcao: ResumoPorAcaoNoPainel[];
@@ -68,7 +65,6 @@ export function resumirAcoesNoPainel(
 ): ResumoComercialDoPainel {
   const mesAtual = formatadorMes.format(agora);
   let mensagensParaEnviar = 0;
-  let falhasParaRevisar = 0;
   let retornosParaRegistrar = 0;
   let resultadosRegistrados = 0;
   let interessados = 0;
@@ -77,12 +73,10 @@ export function resumirAcoesNoPainel(
 
   const porAcao = detalhes.map((detalhe) => {
     let mensagensDaAcao = 0;
-    let falhasDaAcao = 0;
     let retornosDaAcao = 0;
 
     for (const destinatario of detalhe.destinatarios) {
       if (destinatario.situacaoEnvio === "Pendente") mensagensDaAcao += 1;
-      if (destinatario.situacaoEnvio === "Falhou") falhasDaAcao += 1;
 
       if (
         destinatario.resultadoComercial === "NaoInformado"
@@ -108,14 +102,12 @@ export function resumirAcoesNoPainel(
     }
 
     mensagensParaEnviar += mensagensDaAcao;
-    falhasParaRevisar += falhasDaAcao;
     retornosParaRegistrar += retornosDaAcao;
 
     return {
       acaoId: detalhe.id,
       dataAtualizacao: detalhe.dataAtualizacao,
       mensagensParaEnviar: mensagensDaAcao,
-      falhasParaRevisar: falhasDaAcao,
       retornosParaRegistrar: retornosDaAcao,
     };
   });
@@ -126,7 +118,6 @@ export function resumirAcoesNoPainel(
 
   return {
     mensagensParaEnviar,
-    falhasParaRevisar,
     retornosParaRegistrar,
     resultadosRegistrados,
     interessados,
@@ -142,13 +133,11 @@ export function resumirAcoesOperacionais(resumos: ResumoAcaoComercial[]): Resumo
     acaoId: acao.id,
     dataAtualizacao: acao.dataAtualizacao,
     mensagensParaEnviar: acao.mensagensParaEnviar,
-    falhasParaRevisar: acao.falhasParaRevisar,
     retornosParaRegistrar: acao.retornosParaRegistrar,
   })).sort((a, b) => new Date(b.dataAtualizacao).getTime() - new Date(a.dataAtualizacao).getTime());
 
   return {
     mensagensParaEnviar: ativas.reduce((total, acao) => total + acao.mensagensParaEnviar, 0),
-    falhasParaRevisar: ativas.reduce((total, acao) => total + acao.falhasParaRevisar, 0),
     retornosParaRegistrar: ativas.reduce((total, acao) => total + acao.retornosParaRegistrar, 0),
     resultadosRegistrados: ativas.reduce((total, acao) => total + acao.resultadosRegistrados, 0),
     porAcao,

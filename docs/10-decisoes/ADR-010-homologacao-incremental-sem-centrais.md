@@ -1,7 +1,9 @@
 # ADR-010 — Homologacao incremental sem as centrais
 
-- Status: aceito
+- Status: substituida pelo ADR-011 para identidade e pelo ADR-021 para notificacoes
 - Data: 2026-08-24
+
+> Registro historico. Identidade tecnica, Worker, outbox e centrais nao definem a homologacao vigente.
 
 ## Contexto
 

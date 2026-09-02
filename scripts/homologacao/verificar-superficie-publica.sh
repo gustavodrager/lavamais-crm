@@ -56,18 +56,21 @@ for rota in \
   '/api/v1/clientes' \
   '/api/v1/movimentacoes-comerciais' \
   '/api/v1/roteiros' \
-  '/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/enviar'; do
+  '/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/abrir-whatsapp' \
+  '/api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/confirmar-envio-whatsapp'; do
   grep --fixed-strings --quiet "$rota" "$diretorio_temporario/openapi.json" || falhar "o OpenAPI nao publicou $rota."
 done
 if grep --fixed-strings --quiet '/api/v1/acoes-comerciais/{id}/iniciar' "$diretorio_temporario/openapi.json"; then
   falhar "o OpenAPI ainda publica o inicio coletivo removido da Versao 1.0."
 fi
-echo "OK: contrato publico contem os fluxos da Versao 1.0 e nao expoe inicio coletivo."
+if grep --fixed-strings --quiet '/api/v1/capacidades' "$diretorio_temporario/openapi.json"; then
+  falhar "o OpenAPI ainda publica a capacidade do provedor removido."
+fi
+echo "OK: contrato publico contem o fluxo assistido e nao expoe integracao automatica."
 
 validar_codigo "clientes sem sessao" "$url_api/api/v1/clientes" "401"
 validar_codigo "movimentacoes sem sessao" "$url_api/api/v1/movimentacoes-comerciais" "401"
 validar_codigo "roteiros sem sessao" "$url_api/api/v1/roteiros?data=2026-09-02" "401"
-validar_codigo "capacidades sem sessao" "$url_api/api/v1/capacidades" "401"
 
 validar_codigo "pagina de entrada" "$url_web/entrar" "200"
 curl --silent --show-error --dump-header "$diretorio_temporario/web.headers" --output "$diretorio_temporario/web.html" "$url_web/entrar"

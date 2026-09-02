@@ -1,65 +1,101 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ExecucaoAcao } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/execucao";
-import { enviarMensagemIndividual, registrarResultado } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
+import { ExecucaoAcaoWhatsappWeb } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/execucao-whatsapp-web";
+import {
+  confirmarEnvioWhatsapp,
+  registrarAberturaWhatsapp,
+  registrarResultado,
+} from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
+import type { DestinatarioDaAcao } from "../../../src/web/src/contratos/apresentacao";
 
-vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({ enviarMensagemIndividual: vi.fn(), registrarResultado: vi.fn() }));
+vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({
+  confirmarEnvioWhatsapp: vi.fn(),
+  registrarAberturaWhatsapp: vi.fn(),
+  registrarResultado: vi.fn(),
+}));
 
-describe("ExecucaoAcao", () => {
-  beforeEach(() => vi.clearAllMocks());
+describe("ExecucaoAcaoWhatsappWeb", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(registrarAberturaWhatsapp).mockResolvedValue({ sucesso: true });
+    vi.mocked(confirmarEnvioWhatsapp).mockResolvedValue({ sucesso: true });
+  });
 
-  it("exige seleção, prévia e confirmação para enviar somente um destinatário", async () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it("abre a mensagem pronta no WhatsApp oficial sem marcar o envio automaticamente", async () => {
     const usuario = userEvent.setup();
-    vi.mocked(enviarMensagemIndividual).mockResolvedValue({ sucesso: true });
-    render(<ExecucaoAcao acaoId="6d3d0d64-a111-4cff-8db8-111111111111" situacao="Preparada" destinatarios={[{
-      id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana! Conheça a lavagem de edredom.", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1,
-    }]} />);
-    expect(screen.queryByRole("button", { name: /Iniciar processamento/ })).not.toBeInTheDocument();
+    const janela = criarJanelaAuxiliar();
+    const abrir = vi.spyOn(window, "open").mockReturnValue(janela as unknown as Window);
+    render(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="Preparada" destinatarios={[criarDestinatario()]} />);
+
     await usuario.click(screen.getByRole("button", { name: /Ana Martins/ }));
-    expect(screen.getByText("Olá, Ana! Conheça a lavagem de edredom.")).toBeInTheDocument();
-    await usuario.click(screen.getByRole("button", { name: "Enviar mensagem para Ana Martins" }));
-    expect(screen.getByRole("alertdialog")).toHaveTextContent("Será solicitada somente esta mensagem");
-    await usuario.click(screen.getByRole("button", { name: "Confirmar envio" }));
-    await waitFor(() => expect(enviarMensagemIndividual).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", destinatarioId: "6d3d0d64-a111-4cff-8db8-111111111118", versao: 1 }));
-    expect(screen.getByText(/encaminhada para processamento/)).toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: "Abrir WhatsApp para Ana Martins" }));
+
+    expect(abrir).toHaveBeenCalledWith("", "lavamais-whatsapp-web", expect.stringContaining("popup=yes"));
+    expect(janela.location.href).toBe("https://wa.me/5513999999999?text=Ol%C3%A1%2C%20Ana!%20Conhe%C3%A7a%20a%20lavagem%20de%20edredom.");
+    await waitFor(() => expect(registrarAberturaWhatsapp).toHaveBeenCalledWith({ acaoId, destinatarioId, versao: 1 }));
+    expect(confirmarEnvioWhatsapp).not.toHaveBeenCalled();
+    expect(screen.getByText("Conversa aberta")).toBeInTheDocument();
   });
 
-  it("permite revisar sem oferecer envio quando o canal esta desabilitado", async () => {
+  it("só confirma o envio depois da declaração explícita da pessoa operadora", async () => {
     const usuario = userEvent.setup();
-    render(<ExecucaoAcao acaoId="6d3d0d64-a111-4cff-8db8-111111111111" situacao="Preparada" envioHabilitado={false} destinatarios={[{
-      id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana! Conheça a lavagem de edredom.", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1,
-    }]} />);
+    vi.spyOn(window, "open").mockReturnValue(criarJanelaAuxiliar() as unknown as Window);
+    render(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="Preparada" modoOperador destinatarios={[criarDestinatario()]} />);
 
-    expect(screen.getByText("Envio ainda não habilitado")).toBeInTheDocument();
-    expect(screen.getByText(/canal de WhatsApp estiver configurado/)).toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: "Abrir WhatsApp para Ana Martins" }));
+    await usuario.click(screen.getByRole("button", { name: "Confirmar que enviei" }));
+    expect(screen.getByRole("alertdialog")).toHaveTextContent("O CRM não consegue verificar o clique no WhatsApp");
+    expect(confirmarEnvioWhatsapp).not.toHaveBeenCalled();
+
+    await usuario.click(screen.getByRole("button", { name: "Sim, eu enviei" }));
+    await waitFor(() => expect(confirmarEnvioWhatsapp).toHaveBeenCalledWith({ acaoId, destinatarioId, versao: 1 }));
+    expect(screen.getByText("Envio confirmado")).toBeInTheDocument();
+  });
+
+  it("oferece uma nova aba quando o navegador bloqueia a janela auxiliar", async () => {
+    const usuario = userEvent.setup();
+    vi.spyOn(window, "open").mockReturnValue(null);
+    render(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="Preparada" destinatarios={[criarDestinatario()]} />);
+
     await usuario.click(screen.getByRole("button", { name: /Ana Martins/ }));
-    expect(screen.getByText("Olá, Ana! Conheça a lavagem de edredom.")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Enviar mensagem para Ana Martins" })).not.toBeInTheDocument();
-    expect(enviarMensagemIndividual).not.toHaveBeenCalled();
+    await usuario.click(screen.getByRole("button", { name: "Abrir WhatsApp para Ana Martins" }));
+
+    const alternativa = screen.getByRole("link", { name: "Abrir WhatsApp em nova aba" });
+    expect(alternativa).toHaveAttribute("href", expect.stringMatching(/^https:\/\/wa\.me\/5513999999999\?text=/));
+    expect(alternativa).toHaveAttribute("target", "_blank");
+    expect(registrarAberturaWhatsapp).not.toHaveBeenCalled();
   });
 
-  it("abre automaticamente o primeiro destinatario pendente no modo operador", async () => {
-    const usuario = userEvent.setup();
-    vi.mocked(enviarMensagemIndividual).mockResolvedValue({ sucesso: true });
-    render(<ExecucaoAcao acaoId="6d3d0d64-a111-4cff-8db8-111111111111" situacao="Preparada" modoOperador destinatarios={[{
-      id: "6d3d0d64-a111-4cff-8db8-111111111118", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", destino: "+5513999999999", conteudoPreVisualizacao: "Olá, Ana! Conheça a lavagem de edredom.", situacaoEnvio: "Pendente", resultadoComercial: "NaoInformado", valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1,
-    }]} />);
+  it("oferece o resultado comercial somente depois do envio confirmado", () => {
+    const { rerender } = render(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="EmProcessamento" modoOperador destinatarios={[criarDestinatario()]} />);
+    expect(screen.queryByRole("combobox", { name: "Resultado de Ana Martins" })).not.toBeInTheDocument();
 
-    expect(screen.getByText("Fila de atendimento")).toBeInTheDocument();
-    expect(screen.getByText("Olá, Ana! Conheça a lavagem de edredom.")).toBeInTheDocument();
-    await usuario.click(screen.getByRole("button", { name: "Enviar mensagem para Ana Martins" }));
-    await usuario.click(screen.getByRole("button", { name: "Confirmar envio" }));
-    await waitFor(() => expect(enviarMensagemIndividual).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", destinatarioId: "6d3d0d64-a111-4cff-8db8-111111111118", versao: 1 }));
-    expect(screen.getByText("Mensagem solicitada")).toBeInTheDocument();
+    rerender(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="Concluida" modoOperador destinatarios={[criarDestinatario({ situacaoEnvio: "Enviado", dataEnvioConfirmado: "2026-09-02T17:00:00Z" })]} />);
+    expect(screen.getByRole("combobox", { name: "Resultado de Ana Martins" })).toBeInTheDocument();
+    expect(screen.getByText(/Envio confirmado manualmente/)).toBeVisible();
   });
 
-  it("limpa o resultado escolhido ao trocar de destinatario", async () => {
+  it("distingue um envio migrado do historico de uma confirmacao manual", () => {
+    render(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="Concluida" modoOperador destinatarios={[criarDestinatario({ situacaoEnvio: "Enviado", dataEnvioConfirmado: null })]} />);
+
+    expect(screen.getByText("Envio anterior preservado no histórico, sem confirmação manual deste fluxo.")).toBeVisible();
+  });
+
+  it("limpa o resultado escolhido ao trocar de destinatário", async () => {
     const usuario = userEvent.setup();
     vi.mocked(registrarResultado).mockResolvedValue({ sucesso: true });
-    const base = { clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", destino: "+5513999999999", situacaoEnvio: "Entregue" as const, resultadoComercial: "NaoInformado" as const, valorConvertido: null, dataResultadoComercial: null, codigoFalha: null, versao: 1 };
-    render(<ExecucaoAcao acaoId="6d3d0d64-a111-4cff-8db8-111111111111" situacao="EmProcessamento" modoOperador destinatarios={[
-      { ...base, id: "6d3d0d64-a111-4cff-8db8-111111111118", nomeCliente: "Ana Martins", conteudoPreVisualizacao: "Olá, Ana!" },
-      { ...base, id: "6d3d0d64-a111-4cff-8db8-111111111119", clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nomeCliente: "Beatriz Lima", conteudoPreVisualizacao: "Olá, Beatriz!" },
+    render(<ExecucaoAcaoWhatsappWeb acaoId={acaoId} situacao="Concluida" modoOperador destinatarios={[
+      criarDestinatario({ situacaoEnvio: "Enviado", dataEnvioConfirmado: "2026-09-02T17:00:00Z" }),
+      criarDestinatario({
+        id: "6d3d0d64-a111-4cff-8db8-111111111119",
+        clienteId: "6d3d0d64-a111-4cff-8db8-111111111114",
+        nomeCliente: "Beatriz Lima",
+        conteudoPreVisualizacao: "Olá, Beatriz!",
+        situacaoEnvio: "Enviado",
+        dataEnvioConfirmado: "2026-09-02T17:01:00Z",
+      }),
     ]} />);
 
     const resultadoAna = screen.getByRole("combobox", { name: "Resultado de Ana Martins" });
@@ -71,3 +107,31 @@ describe("ExecucaoAcao", () => {
     expect(screen.getByRole("combobox", { name: "Resultado de Beatriz Lima" })).toHaveTextContent("Selecione o resultado");
   });
 });
+
+const acaoId = "6d3d0d64-a111-4cff-8db8-111111111111";
+const destinatarioId = "6d3d0d64-a111-4cff-8db8-111111111118";
+
+function criarDestinatario(sobrescritas: Partial<DestinatarioDaAcao> = {}): DestinatarioDaAcao {
+  return {
+    id: destinatarioId,
+    clienteId: "6d3d0d64-a111-4cff-8db8-111111111113",
+    nomeCliente: "Ana Martins",
+    destino: "+55 (13) 99999-9999",
+    conteudoPreVisualizacao: "Olá, Ana! Conheça a lavagem de edredom.",
+    situacaoEnvio: "Pendente",
+    dataEnvioConfirmado: null,
+    resultadoComercial: "NaoInformado",
+    valorConvertido: null,
+    dataResultadoComercial: null,
+    versao: 1,
+    ...sobrescritas,
+  };
+}
+
+function criarJanelaAuxiliar() {
+  return {
+    opener: {} as Window | null,
+    location: { href: "" },
+    focus: vi.fn(),
+  };
+}

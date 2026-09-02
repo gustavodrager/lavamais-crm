@@ -3,6 +3,8 @@
 - Status: aceito
 - Data: 2026-08-20
 
+> A decisao de banco e ambientes permanece vigente. Referencias ao Worker registram a topologia considerada na epoca e foram tornadas obsoletas pelo ADR-021.
+
 ## Contexto
 
 O CRM precisa de bancos remotos separados para homologacao e producao. A LavaMais ja possui um plano ativo no Railway, enquanto a hospedagem da API, do Worker e do frontend ainda sera definida.

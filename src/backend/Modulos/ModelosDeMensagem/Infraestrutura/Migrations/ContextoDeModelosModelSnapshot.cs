@@ -91,12 +91,6 @@ namespace LavaMais.Crm.Modulos.ModelosDeMensagem.Infraestrutura.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("ChaveTemplateNotificacao")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("chave_template_notificacao");
-
                     b.Property<string>("ConteudoPreVisualizacao")
                         .IsRequired()
                         .HasMaxLength(2000)

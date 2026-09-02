@@ -16,7 +16,7 @@
 - nenhuma variavel sensivel usa prefixo `NEXT_PUBLIC_`;
 - a chave de sessao e exclusiva por ambiente e sua rotacao encerra sessoes existentes;
 - flags de desenvolvimento e teste devem falhar ou permanecer inacessiveis em producao;
-- a disponibilidade do envio vem de `/api/v1/capacidades`; nao existe flag duplicada no Next.js;
+- o envio assistido usa um link oficial `wa.me` montado no navegador, sem flag de provedor ou credencial de WhatsApp no CRM;
 - o BFF acessa somente o schema tecnico `web`; dados empresariais passam pela CRM API;
 - respostas publicas definem CSP minima, bloqueio de `iframe`, `nosniff`, politica de referencia e permissoes restritas;
 - o cabecalho `X-Powered-By` permanece desabilitado.

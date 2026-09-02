@@ -63,7 +63,7 @@ export interface AdministrarConfiguracoes {
 }
 
 export interface AdministrarModelosDeMensagem {
-  criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string; chaveTemplateNotificacao: string }): Promise<{ id: string }>;
+  criarEPublicarModelo(entrada: { nome: string; conteudoPreVisualizacao: string }): Promise<{ id: string }>;
 }
 
 export interface ConsultarCatalogo {
@@ -99,11 +99,8 @@ export interface PrepararAcaoComercial {
 }
 
 export interface EnviarMensagemIndividual {
-  enviarDestinatario(id: string, destinatarioId: string, versao: number): Promise<{ id: string; situacaoEnvio: "AguardandoSolicitacao"; versao: number }>;
-}
-
-export interface ConsultarCapacidades {
-  obterCapacidades(): Promise<{ envioNotificacoesHabilitado: boolean }>;
+  registrarAberturaWhatsapp(id: string, destinatarioId: string, versao: number): Promise<void>;
+  confirmarEnvioWhatsapp(id: string, destinatarioId: string, versao: number): Promise<{ id: string; situacaoEnvio: "Enviado"; dataEnvioConfirmado: string; versao: number }>;
 }
 
 export interface RegistrarResultadoComercial {
@@ -146,7 +143,6 @@ export interface PortaCrmApi
     CriarAcaoComercial,
     AtualizarESimularPublico,
     PrepararAcaoComercial,
-    ConsultarCapacidades,
     EnviarMensagemIndividual,
     RegistrarResultadoComercial,
     AdministrarMovimentacoesComerciais,

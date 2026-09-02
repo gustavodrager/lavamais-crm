@@ -1,6 +1,6 @@
 # Superficie Inicial da API
 
-Todos os endpoints empresariais usam `/api/v1`, exigem access token valido e derivam o tenant da sessao. O webhook tecnico e a unica excecao anonima e usa segredo proprio.
+Todos os endpoints empresariais usam `/api/v1`, exigem sessao valida e derivam o tenant no servidor. Nao existe endpoint anonimo de mensagens.
 
 ## Autenticacao
 
@@ -12,15 +12,6 @@ POST   /api/v1/autenticacao/sair
 ```
 
 Os dois primeiros comandos anonimos que recebem credenciais possuem limitacao de taxa. `entrar` e `primeiro-acesso` devolvem um token opaco, que o BFF guarda na sessao server-side. `sair` revoga a sessao corrente.
-
-## Capacidades e webhook
-
-```text
-GET    /api/v1/capacidades
-POST   /api/v1/webhooks/whatsmiau/{segredo}
-```
-
-`capacidades` informa ao BFF se o envio de notificacoes esta habilitado, sem expor modo ou credenciais. O webhook nao aparece no OpenAPI, limita o corpo, mascara o segredo em observabilidade e responde sempre HTTP 200.
 
 ## Clientes
 
@@ -72,22 +63,23 @@ POST   /api/v1/acoes-comerciais/{id}/simular-publico
 POST   /api/v1/acoes-comerciais/{id}/preparar
 POST   /api/v1/acoes-comerciais/{id}/cancelar
 GET    /api/v1/acoes-comerciais/{id}/destinatarios
-POST   /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/enviar
+POST   /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/abrir-whatsapp
+POST   /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/confirmar-envio-whatsapp
 PUT    /api/v1/acoes-comerciais/{id}/destinatarios/{destinatarioId}/resultado
 ```
 
 Comandos de transicao validam estado e versao do agregado. Conflitos de concorrencia retornam `409`.
 
-A listagem retorna contadores derivados dos destinatarios para montar filas sem uma consulta adicional por acao: `mensagensParaEnviar`, `falhasParaRevisar`, `retornosParaRegistrar` e `resultadosRegistrados`.
+A listagem retorna contadores derivados dos destinatarios para montar filas sem uma consulta adicional por acao: `mensagensParaEnviar`, `retornosParaRegistrar` e `resultadosRegistrados`.
 
 Nos contratos de criacao e alteracao do rascunho, `itemDeCatalogoId` e opcional. Quando a versao do modelo usa a variavel `itemCatalogo`, a preparacao exige um item ativo e retorna `422` se ele nao estiver definido.
 
-### Envio individual
+### WhatsApp Web assistido
 
-Nao existe comando de disparo coletivo na Versao 1.0. O usuario seleciona um destinatario congelado, confere `nomeCliente`, `destino` e `conteudoPreVisualizacao` retornados pela consulta e confirma uma unica mensagem.
+Nao existe comando de disparo coletivo. O usuario seleciona um destinatario congelado, confere `nomeCliente`, `destino` e `conteudoPreVisualizacao` e abre a conversa no WhatsApp oficial. A abertura apenas registra auditoria:
 
 ```http
-POST /api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/enviar
+POST /api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/abrir-whatsapp
 Content-Type: application/json
 
 {
@@ -95,20 +87,32 @@ Content-Type: application/json
 }
 ```
 
-Resposta aceita:
+Depois do envio no WhatsApp, uma confirmacao humana usa:
 
 ```http
-HTTP/1.1 202 Accepted
+POST /api/v1/acoes-comerciais/{acaoId}/destinatarios/{destinatarioId}/confirmar-envio-whatsapp
+Content-Type: application/json
+
+{
+  "versao": 3
+}
+```
+
+Resposta:
+
+```http
+HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
   "id": "3f52de7f-8048-4c10-95e2-3888bd432684",
-  "situacaoEnvio": "AguardandoSolicitacao",
+  "situacaoEnvio": "Enviado",
+  "dataEnvioConfirmado": "2026-09-02T17:00:00Z",
   "versao": 4
 }
 ```
 
-O comando exige papel `Administrador`, `Gerente` ou `Operador`. Destinatario fora da acao ou do tenant nao e revelado (`404`); versao desatualizada, envio concorrente ou destinatario ja solicitado retorna `409`; regra que impede o envio retorna `422`. A outbox e a mudanca de estado sao gravadas na mesma transacao.
+Os comandos exigem papel `Administrador`, `Gerente` ou `Operador`. Destinatario fora da acao ou do tenant nao e revelado (`404`); versao desatualizada, confirmacao concorrente ou destinatario ja confirmado retorna `409`. O CRM registra usuario e horario, mas nao afirma entrega ou leitura.
 
 ## Movimentacoes comerciais
 
@@ -170,6 +174,6 @@ Disponivel somente para `Administrador`, com paginacao e filtros controlados.
 - `404` sem revelar existencia em outro tenant;
 - `409` para conflito de estado, concorrencia ou unicidade;
 - `422` para regra de negocio que impede a operacao;
-- `X-Correlation-Id` propagado entre Web, API, Worker e integracoes quando o contrato externo permitir.
+- `X-Correlation-Id` propagado entre Web e API.
 
 Os schemas detalhados sao expostos pelo OpenAPI da aplicacao e nao devem duplicar diretamente entidades de persistencia.

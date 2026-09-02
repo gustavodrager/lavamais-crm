@@ -1,7 +1,6 @@
 using System.Text.Json;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
-using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
 using LavaMais.Crm.Modulos.AcoesComerciais.Aplicacao;
 using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
@@ -18,7 +17,7 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Api;
 public static class ExtensoesDoModuloAcoesComerciais
 {
     public static IServiceCollection AdicionarModuloAcoesComerciais(this IServiceCollection servicos, IConfiguration configuracao)
-    { servicos.AdicionarContextoDoModulo<ContextoDeAcoesComerciais>(configuracao, ContextoDeAcoesComerciais.Historico, ContextoDeAcoesComerciais.Schema); servicos.AddScoped<GerenciadorDeAcoesComerciais>(); servicos.AddScoped<IProjecaoDeEnvios>(p => p.GetRequiredService<GerenciadorDeAcoesComerciais>()); return servicos; }
+    { servicos.AdicionarContextoDoModulo<ContextoDeAcoesComerciais>(configuracao, ContextoDeAcoesComerciais.Historico, ContextoDeAcoesComerciais.Schema); servicos.AddScoped<GerenciadorDeAcoesComerciais>(); return servicos; }
 
     public static IEndpointRouteBuilder MapearModuloAcoesComerciais(this IEndpointRouteBuilder endpoints)
     {
@@ -30,12 +29,12 @@ public static class ExtensoesDoModuloAcoesComerciais
         grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct))).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{id:guid}/cancelar", async (Guid id, CancelarAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Cancelar(id, dados.Motivo, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
-        grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/enviar", async (Guid acaoId, Guid destinatarioId, EnviarDestinatario dados, GerenciadorDeAcoesComerciais g, IDisponibilidadeDeNotificacoes notificacoes, CancellationToken ct) =>
-        {
-            if (!notificacoes.Habilitado)
-                return Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Envio de notificacoes indisponivel", detail: "O envio de notificacoes nao esta habilitado neste ambiente.");
-            return Results.Accepted((string?)null, await g.EnviarDestinatario(acaoId, destinatarioId, dados.Versao, ct));
-        }).RequireAuthorization(PoliticasDeAutorizacao.EnvioIndividual);
+        grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/abrir-whatsapp", async (Guid acaoId, Guid destinatarioId, RegistrarAberturaWhatsapp dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
+        { await g.RegistrarAberturaWhatsapp(acaoId, destinatarioId, dados.Versao, ct); return Results.NoContent(); })
+            .RequireAuthorization(PoliticasDeAutorizacao.EnvioIndividual);
+        grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/confirmar-envio-whatsapp", async (Guid acaoId, Guid destinatarioId, ConfirmarEnvioWhatsapp dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
+            Results.Ok(await g.ConfirmarEnvioWhatsapp(acaoId, destinatarioId, dados.Versao, ct)))
+            .RequireAuthorization(PoliticasDeAutorizacao.EnvioIndividual);
         grupo.MapGet("/{id:guid}/destinatarios", async (Guid id, GerenciadorDeAcoesComerciais g, CancellationToken ct) => (await g.ListarDestinatarios(id, ct)).Select(DestinatarioResposta.Criar));
 
         endpoints.MapPut("/api/v1/acoes-comerciais/{id:guid}/destinatarios/{destinatarioId:guid}/resultado", async (Guid id, Guid destinatarioId, RegistrarResultado dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
@@ -46,19 +45,20 @@ public static class ExtensoesDoModuloAcoesComerciais
 
     public sealed record PrepararAcao(uint Versao);
     public sealed record CancelarAcao(string Motivo, uint Versao);
-    public sealed record EnviarDestinatario(uint Versao);
+    public sealed record RegistrarAberturaWhatsapp(uint Versao);
+    public sealed record ConfirmarEnvioWhatsapp(uint Versao);
     public sealed record RegistrarResultado(ResultadoComercial Resultado, decimal? ValorConvertido, uint Versao);
 
-    public sealed record DestinatarioResposta(Guid Id, Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao, SituacaoDoEnvio SituacaoEnvio, ResultadoComercial ResultadoComercial, decimal? ValorConvertido, DateTimeOffset? DataResultadoComercial, string? CodigoFalha, uint Versao)
-    { public static DestinatarioResposta Criar(DestinatarioDaAcao d) => new(d.Id, d.ClienteId, d.NomeClienteSnapshot, d.DestinoSnapshot, d.ConteudoPreVisualizacaoSnapshot, d.SituacaoEnvio, d.ResultadoComercial, d.ValorConvertido, d.DataResultadoComercial, d.CodigoFalha, d.Versao); }
+    public sealed record DestinatarioResposta(Guid Id, Guid ClienteId, string NomeCliente, string Destino, string ConteudoPreVisualizacao, SituacaoDoEnvio SituacaoEnvio, DateTimeOffset? DataEnvioConfirmado, ResultadoComercial ResultadoComercial, decimal? ValorConvertido, DateTimeOffset? DataResultadoComercial, uint Versao)
+    { public static DestinatarioResposta Criar(DestinatarioDaAcao d) => new(d.Id, d.ClienteId, d.NomeClienteSnapshot, d.DestinoSnapshot, d.ConteudoPreVisualizacaoSnapshot, d.SituacaoEnvio, d.DataEnvioConfirmado, d.ResultadoComercial, d.ValorConvertido, d.DataResultadoComercial, d.Versao); }
 
-    public sealed record TotaisDaAcao(int Destinatarios, int Pendentes, int AguardandoSolicitacao, int Solicitados, int Enviados, int Entregues, int Lidos, int Falhos, int NaoInformados, int SemRetorno, int Responderam, int Interessados, int Convertidos, int SemInteresse, decimal ValorConvertido);
+    public sealed record TotaisDaAcao(int Destinatarios, int Pendentes, int Enviados, int NaoInformados, int SemRetorno, int Responderam, int Interessados, int Convertidos, int SemInteresse, decimal ValorConvertido);
     public sealed record DetalheResposta(Resposta Acao, TotaisDaAcao Totais, IReadOnlyCollection<DestinatarioResposta> Destinatarios)
     {
         public static DetalheResposta Criar(AcaoComercial acao)
         {
             var d = acao.Destinatarios;
-            var totais = new TotaisDaAcao(d.Count, d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Pendente), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.AguardandoSolicitacao), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Solicitado), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Enviado), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Entregue), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Lido), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Falhou), d.Count(x => x.ResultadoComercial == ResultadoComercial.NaoInformado), d.Count(x => x.ResultadoComercial == ResultadoComercial.SemRetorno), d.Count(x => x.ResultadoComercial == ResultadoComercial.Respondeu), d.Count(x => x.ResultadoComercial == ResultadoComercial.Interessado), d.Count(x => x.ResultadoComercial == ResultadoComercial.Convertido), d.Count(x => x.ResultadoComercial == ResultadoComercial.NaoTemInteresse), d.Sum(x => x.ValorConvertido ?? 0));
+            var totais = new TotaisDaAcao(d.Count, d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Pendente), d.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Enviado), d.Count(x => x.ResultadoComercial == ResultadoComercial.NaoInformado), d.Count(x => x.ResultadoComercial == ResultadoComercial.SemRetorno), d.Count(x => x.ResultadoComercial == ResultadoComercial.Respondeu), d.Count(x => x.ResultadoComercial == ResultadoComercial.Interessado), d.Count(x => x.ResultadoComercial == ResultadoComercial.Convertido), d.Count(x => x.ResultadoComercial == ResultadoComercial.NaoTemInteresse), d.Sum(x => x.ValorConvertido ?? 0));
             return new(Resposta.Criar(acao), totais, d.OrderBy(x => x.NomeClienteSnapshot).Select(DestinatarioResposta.Criar).ToArray());
         }
     }
@@ -75,7 +75,6 @@ public static class ExtensoesDoModuloAcoesComerciais
         uint Versao,
         int QuantidadeDestinatarios,
         int MensagensParaEnviar,
-        int FalhasParaRevisar,
         int RetornosParaRegistrar,
         int ResultadosRegistrados)
     {
@@ -85,7 +84,7 @@ public static class ExtensoesDoModuloAcoesComerciais
             var destinatarios = acao.Destinatarios;
             var retornos = destinatarios.Count(x =>
                 x.ResultadoComercial == ResultadoComercial.NaoInformado
-                && x.SituacaoEnvio is SituacaoDoEnvio.Enviado or SituacaoDoEnvio.Entregue or SituacaoDoEnvio.Lido);
+                && x.SituacaoEnvio == SituacaoDoEnvio.Enviado);
             return new(
                 acao.Id,
                 acao.Nome,
@@ -98,7 +97,6 @@ public static class ExtensoesDoModuloAcoesComerciais
                 acao.Versao,
                 acao.QuantidadeDestinatarios,
                 destinatarios.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Pendente),
-                destinatarios.Count(x => x.SituacaoEnvio == SituacaoDoEnvio.Falhou),
                 retornos,
                 destinatarios.Count(x => x.ResultadoComercial != ResultadoComercial.NaoInformado));
         }

@@ -6,9 +6,8 @@ import { EstadoFalhaApi } from "@/components/estado-falha-api";
 import { SituacaoAcao } from "@/components/situacao-acao";
 import { ErroCrmApi } from "@/infraestrutura/crm-api-http";
 import { obterPortaCrmApi } from "@/infraestrutura/obter-porta-crm-api";
-import { ExecucaoAcao } from "./execucao";
+import { ExecucaoAcaoWhatsappWeb } from "./execucao-whatsapp-web";
 import { ResumoAcao } from "./resumo-acao";
-import { AtualizacaoAutomatica } from "./atualizacao-automatica";
 import { ConfiguracaoAcao } from "./configuracao-acao";
 import { JornadaAcao } from "@/components/jornada-acao";
 import { obterPortaSessao } from "@/infraestrutura/obter-porta-sessao";
@@ -23,9 +22,8 @@ export default async function DetalheAcao({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const api = obterPortaCrmApi();
   let acao;
-  let capacidades;
-  try { [acao, capacidades] = await Promise.all([api.obter(id), api.obterCapacidades()]); }
-  catch (erro) { if (erro instanceof ErroCrmApi) return <><CabecalhoPagina titulo="Detalhe da Ação Comercial" descricao="Acompanhe a preparação, a entrega e o resultado comercial." /><EstadoFalhaApi status={erro.status} /></>; throw erro; }
+  try { acao = await api.obter(id); }
+  catch (erro) { if (erro instanceof ErroCrmApi) return <><CabecalhoPagina titulo="Detalhe da Ação Comercial" descricao="Acompanhe a preparação, os envios confirmados e o resultado comercial." /><EstadoFalhaApi status={erro.status} /></>; throw erro; }
   if (!acao) notFound();
   const sessao = await obterPortaSessao().obterSessao();
   const papelVisualizado = papelDaVisao(sessao);
@@ -41,17 +39,15 @@ export default async function DetalheAcao({ params }: { params: Promise<{ id: st
   const nomeItemCatalogo = itensCatalogo.find((item) => item.id === acao.itemDeCatalogoId)?.nome ?? null;
   const podeCancelar = (acao.situacao === "Rascunho" || acao.situacao === "Preparada") && papelVisualizado !== "Operador";
   const exibeExecucao = acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada";
-  const priorizaEnvio = acao.situacao === "Preparada" || acao.situacao === "EmProcessamento";
-  const blocoExecucao = exibeExecucao ? <ExecucaoAcao acaoId={acao.id} situacao={acao.situacao} destinatarios={acao.destinatarios} envioHabilitado={capacidades.envioNotificacoesHabilitado} modoOperador={modoOperador} /> : null;
+  const blocoExecucao = exibeExecucao ? <ExecucaoAcaoWhatsappWeb acaoId={acao.id} situacao={acao.situacao} destinatarios={acao.destinatarios} modoOperador={modoOperador} /> : null;
   const conteudo = rascunho && modoOperador
     ? <Card><CardContent className="p-5"><Alert><AlertTitle>Ação em rascunho</AlertTitle><AlertDescription>O gerente ainda está preparando esta ação. Você poderá acompanhar os destinatários e registrar resultados quando ela estiver pronta.</AlertDescription></Alert></CardContent></Card>
     : rascunho
       ? <><EditarInformacoesAcao acaoId={acao.id} nomeInicial={acao.nome} objetivoInicial={acao.objetivo} itemInicial={acao.itemDeCatalogoId} itens={itensCatalogo} /><ConfiguracaoAcao acaoId={acao.id} criterios={acao.criterios} modelos={modelos} versaoModeloAtualId={acao.versaoModeloId} simulacaoInicial={simulacaoInicial} nomeItemCatalogo={nomeItemCatalogo} /></>
       : modoOperador
         ? blocoExecucao
-        : <><JornadaAcao etapaAtual={4} />{priorizaEnvio && blocoExecucao}<ResumoAcao acao={acao} />{!priorizaEnvio && blocoExecucao}</>;
-  return <><CabecalhoPagina titulo={acao.nome} descricao={acao.objetivo ?? "Acompanhe a preparação, a entrega e o resultado comercial."} acao={<div className="flex flex-wrap items-center gap-2">{modoOperador && <Button asChild variant="outline"><Link href="/acoes-comerciais"><ArrowLeft />Voltar à fila</Link></Button>}<SituacaoAcao situacao={acao.situacao} />{podeCancelar && <CancelarAcao acaoId={acao.id} versao={acao.versao} />}</div>} />
-    {acao.situacao === "EmProcessamento" && <AtualizacaoAutomatica />}
+        : <><JornadaAcao etapaAtual={4} />{blocoExecucao}<ResumoAcao acao={acao} /></>;
+  return <><CabecalhoPagina titulo={acao.nome} descricao={acao.objetivo ?? "Acompanhe a preparação, os envios confirmados e o resultado comercial."} acao={<div className="flex flex-wrap items-center gap-2">{modoOperador && <Button asChild variant="outline"><Link href="/acoes-comerciais"><ArrowLeft />Voltar à fila</Link></Button>}<SituacaoAcao situacao={acao.situacao} />{podeCancelar && <CancelarAcao acaoId={acao.id} versao={acao.versao} />}</div>} />
     {conteudo}
   </>;
 }

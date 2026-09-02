@@ -28,12 +28,6 @@ describe("CrmApiHttp", () => {
     expect(resultado.itens[0]).toMatchObject({ nome: "Ação real", totalDestinatarios: null });
     expect(requisitar.mock.calls[0][1].headers.Authorization).toBe("Bearer segredo");
   });
-  it("consulta no backend se o envio de notificacoes esta habilitado", async () => {
-    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ envioNotificacoesHabilitado: true }), { status: 200 }));
-    vi.stubGlobal("fetch", requisitar);
-    await expect(new CrmApiHttp("http://crm.test", async () => "token").obterCapacidades()).resolves.toEqual({ envioNotificacoesHabilitado: true });
-    expect(requisitar.mock.calls[0][0].toString()).toBe("http://crm.test/api/v1/capacidades");
-  });
   it.each([401, 403])("preserva o status %s da API", async (status) => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: "Falha controlada" }), { status })));
     await expect(new CrmApiHttp("http://crm.test", async () => "token").listarAcoes()).rejects.toMatchObject<ErroCrmApi>({ status });
@@ -138,7 +132,7 @@ describe("CrmApiHttp", () => {
   it("preserva o rascunho ao atualizar critérios e simula o público", async () => {
     const simulacao = { quantidadeEncontrada: 2, quantidadeElegivel: 1, pagina: 1, tamanhoPagina: 20, clientes: [{ clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: null, elegivel: false, motivoExclusao: "SemPermissao" }] };
     const requisitar = vi.fn()
-      .mockResolvedValueOnce(new Response(JSON.stringify({ acao, totais: { destinatarios: 0, pendentes: 0, aguardandoSolicitacao: 0, solicitados: 0, enviados: 0, entregues: 0, lidos: 0, falhos: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 }, destinatarios: [] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ acao, totais: { destinatarios: 0, pendentes: 0, enviados: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 }, destinatarios: [] }), { status: 200 }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
       .mockResolvedValueOnce(new Response(JSON.stringify(simulacao), { status: 200 }));
     vi.stubGlobal("fetch", requisitar);
@@ -151,7 +145,7 @@ describe("CrmApiHttp", () => {
   });
   it("lista somente a versão atual de modelos publicados", async () => {
     const versaoId = "6d3d0d64-a111-4cff-8db8-111111111116";
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([{ id: "6d3d0d64-a111-4cff-8db8-111111111115", nome: "Oferta", canal: "Whatsapp", situacao: "Publicado", versaoAtualId: versaoId, versoes: [{ id: versaoId, numero: 2, conteudoPreVisualizacao: "Olá!", variaveis: [], chaveTemplateNotificacao: "oferta", dataPublicacao: "2026-08-19T10:00:00Z" }] }, { id: "6d3d0d64-a111-4cff-8db8-111111111117", nome: "Rascunho", canal: "Whatsapp", situacao: "Rascunho", versaoAtualId: null, versoes: [] }]), { status: 200 })));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([{ id: "6d3d0d64-a111-4cff-8db8-111111111115", nome: "Oferta", canal: "Whatsapp", situacao: "Publicado", versaoAtualId: versaoId, versoes: [{ id: versaoId, numero: 2, conteudoPreVisualizacao: "Olá!", variaveis: [], dataPublicacao: "2026-08-19T10:00:00Z" }] }, { id: "6d3d0d64-a111-4cff-8db8-111111111117", nome: "Rascunho", canal: "Whatsapp", situacao: "Rascunho", versaoAtualId: null, versoes: [] }]), { status: 200 })));
     await expect(new CrmApiHttp("http://crm.test", async () => "token").listarModelosPublicados()).resolves.toEqual([{ modeloId: "6d3d0d64-a111-4cff-8db8-111111111115", versaoId, nome: "Oferta", numeroVersao: 2, canal: "Whatsapp", conteudoPreVisualizacao: "Olá!", variaveis: [] }]);
   });
   it("envia a versão de concorrência ao preparar", async () => {
@@ -159,12 +153,19 @@ describe("CrmApiHttp", () => {
     await new CrmApiHttp("http://crm.test", async () => "token").preparar(acao.id, 4);
     expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 4 });
   });
-  it("envia somente um destinatário com a versão de concorrência", async () => {
+  it("registra a abertura individual do WhatsApp com a versão de concorrência", async () => {
     const destinatarioId = "6d3d0d64-a111-4cff-8db8-111111111118";
-    const resposta = { id: destinatarioId, situacaoEnvio: "AguardandoSolicitacao", versao: 6 };
-    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify(resposta), { status: 202 })); vi.stubGlobal("fetch", requisitar);
-    await expect(new CrmApiHttp("http://crm.test", async () => "token").enviarDestinatario(acao.id, destinatarioId, 5)).resolves.toEqual(resposta);
-    expect(requisitar.mock.calls[0][0].toString()).toContain(`/destinatarios/${destinatarioId}/enviar`);
+    const requisitar = vi.fn().mockResolvedValue(new Response(null, { status: 204 })); vi.stubGlobal("fetch", requisitar);
+    await expect(new CrmApiHttp("http://crm.test", async () => "token").registrarAberturaWhatsapp(acao.id, destinatarioId, 5)).resolves.toBeUndefined();
+    expect(requisitar.mock.calls[0][0].toString()).toContain(`/destinatarios/${destinatarioId}/abrir-whatsapp`);
+    expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 5 });
+  });
+  it("confirma manualmente somente um envio depois da ação no WhatsApp", async () => {
+    const destinatarioId = "6d3d0d64-a111-4cff-8db8-111111111118";
+    const resposta = { id: destinatarioId, situacaoEnvio: "Enviado", dataEnvioConfirmado: "2026-09-02T17:00:00Z", versao: 6 };
+    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify(resposta), { status: 200 })); vi.stubGlobal("fetch", requisitar);
+    await expect(new CrmApiHttp("http://crm.test", async () => "token").confirmarEnvioWhatsapp(acao.id, destinatarioId, 5)).resolves.toEqual(resposta);
+    expect(requisitar.mock.calls[0][0].toString()).toContain(`/destinatarios/${destinatarioId}/confirmar-envio-whatsapp`);
     expect(JSON.parse(requisitar.mock.calls[0][1].body)).toEqual({ versao: 5 });
   });
   it("registra resultado comercial sem expor credenciais", async () => {

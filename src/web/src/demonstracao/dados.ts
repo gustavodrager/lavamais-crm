@@ -15,9 +15,9 @@ const criteriosVazios = {
 };
 
 export const acoesDemonstracao: ResumoAcaoComercial[] = [
-  { id: "6d3d0d64-a111-4cff-8db8-111111111111", nome: "Cuidados com edredons", objetivo: null, itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", versaoModeloId: null, criterios: criteriosVazios, situacao: "EmProcessamento", totalDestinatarios: 84, mensagensParaEnviar: 8, falhasParaRevisar: 2, retornosParaRegistrar: 14, resultadosRegistrados: 60, dataAtualizacao: "2026-08-14T14:30:00Z", versao: 1 },
-  { id: "9a842a55-b222-41ab-86f2-222222222222", nome: "Higienizacao de ternos", objetivo: null, itemDeCatalogoId: "9a842a55-b222-41ab-86f2-222222222223", versaoModeloId: null, criterios: criteriosVazios, situacao: "Preparada", totalDestinatarios: 31, mensagensParaEnviar: 31, falhasParaRevisar: 0, retornosParaRegistrar: 0, resultadosRegistrados: 0, dataAtualizacao: "2026-08-13T17:10:00Z", versao: 1 },
-  { id: "bb19f233-c333-42dc-9a26-333333333333", nome: "Boas-vindas de agosto", objetivo: null, itemDeCatalogoId: "bb19f233-c333-42dc-9a26-333333333334", versaoModeloId: null, criterios: criteriosVazios, situacao: "Concluida", totalDestinatarios: 126, mensagensParaEnviar: 0, falhasParaRevisar: 0, retornosParaRegistrar: 0, resultadosRegistrados: 126, dataAtualizacao: "2026-08-08T12:00:00Z", versao: 1 },
+  { id: "6d3d0d64-a111-4cff-8db8-111111111111", nome: "Cuidados com edredons", objetivo: null, itemDeCatalogoId: "6d3d0d64-a111-4cff-8db8-111111111112", versaoModeloId: null, criterios: criteriosVazios, situacao: "EmProcessamento", totalDestinatarios: 84, mensagensParaEnviar: 8, retornosParaRegistrar: 14, resultadosRegistrados: 60, dataAtualizacao: "2026-08-14T14:30:00Z", versao: 1 },
+  { id: "9a842a55-b222-41ab-86f2-222222222222", nome: "Higienizacao de ternos", objetivo: null, itemDeCatalogoId: "9a842a55-b222-41ab-86f2-222222222223", versaoModeloId: null, criterios: criteriosVazios, situacao: "Preparada", totalDestinatarios: 31, mensagensParaEnviar: 31, retornosParaRegistrar: 0, resultadosRegistrados: 0, dataAtualizacao: "2026-08-13T17:10:00Z", versao: 1 },
+  { id: "bb19f233-c333-42dc-9a26-333333333333", nome: "Boas-vindas de agosto", objetivo: null, itemDeCatalogoId: "bb19f233-c333-42dc-9a26-333333333334", versaoModeloId: null, criterios: criteriosVazios, situacao: "Concluida", totalDestinatarios: 126, mensagensParaEnviar: 0, retornosParaRegistrar: 0, resultadosRegistrados: 126, dataAtualizacao: "2026-08-08T12:00:00Z", versao: 1 },
 ];
 
 export const clientesDemonstracao: ResumoCliente[] = [

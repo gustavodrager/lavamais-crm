@@ -8,7 +8,6 @@ lavamais-crm/
 │   ├── web/                         # Next.js, interface e BFF
 │   └── backend/
 │       ├── LavaMais.Crm.Api/        # API HTTP
-│       ├── LavaMais.Crm.Worker/     # outbox e integracoes
 │       ├── LavaMais.Crm.Migrador/   # migrations controladas
 │       ├── LavaMais.Crm.ImportadorEssence/ # importacao controlada por arquivo
 │       ├── BlocosDeConstrucao/      # contratos e infraestrutura compartilhada
@@ -26,7 +25,6 @@ lavamais-crm/
 ## Aplicacoes e processos executaveis
 
 - `LavaMais.Crm.Api`: autenticacao, contratos HTTP e casos de uso do CRM;
-- `LavaMais.Crm.Worker`: processamento da outbox e comunicacao com WhatsMiau ou futura Central de Notificacao;
 - `LavaMais.Crm.Migrador`: aplicacao controlada das migrations;
 - `LavaMais.Crm.ImportadorEssence`: importacao assistida por arquivo, executada somente quando autorizada;
 - `src/web`: interface e BFF, com sessoes server-side.
@@ -44,7 +42,7 @@ lavamais-crm/
 - `MovimentacoesComerciais`;
 - `Roteiros`;
 - `Auditoria`;
-- `Integracoes`.
+- `Integracoes`, temporariamente apenas para aplicar a migration que remove a infraestrutura antiga de notificacoes.
 
 Cada modulo organiza `Dominio`, `Aplicacao`, `Infraestrutura` e `Api` conforme sua necessidade. Os modulos usam contratos de aplicacao e nao acessam diretamente entidades, tabelas ou `DbContext` internos de outro modulo.
 

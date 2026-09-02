@@ -13,7 +13,7 @@ test("lista e abre uma Ação Comercial obtida da CRM API", async ({ page }) => 
   await page.getByRole("link", { name: "Ação integrada de edredons" }).click();
   await expect(page).toHaveURL(/\/acoes-comerciais\/6d3d0d64-a111-4cff-8db8-111111111111$/, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Ação integrada de edredons" })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByRole("progressbar", { name: "Progresso técnico: 83%" })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Envios confirmados: 100%" })).toBeVisible();
   await expect(page.getByText("R$ 150,00")).toBeVisible();
 });
 
@@ -38,11 +38,20 @@ test("cria, simula e prepara uma ação com modelo publicado", async ({ page }) 
   await expect(page.getByText("Preparada", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /Ana Martins/ }).click();
   await expect(page.getByText("Olá, Ana Martins!")).toBeVisible();
-  await page.getByRole("button", { name: "Enviar mensagem para Ana Martins" }).click();
-  await expect(page.getByRole("alertdialog")).toContainText("Será solicitada somente esta mensagem");
-  await page.getByRole("button", { name: "Confirmar envio" }).click();
-  await expect(page.getByText("Em processamento", { exact: true })).toBeVisible();
-  await expect(page.getByText("Mensagem solicitada", { exact: true })).toBeVisible();
+  await page.evaluate(() => {
+    Object.defineProperty(window, "open", {
+      configurable: true,
+      value: () => ({ opener: null, location: { href: "" }, focus() {} }),
+    });
+  });
+  await page.getByRole("button", { name: "Abrir WhatsApp para Ana Martins" }).click();
+  await expect(page.getByText("Conversa aberta", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Confirmar que enviei" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText("O CRM não consegue verificar o clique no WhatsApp");
+  await page.getByRole("button", { name: "Sim, eu enviei" }).click();
+  await expect(page.getByText("Concluída", { exact: true })).toBeVisible();
+  await expect(page.getByText("Envio confirmado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Envios confirmados: 100%" })).toBeVisible();
 });
 
 test("oferece ao gerente as areas permitidas pelo menu principal", async ({ page }, testInfo) => {
@@ -53,7 +62,7 @@ test("oferece ao gerente as areas permitidas pelo menu principal", async ({ page
   await expect(page.getByRole("link", { name: "Importação" })).toHaveCount(0);
   await page.getByRole("link", { name: "Configurações" }).click();
   await expect(page.getByRole("heading", { name: "Configurações" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Canal de mensagens" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "WhatsApp Web assistido" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Catálogo" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Etiquetas" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Mensagens aprovadas" })).toHaveCount(0);
@@ -98,9 +107,8 @@ test("permite ao administrador iniciar a aprovação de uma mensagem", async ({ 
 test("resume pendências e resultados relevantes no painel gerencial", async ({ page }) => {
   await page.goto("/inicio");
   await expect(page.getByRole("heading", { name: "Olá! O que precisa ser feito agora?" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Falhas para revisar: 2" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Retornos para registrar: 4" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Resultados registrados: 6" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Resultados registrados: 8" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Valor convertido informado: R$ 150,00" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Operação de hoje" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Roteiro de hoje" })).toBeVisible();

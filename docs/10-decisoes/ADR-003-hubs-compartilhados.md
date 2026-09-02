@@ -1,7 +1,9 @@
 # ADR-003 — Uso dos hubs compartilhados
 
-- Status: aceito
+- Status: substituida pelo ADR-011 para identidade e pelo ADR-021 para notificacoes
 - Data: 2026-08-15
+
+> Registro historico. Os hubs compartilhados nao fazem parte da arquitetura vigente da Versao 1.0.
 
 ## Contexto
 

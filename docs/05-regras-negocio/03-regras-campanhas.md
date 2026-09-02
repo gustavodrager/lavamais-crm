@@ -6,10 +6,10 @@
 Rascunho
   ↓ preparar
 Preparada
-  ↓ primeiro envio individual
+  ↓ primeira confirmacao individual
 EmProcessamento
   ↓
-Concluida ou ConcluidaComFalhas
+Concluida
 
 Rascunho ou Preparada → Cancelada
 ```
@@ -18,23 +18,16 @@ Rascunho ou Preparada → Cancelada
 
 - `Rascunho` aceita alteracoes de objetivo, item, criterios e modelo.
 - `Preparada` possui audiencia congelada e nao aceita alteracoes comerciais.
-- `Preparada` permite selecionar, conferir e solicitar um destinatario por vez.
-- A primeira solicitacao individual muda a acao para `EmProcessamento`.
-- `EmProcessamento` nao pode ser cancelada globalmente depois que o primeiro envio foi solicitado.
-- `Concluida` indica que todos os destinatarios foram solicitados e terminaram sem falha tecnica.
-- `ConcluidaComFalhas` indica pelo menos uma falha tecnica final.
-- Uma nova tentativa comercial deve ser uma nova acao; reprocessamento tecnico preserva a mesma acao e idempotencia.
+- `Preparada` permite selecionar, conferir e abrir um destinatario por vez.
+- A primeira confirmacao manual muda a acao para `EmProcessamento`.
+- `EmProcessamento` nao pode ser cancelada globalmente depois da primeira confirmacao.
+- `Concluida` indica que todos os destinatarios foram confirmados manualmente.
+- `ConcluidaComFalhas` permanece somente para compatibilidade com dados historicos e nao e produzida pelo fluxo vigente.
 
 ## Estados por destinatario
 
 - `Pendente`;
-- `Removido`;
-- `AguardandoSolicitacao`;
-- `Solicitado`;
 - `Enviado`;
-- `Entregue`;
-- `Lido`;
-- `Falhou`.
 
 ## Envio individual
 
@@ -42,13 +35,14 @@ Rascunho ou Preparada → Cancelada
 - o usuario seleciona um destinatario `Pendente` da audiencia congelada;
 - nome, destino e mensagem final sao apresentados antes da confirmacao;
 - a mensagem usa template aprovado e nao admite edicao livre;
-- uma confirmacao cria no maximo uma intencao na outbox;
-- destinatario ja solicitado ou versao desatualizada causa conflito sem duplicar notificacao;
+- abrir o WhatsApp audita a tentativa sem mudar o estado;
+- a confirmacao manual muda no maximo um destinatario para `Enviado`;
+- destinatario ja confirmado ou versao desatualizada causa conflito;
 - enquanto existir destinatario `Pendente`, a acao permanece aberta para novos envios individuais.
 
 ## Resultado comercial
 
-O resultado comercial nao altera automaticamente o estado tecnico e vice-versa. `Convertido` exige registro humano na Versao 1.0.
+O resultado comercial exige um destinatario `Enviado`. `Convertido` continua sendo um registro humano e nao e inferido da conversa.
 
 ## Campanhas
 

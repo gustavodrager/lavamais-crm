@@ -16,8 +16,8 @@
 - validar primeiro acesso e continuidade das sessoes depois de reinicios;
 - concluir dominio, DNS, alertas e responsaveis operacionais;
 - ensaiar restauracao no provedor e definir RPO e RTO;
-- homologar instancia, credenciais e webhook do WhatsMiau antes de ativar o Worker e o envio individual;
-- manter o adaptador da Central de Notificacao coberto por teste de contrato para a migracao futura.
+- homologar a estacao autorizada, a vinculacao do WhatsApp Web e a confirmacao manual com destinatarios autorizados;
+- confirmar que bloqueio de popup, sessao expirada e QR Code nao alteram o estado do CRM.
 
 ## Prioridade 2 — seguranca, dados e continuidade
 

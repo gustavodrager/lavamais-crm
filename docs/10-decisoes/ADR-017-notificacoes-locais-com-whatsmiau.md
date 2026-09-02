@@ -1,7 +1,9 @@
 # ADR-017: Notificacoes locais com WhatsMiau e porta para a Central
 
-- Status: Aceita
+- Status: Substituida pelo ADR-021
 - Data: 2026-08-27
+
+> Registro historico. Esta arquitetura nao integra mais a aplicacao ativa. A decisao vigente e [WhatsApp Web assistido em janela auxiliar](ADR-021-whatsapp-web-assistido.md).
 
 ## Contexto
 

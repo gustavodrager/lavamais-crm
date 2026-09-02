@@ -46,7 +46,6 @@ export async function aprovarEDisponibilizarMensagem(entrada: {
     await obterPortaCrmApi().criarEPublicarModelo({
       nome: validacao.data.nome,
       conteudoPreVisualizacao: validacao.data.conteudoPreVisualizacao,
-      chaveTemplateNotificacao: modeloPadrao.chaveTemplateNotificacao,
     });
     revalidatePath("/acoes-comerciais");
     return { sucesso: true, mensagem: `A mensagem “${validacao.data.nome}” foi aprovada e disponibilizada.` };

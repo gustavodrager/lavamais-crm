@@ -3,7 +3,6 @@
     <Project Path="src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj" />
     <Project Path="src/backend/LavaMais.Crm.ImportadorEssence/LavaMais.Crm.ImportadorEssence.csproj" />
     <Project Path="src/backend/LavaMais.Crm.Migrador/LavaMais.Crm.Migrador.csproj" />
-    <Project Path="src/backend/LavaMais.Crm.Worker/LavaMais.Crm.Worker.csproj" />
     <Project Path="src/backend/BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
   </Folder>
   <Folder Name="/src/backend/Modulos/">

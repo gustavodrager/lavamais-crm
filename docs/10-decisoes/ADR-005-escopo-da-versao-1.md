@@ -16,8 +16,8 @@ A Versao 1.0 entrega uma capacidade ponta a ponta chamada `AcaoComercial`:
 - filtros simples e selecao manual;
 - modelos aprovados;
 - audiencia congelada;
-- envio imediato por WhatsApp;
-- acompanhamento e resultado manual.
+- abertura individual da mensagem aprovada no WhatsApp Web;
+- confirmacao manual do envio e registro do resultado comercial.
 
 O termo `Campanha` fica para recorrencia, agendamento e automacao futuras.
 

@@ -23,17 +23,17 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
         await bancoAutorizacao.Database.MigrateAsync(TestContext.Current.CancellationToken);
         await banco.Sessoes.ExecuteDeleteAsync(TestContext.Current.CancellationToken); await banco.Usuarios.ExecuteDeleteAsync(TestContext.Current.CancellationToken);
         await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().ExecuteDeleteAsync(TestContext.Current.CancellationToken);
-        var configuracao = Options.Create(new OpcoesDeIdentidadeLocal { TenantId = tenantId, TelefonePermitido = "11997372540", NomeTenant = "LavaMais" });
+        var configuracao = Options.Create(new OpcoesDeIdentidadeLocal { TenantId = tenantId, TelefonePermitido = "11900000001", NomeTenant = "LavaMais" });
         var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao), configuracao, TimeProvider.System);
 
         await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.PrimeiroAcesso("11999999999", "uma-senha-segura", TestContext.Current.CancellationToken));
-        var primeira = await servico.PrimeiroAcesso("(11) 99737-2540", "uma-senha-segura", TestContext.Current.CancellationToken);
-        await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.PrimeiroAcesso("11997372540", "outra-senha-segura", TestContext.Current.CancellationToken));
-        await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.Entrar("11997372540", "senha-incorreta", TestContext.Current.CancellationToken));
+        var primeira = await servico.PrimeiroAcesso("(11) 90000-0001", "uma-senha-segura", TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.PrimeiroAcesso("11900000001", "outra-senha-segura", TestContext.Current.CancellationToken));
+        await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.Entrar("11900000001", "senha-incorreta", TestContext.Current.CancellationToken));
         var autorizacao = await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().SingleAsync(TestContext.Current.CancellationToken);
         autorizacao.AlterarPapel(PapelDoCrm.Gerente, DateTimeOffset.UtcNow);
         await bancoAutorizacao.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var entrada = await servico.Entrar("11997372540", "uma-senha-segura", TestContext.Current.CancellationToken);
+        var entrada = await servico.Entrar("11900000001", "uma-senha-segura", TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(primeira.Token); Assert.NotEmpty(entrada.Token); Assert.NotEqual(primeira.Token, entrada.Token);
         Assert.Equal("Administrador", primeira.Papel);

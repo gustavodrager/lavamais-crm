@@ -23,12 +23,12 @@ Em desenvolvimento, o repositorio de sessoes usa memoria. Homologacao e producao
 - definição e simulação do público;
 - seleção e publicação de modelos de mensagem;
 - preparação e congelamento da audiência;
-- conferência e solicitação de envio individual;
-- acompanhamento dos destinatários e registro de resultado comercial;
+- conferência e abertura individual da mensagem no WhatsApp Web;
+- confirmação manual do envio e registro de resultado comercial;
 - cadastro e listagem de clientes;
 - importação CSV;
 - biblioteca de mensagens aprovadas dentro de Ações Comerciais;
-- configurações de catálogo, etiquetas e disponibilidade do canal de mensagens;
+- configurações de catálogo, etiquetas e modelos de mensagem;
 - validação no navegador e novamente na Server Action;
 - redirecionamento ao detalhe após confirmação da CRM API.
 
@@ -40,7 +40,7 @@ LAVAMAIS_CRM_API_URL=http://127.0.0.1:5000 npm run dev:sem-autenticacao
 
 Esse modo existe apenas fora de produção, não implementa login local e não recebe `tenantId`. Se a CRM API real exigir bearer token, ele pode ser informado somente no servidor por `LAVAMAIS_ACCESS_TOKEN_DESENVOLVIMENTO`. A aplicação recusa a flag `LAVAMAIS_DESABILITAR_AUTENTICACAO=1` quando `NODE_ENV=production`.
 
-A interface consulta `/api/v1/capacidades` na CRM API para decidir se apresenta o envio individual. Nao existe uma segunda flag no Next.js; a API e a unica autoridade sobre a disponibilidade do canal.
+O WhatsApp Web abre em uma janela companheira por um link oficial `wa.me`, com destinatario e mensagem ja preenchidos. O envio continua sob controle da operadora no WhatsApp. Ao retornar, ela confirma manualmente no CRM que enviou a mensagem; o sistema nao infere entrega ou leitura.
 
 ## Executar e verificar
 

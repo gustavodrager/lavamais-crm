@@ -84,7 +84,7 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
 
     [Fact]
     [Trait("Categoria", "RequerDocker")]
-    public async Task Deve_publicar_versoes_imutaveis_com_template_tecnico()
+    public async Task Deve_publicar_versoes_imutaveis_da_mensagem()
     {
         var ct = TestContext.Current.CancellationToken;
         var contexto = new Contexto(Guid.NewGuid()); var opcoes = OpcoesModelos(postgres.Conexao);
@@ -92,12 +92,12 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
         var gerenciador = new GerenciadorDeModelos(banco, contexto, TimeProvider.System);
         var modelo = await gerenciador.Criar("Oferta de servico", ct);
 
-        var primeira = await gerenciador.Publicar(modelo.Id, new("Ola {{nomeCliente}}, conheca {{itemCatalogo}}.", ["nomeCliente", "itemCatalogo"], "crm_oferta_v1"), ct);
-        var segunda = await gerenciador.Publicar(modelo.Id, new("Ola {{nomeCliente}}, temos uma novidade.", ["nomeCliente"], "crm_oferta_v2"), ct);
+        var primeira = await gerenciador.Publicar(modelo.Id, new("Ola {{nomeCliente}}, conheca {{itemCatalogo}}.", ["nomeCliente", "itemCatalogo"]), ct);
+        var segunda = await gerenciador.Publicar(modelo.Id, new("Ola {{nomeCliente}}, temos uma novidade.", ["nomeCliente"]), ct);
         var persistido = await banco.Modelos.AsNoTracking().Include(x => x.Versoes).SingleAsync(ct);
 
         Assert.Equal(1, primeira.Numero); Assert.Equal(2, segunda.Numero);
-        Assert.Equal("crm_oferta_v1", persistido.Versoes.Single(x => x.Numero == 1).ChaveTemplateNotificacao);
+        Assert.Equal("Ola {{nomeCliente}}, conheca {{itemCatalogo}}.", persistido.Versoes.Single(x => x.Numero == 1).ConteudoPreVisualizacao);
         Assert.Equal(segunda.Id, persistido.VersaoAtualId);
     }
 
@@ -105,7 +105,7 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
     public void Deve_rejeitar_variavel_nao_controlada()
     {
         var modelo = LavaMais.Crm.Modulos.ModelosDeMensagem.Dominio.ModeloDeMensagem.Criar(Guid.NewGuid(), "Modelo", TimeProvider.System.GetUtcNow());
-        Assert.Throws<ExcecaoDeRegraDeNegocio>(() => modelo.Publicar("Conteudo", ["linkLivre"], "template", TimeProvider.System.GetUtcNow()));
+        Assert.Throws<ExcecaoDeRegraDeNegocio>(() => modelo.Publicar("Conteudo", ["linkLivre"], TimeProvider.System.GetUtcNow()));
     }
 
     private static DbContextOptions<ContextoDeCatalogo> OpcoesCatalogo(string conexao) => new DbContextOptionsBuilder<ContextoDeCatalogo>().UseNpgsql(conexao, p => p.MigrationsHistoryTable(ContextoDeCatalogo.Historico, ContextoDeCatalogo.Schema)).Options;

@@ -1,9 +1,7 @@
-# Modulo de Integracoes
+# Módulo Integrações
 
-Isola efeitos externos do CRM e mantem a outbox transacional usada pelo Worker.
+Este módulo não possui runtime ativo.
 
-Cada solicitacao individual de envio recebe chave de idempotencia deterministica por tenant. O Worker reutiliza essa chave, controla leases interrompidos e resolve uma porta neutra para o modo `Local` ou `Central`.
+O `ContextoDeIntegracoes` vazio permanece temporariamente no Migrador para aplicar a migration `RemoverInfraestruturaDeNotificacoesAutomaticas` em bancos que receberam a arquitetura anterior. A migration remove outbox e notificações locais.
 
-No modo `Local`, `integracoes.notificacoes_locais` guarda o snapshot, o identificador do WhatsMiau e os estados tecnicos recebidos por `messages.update`. Essa tabela nao e uma segunda fila. No modo `Central`, o servico externo volta a ser responsavel pelo estado tecnico detalhado.
-
-Credenciais externas ficam somente na API ou no Worker. Enquanto `Notificacoes__Modo=Desabilitado`, nenhuma mudanca de destinatario ou mensagem de outbox e criada pelo endpoint de envio. A API publica essa capacidade ao BFF sem expor qual credencial esta configurada.
+A API não referencia este projeto. Depois que todos os ambientes aplicarem a migration e houver uma estratégia de consolidação do histórico, o módulo poderá ser removido por nova decisão controlada.

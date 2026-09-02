@@ -39,10 +39,10 @@ O primeiro administrador e ativado por procedimento controlado. Recuperacao de s
 - logs nao incluem tokens, corpos ou dados pessoais;
 - conexoes de banco usam configuracao externa nos ambientes compartilhados;
 - migrations sao executadas por etapa controlada, nunca no startup;
-- credenciais do WhatsMiau e da futura Central ficam somente na API ou no Worker;
-- o segredo do webhook e mascarado em logs e traces;
-- o envio permanece `Desabilitado` enquanto o canal selecionado nao estiver homologado.
+- a URL de WhatsApp usa somente `wa.me` e dados congelados da acao;
+- QR Code, cookies, sessao e conversas do WhatsApp nao sao capturados pelo CRM;
+- abrir a conversa nao confirma envio; a confirmacao manual e auditada por usuario e horario.
 
 ## Historico da decisao
 
-A arquitetura anterior previa OIDC pelo Identity Hub. O ADR-011 substituiu essa parte das ADR-003, ADR-004 e ADR-010. O ADR-017 substituiu a parte de notificacoes das ADR-003 e ADR-010. O documento de integracao com o Identity Hub permanece marcado como historico.
+A arquitetura anterior previa OIDC pelo Identity Hub. O ADR-011 substituiu essa parte das ADR-003, ADR-004 e ADR-010. O ADR-021 substituiu o ADR-017 e a parte de notificacoes das ADR-003 e ADR-010. Os documentos anteriores permanecem somente como historico.

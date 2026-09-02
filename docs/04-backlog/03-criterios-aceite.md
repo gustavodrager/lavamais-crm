@@ -1,11 +1,12 @@
 # Criterios de Aceite da Versao 1.0
 
-> Status: material historico de descoberta. Os criterios vigentes da implantacao inicial estao em `docs/11-implantacao-inicial/03-definicao-de-pronto.md`.
+> Status: resumo atualizado. Os criterios completos da implantacao inicial estao em `docs/11-implantacao-inicial/03-definicao-de-pronto.md`.
 
 ## Identidade e tenant
 
-- O CRM nao possui tela ou tabela de senha.
-- Requisicoes empresariais exigem `tenant_id` valido no token.
+- O primeiro acesso permite que cada usuario autorizado defina sua senha local.
+- Senhas usam derivacao segura e nunca sao armazenadas ou registradas em claro.
+- Requisicoes empresariais exigem `tenant_id` valido na sessao autenticada.
 - O servidor ignora qualquer tenant informado pelo navegador para fins de autorizacao.
 - Usuario sem papel ativo no CRM recebe acesso negado.
 
@@ -28,7 +29,7 @@
 ## Acao Comercial
 
 - Uma acao comeca em `Rascunho`.
-- Item do catalogo e modelo de mensagem sao obrigatorios para preparar.
+- Modelo de mensagem e obrigatorio para preparar; item do catalogo e opcional.
 - A simulacao lista total elegivel e motivos de exclusao.
 - O usuario pode remover destinatarios antes da preparacao.
 - A preparacao congela audiencia, destino e versao do modelo.
@@ -40,18 +41,17 @@
 - Nao existe comando de disparo coletivo na Versao 1.0.
 - A lista da acao permite selecionar um destinatario congelado por vez.
 - Antes da confirmacao, o CRM apresenta nome, destino e mensagem final montada.
-- Cada confirmacao solicita somente o destinatario selecionado.
-- Apenas destinatario `Pendente` de audiencia preparada pode ser solicitado.
-- A primeira solicitacao individual muda a acao para `EmProcessamento`.
-- Cada destinatario possui chave de idempotencia deterministica.
-- Repetir, concorrer ou confirmar destinatario ja solicitado nao cria nova notificacao no Notification Hub.
-- Credencial do hub nunca chega ao navegador.
-- Falhas individuais nao interrompem os demais destinatarios.
-- O CRM apresenta estado consolidado de solicitacao e entrega.
+- O botao de abertura monta um link oficial `wa.me` com telefone e mensagem congelados.
+- Abertura nao muda o estado do destinatario e gera auditoria.
+- Apenas destinatario `Pendente` de audiencia preparada ou em processamento pode ter envio confirmado.
+- A primeira confirmacao manual muda a acao para `EmProcessamento`.
+- Repetir ou concorrer na confirmacao do mesmo destinatario devolve conflito e nao duplica o registro.
+- QR Code, cookies, sessao e conversas ficam exclusivamente no WhatsApp.
+- O CRM apresenta somente `Pendente` ou `Enviado` e nao afirma entrega ou leitura.
 
 ## Resultado comercial
 
-- Resultado e independente do estado tecnico de entrega.
+- Resultado comercial so pode ser registrado depois da confirmacao manual do envio.
 - Operador pode registrar `SemRetorno`, `Respondeu`, `Interessado`, `Convertido` ou `NaoTemInteresse`.
 - Conversao pode registrar valor opcional em `decimal`.
 - Mudancas de resultado sao auditadas.

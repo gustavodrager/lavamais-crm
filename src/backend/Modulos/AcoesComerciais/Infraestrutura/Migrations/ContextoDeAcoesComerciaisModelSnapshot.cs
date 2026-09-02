@@ -119,25 +119,9 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("acao_comercial_id");
 
-                    b.Property<string>("ChaveIdempotencia")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("chave_idempotencia");
-
-                    b.Property<string>("ChaveTemplateNotificacaoSnapshot")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("chave_template_notificacao_snapshot");
-
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid")
                         .HasColumnName("cliente_id");
-
-                    b.Property<string>("CodigoFalha")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("codigo_falha");
 
                     b.Property<string>("ConteudoPreVisualizacaoSnapshot")
                         .IsRequired()
@@ -145,13 +129,13 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("conteudo_pre_visualizacao_snapshot");
 
+                    b.Property<DateTimeOffset?>("DataEnvioConfirmado")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("data_envio_confirmado");
+
                     b.Property<DateTimeOffset?>("DataResultadoComercial")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("data_resultado_comercial");
-
-                    b.Property<DateTimeOffset?>("DataUltimaReconciliacao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("data_ultima_reconciliacao");
 
                     b.Property<string>("DestinoSnapshot")
                         .IsRequired()
@@ -165,26 +149,11 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("nome_cliente_snapshot");
 
-                    b.Property<string>("NotificacaoId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("notificacao_id");
-
-                    b.Property<string>("PayloadNotificacaoJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb")
-                        .HasColumnName("payload_notificacao_json");
-
                     b.Property<string>("ResultadoComercial")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("resultado_comercial");
-
-                    b.Property<string>("ServicoNotificacao")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("servico_notificacao");
 
                     b.Property<string>("SituacaoEnvio")
                         .IsRequired()
@@ -195,6 +164,11 @@ namespace LavaMais.Crm.Modulos.AcoesComerciais.Infraestrutura.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
+
+                    b.Property<string>("UsuarioEnvioConfirmadoId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("usuario_envio_confirmado_id");
 
                     b.Property<string>("UsuarioResultadoId")
                         .HasMaxLength(200)

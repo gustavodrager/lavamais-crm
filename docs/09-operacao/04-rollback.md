@@ -18,13 +18,13 @@ Nao existe rollback automatico de migration em producao.
 - preferir correcao aditiva quando os dados permanecem integros;
 - usar restauracao somente com alvo, ponto e impacto confirmados;
 - ensaiar restauracao em banco isolado antes de substituir qualquer ambiente;
-- interromper API e Worker quando houver risco de novas escritas;
-- reconciliar efeitos externos e outbox depois da recuperacao.
+- interromper API e Web quando houver risco de novas escritas;
+- conferir auditoria e confirmacoes manuais depois da recuperacao.
 
-## Worker e envios
+## WhatsApp Web e envios
 
-- reduzir Worker para zero replicas interrompe processamento sem apagar a outbox;
-- nao reenviar manualmente mensagens sem confirmar chave de idempotencia, origem da referencia e estado no WhatsMiau ou na Central;
+- nao existe processamento em segundo plano para interromper;
+- antes de repetir uma mensagem, conferir o estado no CRM e a conversa no WhatsApp com a equipe;
 - registrar destinatarios afetados por identificador, sem copiar telefone ou conteudo para o incidente.
 
 ## Criterio de encerramento

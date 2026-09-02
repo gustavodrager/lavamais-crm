@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
-import { CircleCheck, CircleHelp, CircleOff, MessageCircle } from "lucide-react";
+import { CircleCheck, MessageCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ type Item = {
 };
 type Etiqueta = { id: string; nome: string };
 type SecaoConfiguracao = "servicos" | "etiquetas";
-export type SituacaoCanalMensagens = "Disponivel" | "Indisponivel" | "NaoVerificado";
 
 const moeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -30,17 +29,15 @@ export function FormulariosConfiguracao({
   etiquetas,
   secaoInicial = "servicos",
   podeCarregarCatalogoInicial,
-  situacaoCanalMensagens,
 }: {
   itens: Item[];
   etiquetas: Etiqueta[];
   secaoInicial?: SecaoConfiguracao;
   podeCarregarCatalogoInicial: boolean;
-  situacaoCanalMensagens: SituacaoCanalMensagens;
 }) {
   const secao = secaoInicial;
   return <div className="space-y-5">
-    <StatusCanalMensagens situacao={situacaoCanalMensagens} />
+    <StatusCanalMensagens />
     <nav aria-label="Áreas de configuração" className="flex gap-2 rounded-xl border bg-secondary/60 p-2">
       <Button asChild variant={secao === "servicos" ? "default" : "ghost"} className="min-h-11">
         <Link href="/configuracoes" aria-current={secao === "servicos" ? "page" : undefined}>Catálogo</Link>
@@ -56,18 +53,13 @@ export function FormulariosConfiguracao({
   </div>;
 }
 
-function StatusCanalMensagens({ situacao }: { situacao: SituacaoCanalMensagens }) {
-  const configuracao = situacao === "Disponivel"
-    ? { rotulo: "Disponível", Icone: CircleCheck, classe: "text-emerald-700" }
-    : situacao === "Indisponivel"
-      ? { rotulo: "Indisponível", Icone: CircleOff, classe: "text-muted-foreground" }
-      : { rotulo: "Não verificado", Icone: CircleHelp, classe: "text-muted-foreground" };
+function StatusCanalMensagens() {
   return <section aria-labelledby="titulo-status-mensagens" className="flex items-center justify-between gap-4 rounded-xl border bg-card p-4">
     <div className="flex min-w-0 items-center gap-3">
       <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary"><MessageCircle className="size-5" aria-hidden="true" /></span>
-      <div><h2 id="titulo-status-mensagens" className="font-medium">Canal de mensagens</h2><p className="text-sm text-muted-foreground">Envio de mensagens pelo WhatsApp</p></div>
+      <div><h2 id="titulo-status-mensagens" className="font-medium">WhatsApp Web assistido</h2><p className="text-sm text-muted-foreground">A conversa abre no WhatsApp oficial e o envio é confirmado manualmente no CRM.</p></div>
     </div>
-    <Badge variant="outline" className={configuracao.classe}><configuracao.Icone aria-hidden="true" />{configuracao.rotulo}</Badge>
+    <Badge variant="outline" className="text-emerald-700"><CircleCheck aria-hidden="true" />Disponível</Badge>
   </section>;
 }
 

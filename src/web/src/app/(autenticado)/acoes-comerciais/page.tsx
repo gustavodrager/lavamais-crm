@@ -55,7 +55,7 @@ export default async function AcoesComerciais({ searchParams }: { searchParams: 
 }
 
 function normalizarFiltroOperador(valor: string | undefined): FiltroOperador {
-  return valor === "Retornos" || valor === "Falhas" || valor === "Concluidas" ? valor : "ParaEnviar";
+  return valor === "Retornos" || valor === "Concluidas" ? valor : "ParaEnviar";
 }
 
 function NavegacaoDasVisoes({ ativa }: { ativa: VisaoAcoes }) {

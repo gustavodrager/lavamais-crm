@@ -11,6 +11,7 @@ Concluida no repositorio em 2 de setembro de 2026. Este fechamento significa esc
 - uma parada de roteiro representa a necessidade operacional de coleta ou entrega nesta fase;
 - nao sera criada agora uma entidade separada de solicitacao de delivery;
 - o WhatsApp permanece individual, com mensagem aprovada e confirmacao humana;
+- o WhatsApp Web abre em janela auxiliar oficial; nao existe provedor, automacao ou incorporacao em `iframe`;
 - o painel inicial prioriza tarefas e informacoes registradas no CRM, sem assumir faturamento oficial;
 - os perfis da implantacao sao Administrador, Gerente e Operador;
 - Franqueadora, metas, relatorios avancados, segmentacao comportamental e Luna ficam para fase posterior.
@@ -26,13 +27,15 @@ Concluida no repositorio em 2 de setembro de 2026. Este fechamento significa esc
 
 ## Evidencias locais de verificacao
 
-- formatacao .NET: aprovada sem alteracoes pendentes;
+- formatacao .NET do modulo alterado: aprovada sem alteracoes pendentes;
 - build .NET em `Release`: aprovado com zero avisos e zero erros;
-- testes .NET: 78 aprovados — 22 de unidade, 55 de integracao e 1 de arquitetura;
+- testes .NET: 67 aprovados — 13 de unidade, 53 de integracao e 1 de arquitetura;
 - verificacao de tipos e lint do frontend: aprovados;
-- testes Vitest: 23 arquivos e 67 testes aprovados;
-- testes Playwright: 27 aprovados em desktop e mobile, com 3 cenarios ignorados intencionalmente por serem exclusivos de um layout;
-- build de producao do Next.js: aprovado.
+- testes Vitest: 24 arquivos e 74 testes aprovados;
+- testes Playwright: 29 aprovados em desktop e mobile, com 3 cenarios ignorados intencionalmente por serem exclusivos de um layout;
+- build de producao do Next.js: aprovado;
+- scripts das tres migrations desta mudanca: gerados e revisados localmente, sem aplicacao em banco remoto;
+- inspecao visual da execucao assistida em desktop e celular: aprovada, sem erros de navegador e sem abrir uma conversa real.
 
 ## Porta de saida da Fase 1
 
@@ -48,7 +51,7 @@ O repositorio esta pronto para iniciar homologacao quando:
 1. preparar um ambiente de homologacao isolado e seus segredos;
 2. cadastrar usuarios, catalogo, etiquetas e modelos aprovados;
 3. importar uma amostra autorizada e validar clientes e atendimentos com a equipe;
-4. homologar WhatsMiau, webhook, idempotencia e Worker com destinatario autorizado;
+4. homologar a estacao, a sessao do WhatsApp Web e a confirmacao manual com destinatarios autorizados;
 5. ensaiar backup e restauracao no provedor e aprovar RPO e RTO;
 6. aprovar politica de dados, retencao, atendimento a titulares e responsabilidades LGPD;
 7. executar um piloto assistido com Administrador, Gerente e Operador;

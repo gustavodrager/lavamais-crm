@@ -3,7 +3,6 @@
 Este diretorio cataloga nomes e responsabilidades de configuracao. Valores reais, senhas, tokens e URLs com credenciais nunca sao registrados aqui nem versionados.
 
 - [API e Migrador](01-api-e-migrador.md)
-- [Worker](02-worker.md)
 - [Web e BFF](03-web-e-bff.md)
 - [Matriz de ambientes](04-ambientes.md)
 

@@ -32,14 +32,13 @@ public sealed class ModeloDeMensagem
         return new(tenantId, nome, agora);
     }
 
-    public VersaoDoModelo Publicar(string conteudoPreVisualizacao, IReadOnlyCollection<string>? variaveis, string chaveTemplateNotificacao, DateTimeOffset agora)
+    public VersaoDoModelo Publicar(string conteudoPreVisualizacao, IReadOnlyCollection<string>? variaveis, DateTimeOffset agora)
     {
         if (Situacao == SituacaoDoModelo.Inativo) throw new ExcecaoDeRegraDeNegocio("modelo_inativo", "Um modelo inativo nao pode ser publicado.");
         if (string.IsNullOrWhiteSpace(conteudoPreVisualizacao)) throw new ExcecaoDeRegraDeNegocio("conteudo_obrigatorio", "O conteudo de pre-visualizacao e obrigatorio.");
-        if (string.IsNullOrWhiteSpace(chaveTemplateNotificacao)) throw new ExcecaoDeRegraDeNegocio("template_obrigatorio", "A chave do template tecnico e obrigatoria.");
         var nomes = (variaveis ?? []).Where(x => x is not null).Select(x => x.Trim()).Where(x => x.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         if (nomes.Any(x => x is not ("nomeCliente" or "itemCatalogo"))) throw new ExcecaoDeRegraDeNegocio("variavel_invalida", "O modelo possui uma variavel nao permitida.");
-        var versao = new VersaoDoModelo(TenantId, Id, Versoes.Count + 1, conteudoPreVisualizacao.Trim(), nomes, chaveTemplateNotificacao.Trim(), agora);
+        var versao = new VersaoDoModelo(TenantId, Id, Versoes.Count + 1, conteudoPreVisualizacao.Trim(), nomes, agora);
         Versoes.Add(versao); VersaoAtualId = versao.Id; Situacao = SituacaoDoModelo.Publicado; DataAtualizacao = agora; return versao;
     }
 
@@ -49,14 +48,13 @@ public sealed class ModeloDeMensagem
 public sealed class VersaoDoModelo
 {
     private VersaoDoModelo() { }
-    internal VersaoDoModelo(Guid tenantId, Guid modeloId, int numero, string conteudo, string[] variaveis, string chave, DateTimeOffset agora)
-    { Id = Guid.NewGuid(); TenantId = tenantId; ModeloId = modeloId; Numero = numero; ConteudoPreVisualizacao = conteudo; Variaveis = variaveis; ChaveTemplateNotificacao = chave; DataPublicacao = agora; }
+    internal VersaoDoModelo(Guid tenantId, Guid modeloId, int numero, string conteudo, string[] variaveis, DateTimeOffset agora)
+    { Id = Guid.NewGuid(); TenantId = tenantId; ModeloId = modeloId; Numero = numero; ConteudoPreVisualizacao = conteudo; Variaveis = variaveis; DataPublicacao = agora; }
     public Guid Id { get; private set; }
     public Guid TenantId { get; private set; }
     public Guid ModeloId { get; private set; }
     public int Numero { get; private set; }
     public string ConteudoPreVisualizacao { get; private set; } = string.Empty;
     public string[] Variaveis { get; private set; } = [];
-    public string ChaveTemplateNotificacao { get; private set; } = string.Empty;
     public DateTimeOffset DataPublicacao { get; private set; }
 }

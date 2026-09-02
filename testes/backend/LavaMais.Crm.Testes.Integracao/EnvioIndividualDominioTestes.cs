@@ -1,5 +1,4 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
-using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Integracoes;
 using LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
 namespace LavaMais.Crm.Testes.Integracao;
@@ -7,31 +6,33 @@ namespace LavaMais.Crm.Testes.Integracao;
 public sealed class EnvioIndividualDominioTestes
 {
     [Fact]
-    public void Deve_solicitar_somente_o_destinatario_selecionado()
+    public void Deve_confirmar_manualmente_somente_o_destinatario_selecionado()
     {
         var acao = CriarPreparada();
         var destinatario = acao.Destinatarios.First();
         var outro = acao.Destinatarios.Last();
+        var agora = DateTimeOffset.Parse("2026-09-02T14:00:00-03:00");
 
-        var solicitado = acao.SolicitarEnvio(destinatario.Id, DateTimeOffset.UtcNow);
+        var confirmado = acao.ConfirmarEnvio(destinatario.Id, "operador-teste", agora);
 
-        Assert.Same(destinatario, solicitado);
+        Assert.Same(destinatario, confirmado);
         Assert.Equal(SituacaoDaAcaoComercial.EmProcessamento, acao.Situacao);
-        Assert.Equal(SituacaoDoEnvio.AguardandoSolicitacao, destinatario.SituacaoEnvio);
+        Assert.Equal(SituacaoDoEnvio.Enviado, destinatario.SituacaoEnvio);
+        Assert.Equal(agora, destinatario.DataEnvioConfirmado);
+        Assert.Equal("operador-teste", destinatario.UsuarioEnvioConfirmadoId);
         Assert.Equal(SituacaoDoEnvio.Pendente, outro.SituacaoEnvio);
-        Assert.Equal($"acao:{acao.Id}:destinatario:{destinatario.Id}:v1", destinatario.ChaveIdempotencia);
     }
 
     [Fact]
-    public void Deve_rejeitar_destinatario_ja_solicitado()
+    public void Deve_rejeitar_destinatario_ja_confirmado()
     {
         var acao = CriarPreparada();
         var destinatario = acao.Destinatarios.First();
-        acao.SolicitarEnvio(destinatario.Id, DateTimeOffset.UtcNow);
+        acao.ConfirmarEnvio(destinatario.Id, "operador-teste", DateTimeOffset.UtcNow);
 
-        var erro = Assert.Throws<ExcecaoDeConflito>(() => acao.SolicitarEnvio(destinatario.Id, DateTimeOffset.UtcNow));
+        var erro = Assert.Throws<ExcecaoDeConflito>(() => acao.ConfirmarEnvio(destinatario.Id, "operador-teste", DateTimeOffset.UtcNow));
 
-        Assert.Equal("destinatario_ja_solicitado", erro.Codigo);
+        Assert.Equal("destinatario_ja_confirmado", erro.Codigo);
     }
 
     [Fact]
@@ -39,30 +40,38 @@ public sealed class EnvioIndividualDominioTestes
     {
         var acao = AcaoComercial.Criar(Guid.NewGuid(), "usuario", "Acao", null, Guid.NewGuid(), Guid.NewGuid(), "{}", DateTimeOffset.UtcNow);
 
-        var erro = Assert.Throws<ExcecaoDeConflito>(() => acao.SolicitarEnvio(Guid.NewGuid(), DateTimeOffset.UtcNow));
+        var erro = Assert.Throws<ExcecaoDeConflito>(() => acao.ConfirmarEnvio(Guid.NewGuid(), "operador-teste", DateTimeOffset.UtcNow));
 
         Assert.Equal("acao_nao_disponivel_para_envio", erro.Codigo);
     }
 
     [Fact]
-    public void Deve_concluir_somente_depois_de_solicitar_e_finalizar_todos()
+    public void Deve_concluir_somente_depois_de_confirmar_todos_os_envios()
     {
         var acao = CriarPreparada();
         var primeiro = acao.Destinatarios.First();
         var segundo = acao.Destinatarios.Last();
         var agora = DateTimeOffset.UtcNow;
-        acao.SolicitarEnvio(primeiro.Id, agora);
-        primeiro.RegistrarSolicitacao(new(ServicoDeNotificacao.Local, "notificacao-1"));
-        primeiro.AtualizarEstado(SituacaoDoEnvio.Entregue, null, agora);
-
-        acao.RecalcularConclusao(agora);
+        acao.ConfirmarEnvio(primeiro.Id, "operador-teste", agora);
 
         Assert.Equal(SituacaoDaAcaoComercial.EmProcessamento, acao.Situacao);
-        acao.SolicitarEnvio(segundo.Id, agora);
-        segundo.RegistrarSolicitacao(new(ServicoDeNotificacao.Local, "notificacao-2"));
-        segundo.AtualizarEstado(SituacaoDoEnvio.Falhou, "falha_teste", agora);
-        acao.RecalcularConclusao(agora);
-        Assert.Equal(SituacaoDaAcaoComercial.ConcluidaComFalhas, acao.Situacao);
+        acao.ConfirmarEnvio(segundo.Id, "operador-teste", agora.AddMinutes(1));
+        Assert.Equal(SituacaoDaAcaoComercial.Concluida, acao.Situacao);
+    }
+
+    [Fact]
+    public void Deve_exigir_confirmacao_do_envio_antes_do_resultado_comercial()
+    {
+        var acao = CriarPreparada();
+        var destinatario = acao.Destinatarios.First();
+
+        var erro = Assert.Throws<ExcecaoDeConflito>(() => destinatario.RegistrarResultado(
+            ResultadoComercial.Interessado,
+            null,
+            "operador-teste",
+            DateTimeOffset.UtcNow));
+
+        Assert.Equal("envio_nao_confirmado", erro.Codigo);
     }
 
     private static AcaoComercial CriarPreparada()
@@ -70,8 +79,8 @@ public sealed class EnvioIndividualDominioTestes
         var agora = DateTimeOffset.UtcNow;
         var acao = AcaoComercial.Criar(Guid.NewGuid(), "usuario", "Acao", null, Guid.NewGuid(), Guid.NewGuid(), "{}", agora);
         acao.Preparar("Servico", [
-            new(Guid.NewGuid(), "Cliente 1", "5513999999991", "Ola 1", "template", "{}"),
-            new(Guid.NewGuid(), "Cliente 2", "5513999999992", "Ola 2", "template", "{}")
+            new(Guid.NewGuid(), "Cliente 1", "5513999999991", "Ola 1"),
+            new(Guid.NewGuid(), "Cliente 2", "5513999999992", "Ola 2")
         ], agora);
         return acao;
     }

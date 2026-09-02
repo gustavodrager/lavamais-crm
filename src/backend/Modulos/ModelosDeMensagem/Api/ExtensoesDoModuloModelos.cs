@@ -33,6 +33,6 @@ public static class ExtensoesDoModuloModelos
     public sealed record CriarModelo(string Nome);
     public sealed record RespostaDoModelo(Guid Id, string Nome, CanalDeMensagem Canal, SituacaoDoModelo Situacao, Guid? VersaoAtualId, IReadOnlyCollection<RespostaDaVersao> Versoes)
     { public static RespostaDoModelo Criar(ModeloDeMensagem modelo) => new(modelo.Id, modelo.Nome, modelo.Canal, modelo.Situacao, modelo.VersaoAtualId, modelo.Versoes.OrderBy(x => x.Numero).Select(RespostaDaVersao.Criar).ToArray()); }
-    public sealed record RespostaDaVersao(Guid Id, int Numero, string ConteudoPreVisualizacao, IReadOnlyCollection<string> Variaveis, string ChaveTemplateNotificacao, DateTimeOffset DataPublicacao)
-    { public static RespostaDaVersao Criar(VersaoDoModelo versao) => new(versao.Id, versao.Numero, versao.ConteudoPreVisualizacao, versao.Variaveis, versao.ChaveTemplateNotificacao, versao.DataPublicacao); }
+    public sealed record RespostaDaVersao(Guid Id, int Numero, string ConteudoPreVisualizacao, IReadOnlyCollection<string> Variaveis, DateTimeOffset DataPublicacao)
+    { public static RespostaDaVersao Criar(VersaoDoModelo versao) => new(versao.Id, versao.Numero, versao.ConteudoPreVisualizacao, versao.Variaveis, versao.DataPublicacao); }
 }
