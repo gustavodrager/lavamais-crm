@@ -73,15 +73,32 @@ Em seguida, os tres perfis realizaram o primeiro acesso. O encerramento da ativa
 - no modo Organizar, o Operador visualizou o rascunho de `Motorista HML` com zero paradas;
 - nenhum cliente foi incluido no roteiro, pois os enderecos dos destinatarios autorizados permanecem incompletos.
 
+## Ensaio autenticado do Administrador
+
+- a interface identificou corretamente o papel `Administrador` e exibiu Inicio, Clientes, Atendimentos, Acoes Comerciais, Roteiros, Importacao e Configuracoes;
+- o painel consolidou os dois atendimentos controlados do dia, dois clientes e valor total informado de `R$ 20,00`;
+- a selecao de experiencia ofereceu as visoes Administrador, Gerente e Operador, sem alterar a identidade autenticada;
+- a Importacao apresentou as etapas de arquivo, conferencia e resultado, alem da regra explicita de cadastrar como sem permissao quem nao possuir autorizacao de WhatsApp;
+- nenhum arquivo foi enviado e nenhuma carga foi confirmada;
+- Configuracoes apresentou catalogo, etiquetas e o canal de WhatsApp como indisponivel; nenhum servico, etiqueta ou carga de catalogo foi criado;
+- a biblioteca exibiu um modelo de mensagem publicado e aprovado; nenhum novo modelo foi criado;
+- os comandos de cancelamento de atendimento e Acao Comercial ficaram disponiveis ao Administrador, mas nenhum cancelamento foi iniciado;
+- a Acao Comercial controlada permaneceu preparada, com dois destinatarios pendentes, zero mensagens iniciadas e nenhum resultado comercial registrado;
+- a Auditoria e a administracao de usuarios permanecem disponiveis somente pela API; nao existe tela dedicada e `/auditoria` apresentou `Pagina nao encontrada`;
+- a consulta autenticada especifica de Auditoria e Usuarios pela API nao foi executada, pois exigiria expor ou manipular o token opaco mantido exclusivamente no BFF.
+
+Ao final dos ensaios dos tres perfis, `scripts/homologacao/verificar-superficie-publica.sh` passou novamente sem falhas: API e PostgreSQL prontos, contrato publico esperado, endpoints empresariais protegidos, pagina de entrada disponivel e cabecalhos de seguranca ativos.
+
 ## Pendencia de dados na homologacao
 
 A lista autenticada apresentou `3.523` clientes. O ensaio nao alterou registros fora dos dois destinatarios autorizados, mas a origem, a autorizacao, a minimizacao e a retencao dessa carga devem ser formalmente confirmadas antes de ampliar a homologacao ou liberar qualquer envio.
 
 ## Proximas validacoes
 
-1. executar a matriz autenticada do Administrador usando apenas dados controlados;
-2. confirmar formalmente a autorizacao da carga existente de clientes em homologacao;
-3. completar um endereco autorizado para validar inclusao, publicacao e execucao do roteiro;
-4. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
-5. homologar envio individual, entrega, leitura e idempotencia somente com os destinatarios autorizados;
-6. ensaiar backup e restauracao isolada no provedor.
+1. confirmar formalmente a autorizacao da carga existente de clientes em homologacao;
+2. completar um endereco autorizado para validar inclusao, publicacao e execucao do roteiro;
+3. decidir se a tela administrativa de Auditoria e Usuarios entra antes do piloto assistido ou permanece como operacao tecnica da Versao 1.0;
+4. validar os endpoints administrativos autenticados sem retirar o token opaco do BFF;
+5. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
+6. homologar envio individual, entrega, leitura e idempotencia somente com os destinatarios autorizados;
+7. ensaiar backup e restauracao isolada no provedor.
