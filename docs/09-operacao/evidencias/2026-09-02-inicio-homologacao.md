@@ -19,16 +19,26 @@ Verificacao publica, sem autenticacao, sem escrita de dados e sem ativacao do Wo
 - OpenAPI publicou clientes, Movimentacoes Comerciais, Roteiros e envio individual, sem o comando coletivo removido;
 - commit funcional publicado na Web: `2a17bb2`;
 - implantacao Web `fa2819e9-93b9-47da-9d14-39f9fd12d47a`, criada em `2026-09-02T13:50:22.542Z`, concluida com `SUCCESS` e instancia `RUNNING`;
-- API, PostgreSQL, Migrador e Worker mantiveram as implantacoes anteriores; o Worker permaneceu sem implantacao;
+- PostgreSQL, Migrador e Worker mantiveram as implantacoes anteriores; o Worker permaneceu sem implantacao;
 - `scripts/homologacao/verificar-superficie-publica.sh` concluiu todas as verificacoes sem falhas depois da publicacao.
 
 ## Lacuna corrigida e validada remotamente
 
 A implantacao anterior revelava `X-Powered-By` e nao devolvia a politica minima de seguranca do BFF. A Web publicada a partir do commit `2a17bb2` removeu esse cabecalho e passou a devolver CSP, `Cross-Origin-Opener-Policy`, `Permissions-Policy`, `Referrer-Policy`, `X-Content-Type-Options` e `X-Frame-Options`. O verificador remoto confirmou o comportamento em homologacao sem autenticacao e sem escrita de dados.
 
+## Usuarios iniciais de homologacao
+
+- o Gerente foi configurado externamente com o telefone autorizado terminado em `7083`;
+- o Operador foi configurado externamente com o telefone corporativo da loja terminado em `5955`;
+- nomes, telefones e papeis nao foram gravados no repositorio;
+- nenhuma senha foi criada pela equipe tecnica; cada usuario definira sua propria senha no primeiro acesso;
+- a API foi reimplantada como `6048893a-4df5-42e0-b871-0afb7c2fbd91`, criada em `2026-09-02T14:33:47.057Z` e concluida com `SUCCESS`;
+- depois da reimplantacao, a superficie publica passou novamente sem falhas e o indicador de primeiro acesso retornou `disponivel: true`;
+- WhatsApp e Worker permaneceram desligados durante toda a configuracao.
+
 ## Proximas validacoes
 
-1. configurar e ativar separadamente os usuarios de Administrador, Gerente e Operador;
+1. cada usuario autorizado definir sua propria senha no primeiro acesso;
 2. executar os fluxos autenticados sem usar dados pessoais nao autorizados;
 3. homologar WhatsMiau e Worker somente com destinatario autorizado;
 4. ensaiar backup e restauracao isolada no provedor.
