@@ -2,7 +2,7 @@
 
 ## Escopo da verificacao
 
-Verificacao publica, sem autenticacao, sem escrita de dados e sem ativacao do Worker ou do WhatsApp.
+Verificacao publica inicial e, depois da ativacao dos perfis, ensaio autenticado com dados controlados. O Worker e o WhatsApp permaneceram desligados.
 
 ## Evidencias confirmadas
 
@@ -41,15 +41,34 @@ Em seguida, os tres perfis realizaram o primeiro acesso. O encerramento da ativa
 ## Destinatarios autorizados para o ensaio de WhatsApp
 
 - Gustavo Drager, com telefone autorizado terminado em `2540`;
-- Vanessa Drager, autorizada para o mesmo ensaio, com telefone ainda pendente de configuracao;
+- Vanessa Drager, com telefone autorizado terminado em `5526` e cadastro preexistente na base;
 - a autorizacao foi informada pelo responsavel do projeto em 2 de setembro de 2026 e se limita a homologacao;
 - nenhum numero completo foi registrado nesta evidencia;
 - nenhum envio foi realizado: API e Worker ainda nao possuem a instancia, a chave e o segredo de webhook do WhatsMiau.
 
+## Ensaio autenticado do Gerente
+
+- a interface identificou corretamente o papel `Gerente` e exibiu apenas as capacidades desse perfil;
+- a busca confirmou que Gustavo ainda nao existia e evitou duplicidade;
+- Gustavo foi cadastrado como cliente ativo e autorizado para WhatsApp, sem inventar endereco ou outros dados;
+- Vanessa foi localizada no cadastro preexistente, com autorizacao para WhatsApp e telefone valido terminado em `5526`;
+- a Movimentacao Comercial `HML-20260902-GD-001` foi registrada para Gustavo com um item de `Toalha de banho - Lavagem`, total informado de `R$ 10,00` e observacao explicita de homologacao sem efeito fiscal, financeiro, de producao ou caixa;
+- o detalhe de Gustavo atualizou historico, total, media, ultima movimentacao e servico utilizado;
+- foi criado um roteiro em rascunho para `Motorista HML`, sem paradas, e a interface bloqueou corretamente a inclusao de Gustavo por endereco incompleto;
+- a Acao Comercial `HML - Ensaio autorizado Gustavo e Vanessa - 02/09/2026` foi criada somente com os dois destinatarios autorizados;
+- a audiencia foi congelada com o modelo publicado `LavaMais no seu bairro`, versao 1;
+- a fila permaneceu com dois destinatarios pendentes, `0 de 2` mensagens iniciadas e aviso explicito de envio indisponivel;
+- nenhum resultado comercial foi inventado ou registrado.
+
+## Pendencia de dados na homologacao
+
+A lista autenticada apresentou `3.523` clientes. O ensaio nao alterou registros fora dos dois destinatarios autorizados, mas a origem, a autorizacao, a minimizacao e a retencao dessa carga devem ser formalmente confirmadas antes de ampliar a homologacao ou liberar qualquer envio.
+
 ## Proximas validacoes
 
-1. executar os fluxos autenticados usando apenas dados controlados;
-2. receber o telefone autorizado da Vanessa e cadastrar os dois clientes de homologacao;
-3. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
-4. homologar envio individual, entrega, leitura e idempotencia somente com os destinatarios autorizados;
-5. ensaiar backup e restauracao isolada no provedor.
+1. executar a matriz autenticada do Operador e do Administrador usando apenas dados controlados;
+2. confirmar formalmente a autorizacao da carga existente de clientes em homologacao;
+3. completar um endereco autorizado para validar inclusao, publicacao e execucao do roteiro;
+4. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
+5. homologar envio individual, entrega, leitura e idempotencia somente com os destinatarios autorizados;
+6. ensaiar backup e restauracao isolada no provedor.
