@@ -89,6 +89,21 @@ Em seguida, os tres perfis realizaram o primeiro acesso. O encerramento da ativa
 
 Ao final dos ensaios dos tres perfis, `scripts/homologacao/verificar-superficie-publica.sh` passou novamente sem falhas: API e PostgreSQL prontos, contrato publico esperado, endpoints empresariais protegidos, pagina de entrada disponivel e cabecalhos de seguranca ativos.
 
+## Ensaio autenticado do roteiro e correcao em homologacao
+
+- os enderecos autorizados de Gustavo e Vanessa foram completados e conferidos no CRM; nenhum endereco completo foi copiado para esta evidencia;
+- a primeira tentativa de incluir Vanessa no roteiro reproduziu uma falha de concorrencia otimista e retornou `409`; nenhuma parada parcial foi criada;
+- um teste de integracao passou a reproduzir o caso ausente: criar um roteiro vazio, recarrega-lo em uma nova sessao e adicionar a primeira parada;
+- a causa foi o mapeamento dos identificadores gerados pela aplicacao como se fossem gerados pelo banco, fazendo a persistencia tentar atualizar uma parada nova em vez de inseri-la;
+- o mapeamento foi corrigido e o tratamento de concorrencia das alteracoes do roteiro foi centralizado em uma resposta operacional segura;
+- a solucao compilou sem avisos nem erros e passaram `22` testes unitarios, `1` teste de arquitetura e `56` testes de integracao, totalizando `79` testes;
+- a correcao foi registrada no commit `62e6a8e` e publicada somente na API pelo deployment `589197e9-3d4a-4f92-b6b3-fe06ac194ade`, concluido com `SUCCESS`;
+- depois da publicacao, `scripts/homologacao/verificar-superficie-publica.sh` passou integralmente e nao houve erro de aplicacao no novo deployment;
+- o roteiro controlado recebeu duas paradas: uma entrega para Vanessa e uma coleta para Gustavo, ambas marcadas explicitamente como ensaio sem deslocamento real;
+- o roteiro foi publicado e as duas paradas percorreram os estados `Pendente`, `A caminho` e `Concluida`;
+- o resultado final foi `100%`, com duas paradas concluidas e zero nao realizadas;
+- nenhum link de WhatsApp, ligacao ou mapa foi acionado; o Worker permaneceu sem implantacao ativa e nenhum envio foi realizado.
+
 ## Pendencia de dados na homologacao
 
 A lista autenticada apresentou `3.523` clientes. O ensaio nao alterou registros fora dos dois destinatarios autorizados, mas a origem, a autorizacao, a minimizacao e a retencao dessa carga devem ser formalmente confirmadas antes de ampliar a homologacao ou liberar qualquer envio.
@@ -96,7 +111,7 @@ A lista autenticada apresentou `3.523` clientes. O ensaio nao alterou registros 
 ## Proximas validacoes
 
 1. confirmar formalmente a autorizacao da carga existente de clientes em homologacao;
-2. completar um endereco autorizado para validar inclusao, publicacao e execucao do roteiro;
+2. obter o aceite operacional da equipe sobre periodos, replanejamento e significado de conclusao das paradas do roteiro;
 3. decidir se a tela administrativa de Auditoria e Usuarios entra antes do piloto assistido ou permanece como operacao tecnica da Versao 1.0;
 4. validar os endpoints administrativos autenticados sem retirar o token opaco do BFF;
 5. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;

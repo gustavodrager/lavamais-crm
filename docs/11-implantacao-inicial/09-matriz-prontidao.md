@@ -17,7 +17,7 @@ Atualizada em 2 de setembro de 2026. `Concluido` representa implementacao, docum
 | Resultado comercial | Concluido | Concluido | Concluido | Pendente de validacao operacional | Bloqueada |
 | Movimentacoes comerciais manuais | Concluido | Concluido | Concluido | Registro e consulta validados; cancelamento nao executado | Bloqueada |
 | Historico comercial do cliente | Concluido | Concluido | Concluido | Validado com dados controlados | Bloqueada |
-| Roteiro diario manual | Concluido | Concluido | Concluido | Rascunho e bloqueio de endereco validados; publicacao pendente | Bloqueada |
+| Roteiro diario manual | Concluido | Concluido | Concluido | Inclusao, publicacao e execucao validadas com duas paradas controladas; aceite operacional pendente | Bloqueada |
 | Paineis gerencial e operacional | Consultas concluidas | Concluido | Concluido | Validado nos tres perfis | Bloqueada |
 | Auditoria | Parcial | Sem tela dedicada | Parcial | API e protecao publicadas; consulta administrativa pendente | Bloqueada |
 | Backup e restauracao | Scripts validados localmente | Nao se aplica | Prova local concluida | Ensaio no provedor pendente | Bloqueada |
