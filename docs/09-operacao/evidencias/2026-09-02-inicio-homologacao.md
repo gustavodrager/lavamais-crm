@@ -60,13 +60,26 @@ Em seguida, os tres perfis realizaram o primeiro acesso. O encerramento da ativa
 - a fila permaneceu com dois destinatarios pendentes, `0 de 2` mensagens iniciadas e aviso explicito de envio indisponivel;
 - nenhum resultado comercial foi inventado ou registrado.
 
+## Ensaio autenticado do Operador
+
+- a interface identificou corretamente o papel `Operador` e restringiu a navegacao a Inicio, Clientes, Atendimentos, Mensagens e Roteiro;
+- tentativas de acesso direto a Configuracoes, criacao de Acao Comercial e Importacao foram bloqueadas ou redirecionadas para uma area permitida;
+- a Acao Comercial controlada ficou disponivel apenas como fila de execucao, sem comandos de criacao ou cancelamento;
+- Gustavo e Vanessa apareceram como os dois destinatarios pendentes, com mensagem personalizada e aviso explicito de envio indisponivel;
+- nenhuma mensagem foi iniciada e nenhum resultado comercial foi registrado;
+- um atendimento de homologacao foi registrado para Vanessa com um item de `Toalha de banho - Lavagem`, total informado de `R$ 10,00` e observacao explicita de ensaio sem efeito fiscal, financeiro, de producao ou caixa;
+- o historico de Vanessa passou a apresentar dois atendimentos, preservando o registro anterior e sem oferecer cancelamento ao Operador;
+- no modo Executar, o sistema informou corretamente que o roteiro de 2 de setembro ainda nao havia sido publicado;
+- no modo Organizar, o Operador visualizou o rascunho de `Motorista HML` com zero paradas;
+- nenhum cliente foi incluido no roteiro, pois os enderecos dos destinatarios autorizados permanecem incompletos.
+
 ## Pendencia de dados na homologacao
 
 A lista autenticada apresentou `3.523` clientes. O ensaio nao alterou registros fora dos dois destinatarios autorizados, mas a origem, a autorizacao, a minimizacao e a retencao dessa carga devem ser formalmente confirmadas antes de ampliar a homologacao ou liberar qualquer envio.
 
 ## Proximas validacoes
 
-1. executar a matriz autenticada do Operador e do Administrador usando apenas dados controlados;
+1. executar a matriz autenticada do Administrador usando apenas dados controlados;
 2. confirmar formalmente a autorizacao da carga existente de clientes em homologacao;
 3. completar um endereco autorizado para validar inclusao, publicacao e execucao do roteiro;
 4. provisionar a instancia e as credenciais do WhatsMiau, cadastrar o webhook e somente entao ativar uma replica do Worker;
