@@ -20,7 +20,7 @@ public sealed class CatalogoDeLavanderiaTestes(PostgresCompartilhado postgres)
         await using (var banco = new ContextoDeCatalogo(opcoes, new UsuarioDeTeste(tenant)))
         {
             await banco.Database.MigrateAsync(ct);
-            var gerenciador = new GerenciadorDoCatalogoDeLavanderia(banco, new UsuarioDeTeste(tenant), TimeProvider.System);
+            var gerenciador = new GerenciadorDoCatalogoDeLavanderia(banco, new UsuarioDeTeste(tenant), TimeProvider.System, new AuditoriaNula());
 
             var primeiraCarga = await gerenciador.CarregarCatalogoInicial(ct);
             var segundaCarga = await gerenciador.CarregarCatalogoInicial(ct);

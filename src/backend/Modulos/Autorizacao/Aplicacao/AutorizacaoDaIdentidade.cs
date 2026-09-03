@@ -1,5 +1,6 @@
 using System.Data.Common;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Autorizacao.Dominio;
 using LavaMais.Crm.Modulos.Autorizacao.Infraestrutura;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LavaMais.Crm.Modulos.Autorizacao.Aplicacao;
 
-public sealed class AutorizacaoDaIdentidade(ContextoDeAutorizacao banco) : IAutorizacaoDaIdentidade
+public sealed class AutorizacaoDaIdentidade(ContextoDeAutorizacao banco, IRegistradorDeAuditoriaDeIdentidade auditoria) : IAutorizacaoDaIdentidade
 {
     public async Task ProvisionarUsuarioInicial(
         Guid tenantId,
@@ -32,6 +33,9 @@ public sealed class AutorizacaoDaIdentidade(ContextoDeAutorizacao banco) : IAuto
 
         banco.Add(UsuarioCrm.Criar(tenantId, usuarioIdentidadeId, papelDoCrm, agora));
         await banco.SaveChangesAsync(cancellationToken);
+        if (!Guid.TryParse(usuarioIdentidadeId, out var usuarioId))
+            throw new ExcecaoDeRegraDeNegocio("usuario_identidade_invalido", "O identificador do usuario inicial nao e valido.");
+        await auditoria.Registrar(EventoDeAuditoriaDeIdentidade.AutorizacaoInicialProvisionada, tenantId, usuarioId, transacao, agora, cancellationToken);
     }
 
     public async Task<string?> ObterPapelAtivo(

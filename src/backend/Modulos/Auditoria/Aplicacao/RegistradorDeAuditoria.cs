@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LavaMais.Crm.Modulos.Auditoria.Aplicacao;
 
-public sealed class RegistradorDeAuditoria(ContextoDeAuditoria banco, IContextoDoUsuario usuario) : IRegistradorDeAuditoria
+public sealed class RegistradorDeAuditoria(ContextoDeAuditoria banco, IContextoDoUsuario usuario) : IRegistradorDeAuditoria, IRegistradorDeAuditoriaDeIdentidade
 {
     public async Task Registrar(RegistroDeAuditoriaSolicitado registro, DbTransaction transacao, CancellationToken ct)
     {
@@ -22,4 +22,13 @@ public sealed class RegistradorDeAuditoria(ContextoDeAuditoria banco, IContextoD
     }
 
     public Task<RegistroDeAuditoria?> Obter(Guid id, CancellationToken ct) => banco.Registros.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, ct);
+
+    public async Task Registrar(EventoDeAuditoriaDeIdentidade evento, Guid tenantId, Guid usuarioId, DbTransaction transacao, DateTimeOffset data, CancellationToken ct)
+    {
+        if (tenantId == Guid.Empty || usuarioId == Guid.Empty)
+            throw new InvalidOperationException("Tenant e usuario sao obrigatorios para auditar identidade.");
+        banco.Database.SetDbConnection(transacao.Connection!, false); await banco.Database.UseTransactionAsync(transacao, ct);
+        banco.Add(new RegistroDeAuditoria(tenantId, usuarioId.ToString(), evento.ToString(), "UsuarioDeIdentidade", usuarioId, "{}", data));
+        await banco.SaveChangesAsync(ct);
+    }
 }

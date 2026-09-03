@@ -1,12 +1,16 @@
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
 using LavaMais.Crm.Modulos.Catalogo.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Text.Json;
 
 namespace LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 
-public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, IContextoDoUsuario usuario, TimeProvider relogio)
+public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, IContextoDoUsuario usuario, TimeProvider relogio, IRegistradorDeAuditoria auditoria)
 {
+    private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     private const string NomeDoArtigoHistoricoEssence = "Itens sem detalhamento do Essence";
     private const string NomeDoServicoHistoricoEssence = "Movimentacao historica importada";
     private const string NomeDoServicoSinteticoEssence = "Composicao sintetica de homologacao";
@@ -23,6 +27,7 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
 
     public async Task<OfertaHistoricaDoEssence> ObterOuCriarOfertaHistoricaDoEssence(CancellationToken ct)
     {
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         var agora = relogio.GetUtcNow();
         var artigo = await banco.ArtigosDeLavanderia.SingleOrDefaultAsync(x => x.NomeNormalizado == NomeDoArtigoHistoricoEssence.ToUpperInvariant(), ct);
         if (artigo is null)
@@ -52,6 +57,8 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
             await banco.SaveChangesAsync(ct);
         }
 
+        await RegistrarAuditoria("OfertaHistoricaDoEssenceProvisionada", oferta.Id, new { artigoId = artigo.Id, servicoId = servico.Id }, transacao, ct);
+        await transacao.CommitAsync(ct);
         return new(oferta.Id, artigo.Id, artigo.Nome, servico.Id, servico.Nome);
     }
 
@@ -76,6 +83,7 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
         if (nomesRepetidos.Length > 0)
             throw new ArgumentException($"Existem nomes de produtos sinteticos repetidos apos a normalizacao: {string.Join(", ", nomesRepetidos)}", nameof(definicoes));
 
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         var agora = relogio.GetUtcNow();
         var nomeNormalizadoDoServico = NomeDoServicoSinteticoEssence.ToUpperInvariant();
         var servico = await banco.ServicosDeLavanderia.SingleOrDefaultAsync(x => x.NomeNormalizado == nomeNormalizadoDoServico, ct);
@@ -138,6 +146,8 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
         }
         await banco.SaveChangesAsync(ct);
 
+        await RegistrarAuditoria("OfertasSinteticasDoEssenceProvisionadas", servico.Id, new { quantidade = definicoes.Count }, transacao, ct);
+        await transacao.CommitAsync(ct);
         return definicoes.ToDictionary(
             definicao => definicao.Chave,
             definicao =>
@@ -158,6 +168,7 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
 
     public async Task<ResultadoDaCargaInicial> CarregarCatalogoInicial(CancellationToken ct)
     {
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         var agora = relogio.GetUtcNow();
         var artigosExistentes = await banco.ArtigosDeLavanderia.ToDictionaryAsync(x => x.NomeNormalizado, ct);
         var servicosExistentes = await banco.ServicosDeLavanderia.ToDictionaryAsync(x => x.NomeNormalizado, ct);
@@ -185,8 +196,14 @@ public sealed class GerenciadorDoCatalogoDeLavanderia(ContextoDeCatalogo banco, 
                 banco.Add(OfertaDeServico.Criar(usuario.TenantId, entidadeArtigo.Id, servico.Id, CalcularPreco(artigo.PrecoBase, nomeServico), agora)); ofertasCriadas++;
             }
         await banco.SaveChangesAsync(ct);
-        return new(artigosCriados, servicosCriados, ofertasCriadas);
+        var resultado = new ResultadoDaCargaInicial(artigosCriados, servicosCriados, ofertasCriadas);
+        await RegistrarAuditoria("CatalogoDeLavanderiaCarregado", Guid.Empty, resultado, transacao, ct);
+        await transacao.CommitAsync(ct);
+        return resultado;
     }
+
+    private Task RegistrarAuditoria(string tipo, Guid recursoId, object dados, IDbContextTransaction transacao, CancellationToken ct) =>
+        auditoria.Registrar(new(tipo, "CatalogoDeLavanderia", recursoId, JsonSerializer.Serialize(dados, OpcoesJson), relogio.GetUtcNow()), transacao.GetDbTransaction(), ct);
 
     private static decimal CalcularPreco(decimal baseLavagem, string servico) => decimal.Round(servico switch
     {

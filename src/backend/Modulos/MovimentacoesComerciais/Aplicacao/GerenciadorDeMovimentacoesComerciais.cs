@@ -1,14 +1,18 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Text.Json;
 
 namespace LavaMais.Crm.Modulos.MovimentacoesComerciais.Aplicacao;
 
-public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoesComerciais banco, IConsultaDeClienteParaMovimentacao clientes, IConsultaDeCatalogoParaMovimentacao catalogo, IContextoDoUsuario usuario, TimeProvider relogio)
+public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoesComerciais banco, IConsultaDeClienteParaMovimentacao clientes, IConsultaDeCatalogoParaMovimentacao catalogo, IContextoDoUsuario usuario, TimeProvider relogio, IRegistradorDeAuditoria auditoria)
 {
+    private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     public async Task<MovimentacaoComercial> Registrar(DadosDaMovimentacao dados, CancellationToken ct)
     {
         var codigo = string.IsNullOrWhiteSpace(dados.CodigoExterno) ? null : dados.CodigoExterno.Trim();
@@ -99,6 +103,7 @@ public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoes
         movimentacao.SubstituirComposicaoImportada(preparadas, observacaoNormalizada);
         banco.Linhas.AddRange(movimentacao.Linhas);
         await banco.SaveChangesAsync(ct);
+        await RegistrarAuditoria("ComposicaoDeMovimentacaoImportadaSubstituida", movimentacao.Id, new { quantidadeLinhas = linhas.Count }, transacao, ct);
         await transacao.CommitAsync(ct);
         return new(SituacaoDaSubstituicaoDeComposicao.Atualizada, movimentacao);
     }
@@ -117,7 +122,13 @@ public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoes
         var movimentacao = await banco.Movimentacoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Movimentacao comercial nao encontrada.");
         if (movimentacao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A movimentacao comercial foi alterada por outro usuario.");
         movimentacao.Cancelar(motivo, usuario.UsuarioIdentidadeId, relogio.GetUtcNow());
-        try { await banco.SaveChangesAsync(ct); }
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        try
+        {
+            await banco.SaveChangesAsync(ct);
+            await RegistrarAuditoria("MovimentacaoComercialCancelada", movimentacao.Id, new { }, transacao, ct);
+            await transacao.CommitAsync(ct);
+        }
         catch (DbUpdateConcurrencyException) { throw new ExcecaoDeConflito("versao_desatualizada", "A movimentacao comercial foi alterada por outro usuario."); }
     }
 
@@ -150,7 +161,10 @@ public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoes
             usuario.UsuarioIdentidadeId,
             agora);
         banco.Add(movimentacao);
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         await banco.SaveChangesAsync(ct);
+        await RegistrarAuditoria("MovimentacaoComercialRegistrada", movimentacao.Id, new { origem, quantidadeLinhas = linhas.Count }, transacao, ct);
+        await transacao.CommitAsync(ct);
         return movimentacao;
     }
 
@@ -179,6 +193,9 @@ public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoes
         }
         return linhas;
     }
+
+    private Task RegistrarAuditoria(string tipo, Guid recursoId, object dados, IDbContextTransaction transacao, CancellationToken ct) =>
+        auditoria.Registrar(new(tipo, "MovimentacaoComercial", recursoId, JsonSerializer.Serialize(dados, OpcoesJson), relogio.GetUtcNow()), transacao.GetDbTransaction(), ct);
 }
 
 public sealed record DadosDaMovimentacao(Guid ClienteId, IReadOnlyCollection<DadosDaLinha> Linhas, DateTimeOffset? DataMovimentacao, string? CodigoExterno, string? Observacao);

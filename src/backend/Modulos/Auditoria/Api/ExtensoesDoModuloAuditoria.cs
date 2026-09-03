@@ -17,7 +17,10 @@ public static class ExtensoesDoModuloAuditoria
     public static IServiceCollection AdicionarModuloAuditoria(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeAuditoria>(configuracao, ContextoDeAuditoria.Historico, ContextoDeAuditoria.Schema);
-        servicos.AddScoped<RegistradorDeAuditoria>(); servicos.AddScoped<IRegistradorDeAuditoria>(p => p.GetRequiredService<RegistradorDeAuditoria>()); return servicos;
+        servicos.AddScoped<RegistradorDeAuditoria>();
+        servicos.AddScoped<IRegistradorDeAuditoria>(p => p.GetRequiredService<RegistradorDeAuditoria>());
+        servicos.AddScoped<IRegistradorDeAuditoriaDeIdentidade>(p => p.GetRequiredService<RegistradorDeAuditoria>());
+        return servicos;
     }
     public static IEndpointRouteBuilder MapearModuloAuditoria(this IEndpointRouteBuilder endpoints)
     {

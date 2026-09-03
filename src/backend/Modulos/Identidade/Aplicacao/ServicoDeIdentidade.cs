@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Identidade.Dominio;
 using LavaMais.Crm.Modulos.Identidade.Infraestrutura;
@@ -12,10 +13,10 @@ namespace LavaMais.Crm.Modulos.Identidade.Aplicacao;
 public sealed class OpcoesDeIdentidadeLocal
 {
     public bool Habilitada { get; set; } = true;
-    public string TelefonePermitido { get; set; } = "11900000001";
+    public string TelefonePermitido { get; set; } = string.Empty;
     public Guid TenantId { get; set; }
-    public string NomeTenant { get; set; } = "LavaMais";
-    public string NomeUsuario { get; set; } = "Administrador LavaMais";
+    public string NomeTenant { get; set; } = string.Empty;
+    public string NomeUsuario { get; set; } = string.Empty;
     public List<UsuarioInicialDeIdentidade> UsuariosIniciais { get; set; } = [];
 }
 public sealed class UsuarioInicialDeIdentidade
@@ -26,7 +27,7 @@ public sealed class UsuarioInicialDeIdentidade
 }
 public sealed record ResultadoDaSessao(string Token, DateTimeOffset ExpiraEm, string Nome, string NomeTenant, string Papel);
 
-public sealed class ServicoDeIdentidade(ContextoDeIdentidade banco, IAutorizacaoDaIdentidade autorizacao, IOptions<OpcoesDeIdentidadeLocal> opcoes, TimeProvider relogio)
+public sealed class ServicoDeIdentidade(ContextoDeIdentidade banco, IAutorizacaoDaIdentidade autorizacao, IOptions<OpcoesDeIdentidadeLocal> opcoes, TimeProvider relogio, IRegistradorDeAuditoriaDeIdentidade auditoria)
 {
     public async Task<bool> PrimeiroAcessoDisponivel(CancellationToken ct)
     {
@@ -46,6 +47,8 @@ public sealed class ServicoDeIdentidade(ContextoDeIdentidade banco, IAutorizacao
         await banco.SaveChangesAsync(ct);
         await autorizacao.ProvisionarUsuarioInicial(usuario.TenantId, usuario.Id.ToString(), usuarioInicial.Papel, transacao.GetDbTransaction(), agora, ct);
         var resultado = await CriarSessao(usuario, agora, ct);
+        await auditoria.Registrar(EventoDeAuditoriaDeIdentidade.UsuarioInicialAtivado, usuario.TenantId, usuario.Id, transacao.GetDbTransaction(), agora, ct);
+        await auditoria.Registrar(EventoDeAuditoriaDeIdentidade.SessaoCriada, usuario.TenantId, usuario.Id, transacao.GetDbTransaction(), agora, ct);
         await transacao.CommitAsync(ct);
         return resultado;
     }
@@ -53,9 +56,24 @@ public sealed class ServicoDeIdentidade(ContextoDeIdentidade banco, IAutorizacao
     {
         var usuario = await banco.Usuarios.SingleOrDefaultAsync(x => x.Telefone == Normalizar(telefone), ct);
         if (usuario is null || !usuario.Ativo || !VerificarSenha(senha, usuario.SenhaProtegida)) throw new ExcecaoDeRegraDeNegocio("credenciais_invalidas", "Telefone ou senha invalidos.");
-        return await CriarSessao(usuario, relogio.GetUtcNow(), ct);
+        var agora = relogio.GetUtcNow();
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        var resultado = await CriarSessao(usuario, agora, ct);
+        await auditoria.Registrar(EventoDeAuditoriaDeIdentidade.SessaoCriada, usuario.TenantId, usuario.Id, transacao.GetDbTransaction(), agora, ct);
+        await transacao.CommitAsync(ct);
+        return resultado;
     }
-    public async Task Revogar(string token, CancellationToken ct) { var sessao = await banco.Sessoes.SingleOrDefaultAsync(x => x.TokenHash == Hash(token), ct); if (sessao is not null) { sessao.Revogar(relogio.GetUtcNow()); await banco.SaveChangesAsync(ct); } }
+    public async Task Revogar(string token, CancellationToken ct)
+    {
+        var sessao = await banco.Sessoes.SingleOrDefaultAsync(x => x.TokenHash == Hash(token), ct);
+        if (sessao is null) return;
+        var agora = relogio.GetUtcNow();
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        sessao.Revogar(agora);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(EventoDeAuditoriaDeIdentidade.SessaoRevogada, opcoes.Value.TenantId, sessao.UsuarioId, transacao.GetDbTransaction(), agora, ct);
+        await transacao.CommitAsync(ct);
+    }
     private async Task<ResultadoDaSessao> CriarSessao(UsuarioDeIdentidade usuario, DateTimeOffset agora, CancellationToken ct)
     {
         var papel = await autorizacao.ObterPapelAtivo(usuario.TenantId, usuario.Id.ToString(), ct)

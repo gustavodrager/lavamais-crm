@@ -1,15 +1,19 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
 using LavaMais.Crm.Modulos.Catalogo.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Data.Common;
+using System.Text.Json;
 
 namespace LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 
-public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoUsuario usuario, TimeProvider relogio)
+public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoUsuario usuario, TimeProvider relogio, IRegistradorDeAuditoria auditoria)
 {
+    private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     public Task<List<ItemDeCatalogo>> Listar(SituacaoDoItemDeCatalogo? situacao, CancellationToken ct)
     {
         var consulta = banco.Itens.AsNoTracking();
@@ -24,7 +28,9 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
         item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow());
         await ValidarNome(item.NomeNormalizado, null, ct);
         await ValidarCodigoExterno(item.CodigoExterno, null, ct);
-        banco.Add(item); await banco.SaveChangesAsync(ct); return item;
+        banco.Add(item);
+        await SalvarComAuditoria("ItemDeCatalogoCriado", item.Id, new { item.Tipo, item.Situacao, origem = item.CodigoExterno is null ? "CadastroManual" : "Importacao" }, ct);
+        return item;
     }
 
     public async Task Atualizar(Guid id, DadosDoItemDeCatalogo dados, CancellationToken ct)
@@ -33,7 +39,8 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
         item.Atualizar(dados.Tipo, dados.Nome, dados.Descricao, dados.Categoria, dados.ValorReferencia, relogio.GetUtcNow());
         AplicarDadosDeOrigem(item, dados);
         item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow());
-        await ValidarNome(item.NomeNormalizado, id, ct); await ValidarCodigoExterno(item.CodigoExterno, id, ct); await banco.SaveChangesAsync(ct);
+        await ValidarNome(item.NomeNormalizado, id, ct); await ValidarCodigoExterno(item.CodigoExterno, id, ct);
+        await SalvarComAuditoria("ItemDeCatalogoAtualizado", item.Id, new { item.Tipo, item.Situacao }, ct);
     }
 
     public async Task<ResultadoDaImportacaoDeItem> ImportarOuAtualizar(DadosDoItemDeCatalogo dados, CancellationToken ct)
@@ -46,10 +53,20 @@ public sealed class GerenciadorDeCatalogo(ContextoDeCatalogo banco, IContextoDoU
         if (item is null) return new(await Criar(dados, ct), false);
         item.Atualizar(dados.Tipo, dados.Nome, dados.Descricao, dados.Categoria, dados.ValorReferencia, relogio.GetUtcNow());
         item.AlterarSituacao(dados.Situacao, relogio.GetUtcNow()); AplicarDadosDeOrigem(item, dados);
-        await ValidarCodigoExterno(item.CodigoExterno, item.Id, ct); await banco.SaveChangesAsync(ct); return new(item, true);
+        await ValidarCodigoExterno(item.CodigoExterno, item.Id, ct);
+        await SalvarComAuditoria("ItemDeCatalogoAtualizadoPorImportacao", item.Id, new { item.Tipo, item.Situacao, origem = "Importacao" }, ct);
+        return new(item, true);
     }
 
     public void DescartarAlteracoesPendentes() => banco.ChangeTracker.Clear();
+
+    private async Task SalvarComAuditoria(string tipo, Guid recursoId, object dados, CancellationToken ct)
+    {
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new(tipo, "ItemDeCatalogo", recursoId, JsonSerializer.Serialize(dados, OpcoesJson), relogio.GetUtcNow()), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
+    }
 
     private void AplicarDadosDeOrigem(ItemDeCatalogo item, DadosDoItemDeCatalogo dados)
     {

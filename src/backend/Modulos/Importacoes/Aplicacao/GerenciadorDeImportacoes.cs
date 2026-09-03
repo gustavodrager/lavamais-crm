@@ -1,23 +1,28 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Clientes.Aplicacao;
 using LavaMais.Crm.Modulos.Importacoes.Dominio;
 using LavaMais.Crm.Modulos.Importacoes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Globalization;
+using System.Text.Json;
 
 namespace LavaMais.Crm.Modulos.Importacoes.Aplicacao;
 
-public sealed class GerenciadorDeImportacoes(ContextoDeImportacoes banco, GerenciadorDeClientes clientes, IContextoDoUsuario usuario, TimeProvider relogio)
+public sealed class GerenciadorDeImportacoes(ContextoDeImportacoes banco, GerenciadorDeClientes clientes, IContextoDoUsuario usuario, TimeProvider relogio, IRegistradorDeAuditoria auditoria)
 {
     private const long TamanhoMaximo = 10 * 1024 * 1024;
+    private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
 
     public async Task<PreVisualizacao> PreVisualizar(string nomeArquivo, Stream arquivo, long tamanho, MapeamentoCsv mapa, CancellationToken ct)
     {
         if (tamanho <= 0 || tamanho > TamanhoMaximo) throw new ExcecaoDeRegraDeNegocio("arquivo_invalido", "O CSV deve possuir no maximo 10 MB.");
         await using var memoria = new MemoryStream((int)tamanho); await arquivo.CopyToAsync(memoria, ct); var conteudo = memoria.ToArray();
         await using var leitura = new MemoryStream(conteudo, writable: false); var linhas = await LeitorDeCsv.Ler(leitura, ct); var cabecalho = linhas[0]; ValidarMapa(cabecalho, mapa);
-        var importacao = ImportacaoDeClientes.Criar(usuario.TenantId, Path.GetFileName(nomeArquivo), conteudo, usuario.UsuarioIdentidadeId, relogio.GetUtcNow()); banco.Add(importacao); await banco.SaveChangesAsync(ct);
+        var importacao = ImportacaoDeClientes.Criar(usuario.TenantId, Path.GetFileName(nomeArquivo), conteudo, usuario.UsuarioIdentidadeId, relogio.GetUtcNow()); banco.Add(importacao);
+        await SalvarComAuditoria("ImportacaoDeClientesPreVisualizada", importacao.Id, new { tamanhoBytes = tamanho, totalLinhas = linhas.Count - 1 }, ct);
         var amostra = linhas.Skip(1).Take(20).Select((l, i) => ValidarLinha(cabecalho, l, i + 2, mapa)).ToArray();
         return new(importacao.Id, cabecalho, linhas.Count - 1, amostra);
     }
@@ -49,11 +54,20 @@ public sealed class GerenciadorDeImportacoes(ContextoDeImportacoes banco, Gerenc
                 importacao.Registrar(i + 1, ResultadoDaLinha.Rejeitada, null, ex.Message);
             }
         }
-        importacao.Concluir(relogio.GetUtcNow()); banco.AddRange(importacao.Linhas); await banco.SaveChangesAsync(ct);
+        importacao.Concluir(relogio.GetUtcNow()); banco.AddRange(importacao.Linhas);
+        await SalvarComAuditoria("ImportacaoDeClientesConfirmada", importacao.Id, new { importacao.TotalLinhas, importacao.TotalInseridas, importacao.TotalAtualizadas, importacao.TotalRejeitadas }, ct);
         return importacao;
     }
 
     public Task<ImportacaoDeClientes?> Obter(Guid id, CancellationToken ct) => banco.Importacoes.AsNoTracking().Include(x => x.Linhas).SingleOrDefaultAsync(x => x.Id == id, ct);
+
+    private async Task SalvarComAuditoria(string tipo, Guid recursoId, object dados, CancellationToken ct)
+    {
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new(tipo, "ImportacaoDeClientes", recursoId, JsonSerializer.Serialize(dados, OpcoesJson), relogio.GetUtcNow()), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
+    }
 
     private static void ValidarMapa(string[] cabecalho, MapeamentoCsv mapa)
     { foreach (var coluna in new[] { mapa.Nome, mapa.Whatsapp }) if (!cabecalho.Contains(coluna, StringComparer.OrdinalIgnoreCase)) throw new ExcecaoDeRegraDeNegocio("mapeamento_invalido", $"A coluna obrigatoria '{coluna}' nao existe no CSV."); }

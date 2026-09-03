@@ -77,7 +77,8 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
             new ConsultaDeClienteDeTeste(clienteId),
             new ConsultaDeCatalogoDeTeste(oferta),
             usuario,
-            TimeProvider.System);
+            TimeProvider.System,
+            new AuditoriaNula());
         var data = new DateTimeOffset(2026, 1, 2, 10, 30, 0, TimeSpan.FromHours(-3));
         var entrada = new DadosDaMovimentacao(clienteId, [new(oferta.Id, 1, 117.17m)], data, "8852", "Importado do Essence.");
 
@@ -114,7 +115,8 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
             new ConsultaDeClienteDeTeste(clienteId),
             new ConsultaDeCatalogoMultiploDeTeste([ofertaHistorica, ofertaCamisa, ofertaCalca]),
             usuario,
-            TimeProvider.System);
+            TimeProvider.System,
+            new AuditoriaNula());
         var data = new DateTimeOffset(2026, 1, 2, 10, 30, 0, TimeSpan.FromHours(-3));
         await gerenciador.RegistrarImportada(new(
             clienteId,

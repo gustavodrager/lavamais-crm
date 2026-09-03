@@ -3,6 +3,8 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Autorizacao.Aplicacao;
 using LavaMais.Crm.Modulos.Autorizacao.Dominio;
 using LavaMais.Crm.Modulos.Autorizacao.Infraestrutura;
+using LavaMais.Crm.Modulos.Auditoria.Aplicacao;
+using LavaMais.Crm.Modulos.Auditoria.Infraestrutura;
 using LavaMais.Crm.Modulos.Identidade.Aplicacao;
 using LavaMais.Crm.Modulos.Identidade.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
@@ -21,10 +23,14 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
         var opcoesAutorizacao = new DbContextOptionsBuilder<ContextoDeAutorizacao>().UseNpgsql(postgres.Conexao, x => x.MigrationsHistoryTable(ContextoDeAutorizacao.TabelaDeHistoricoDasMigrations, ContextoDeAutorizacao.Schema)).Options;
         await using var bancoAutorizacao = new ContextoDeAutorizacao(opcoesAutorizacao, new ContextoDeTeste(tenantId));
         await bancoAutorizacao.Database.MigrateAsync(TestContext.Current.CancellationToken);
+        var opcoesAuditoria = new DbContextOptionsBuilder<ContextoDeAuditoria>().UseNpgsql(postgres.Conexao, x => x.MigrationsHistoryTable(ContextoDeAuditoria.Historico, ContextoDeAuditoria.Schema)).Options;
+        await using var bancoAuditoria = new ContextoDeAuditoria(opcoesAuditoria, new ContextoDeTeste(tenantId));
+        await bancoAuditoria.Database.MigrateAsync(TestContext.Current.CancellationToken);
         await banco.Sessoes.ExecuteDeleteAsync(TestContext.Current.CancellationToken); await banco.Usuarios.ExecuteDeleteAsync(TestContext.Current.CancellationToken);
         await bancoAutorizacao.UsuariosCrm.IgnoreQueryFilters().ExecuteDeleteAsync(TestContext.Current.CancellationToken);
         var configuracao = Options.Create(new OpcoesDeIdentidadeLocal { TenantId = tenantId, TelefonePermitido = "11900000001", NomeTenant = "LavaMais" });
-        var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao), configuracao, TimeProvider.System);
+        var auditoria = new RegistradorDeAuditoria(bancoAuditoria, new ContextoDeTeste(tenantId));
+        var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao, auditoria), configuracao, TimeProvider.System, auditoria);
 
         await Assert.ThrowsAsync<ExcecaoDeRegraDeNegocio>(() => servico.PrimeiroAcesso("11999999999", "uma-senha-segura", TestContext.Current.CancellationToken));
         var primeira = await servico.PrimeiroAcesso("(11) 90000-0001", "uma-senha-segura", TestContext.Current.CancellationToken);
@@ -34,6 +40,7 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
         autorizacao.AlterarPapel(PapelDoCrm.Gerente, DateTimeOffset.UtcNow);
         await bancoAutorizacao.SaveChangesAsync(TestContext.Current.CancellationToken);
         var entrada = await servico.Entrar("11900000001", "uma-senha-segura", TestContext.Current.CancellationToken);
+        await servico.Revogar(entrada.Token, TestContext.Current.CancellationToken);
 
         Assert.NotEmpty(primeira.Token); Assert.NotEmpty(entrada.Token); Assert.NotEqual(primeira.Token, entrada.Token);
         Assert.Equal("Administrador", primeira.Papel);
@@ -42,6 +49,11 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
         Assert.DoesNotContain(primeira.Token, (await banco.Sessoes.FirstAsync(TestContext.Current.CancellationToken)).TokenHash);
         Assert.Equal(PapelDoCrm.Gerente, autorizacao.Papel);
         Assert.Equal((await banco.Usuarios.SingleAsync(TestContext.Current.CancellationToken)).Id.ToString(), autorizacao.UsuarioIdentidadeId);
+        var eventos = await bancoAuditoria.Registros.AsNoTracking().Where(x => x.RecursoId == Guid.Parse(autorizacao.UsuarioIdentidadeId)).Select(x => x.Tipo).ToListAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("AutorizacaoInicialProvisionada", eventos);
+        Assert.Contains("UsuarioInicialAtivado", eventos);
+        Assert.Equal(2, eventos.Count(x => x == "SessaoCriada"));
+        Assert.Contains("SessaoRevogada", eventos);
     }
 
     [Fact]
@@ -66,7 +78,8 @@ public sealed class IdentidadeLocalTestes(PostgresCompartilhado postgres)
                 new() { Telefone = "11900000003", Nome = "Usuario Operador", Papel = "Operador" }
             ]
         });
-        var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao), configuracao, TimeProvider.System);
+        var auditoria = new AuditoriaNula();
+        var servico = new ServicoDeIdentidade(banco, new AutorizacaoDaIdentidade(bancoAutorizacao, auditoria), configuracao, TimeProvider.System, auditoria);
 
         Assert.True(await servico.PrimeiroAcessoDisponivel(TestContext.Current.CancellationToken));
         var administrador = await servico.PrimeiroAcesso("11900000001", "senha-admin-segura", TestContext.Current.CancellationToken);

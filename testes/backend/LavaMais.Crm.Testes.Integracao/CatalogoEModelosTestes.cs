@@ -1,5 +1,7 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.Modulos.Auditoria.Aplicacao;
+using LavaMais.Crm.Modulos.Auditoria.Infraestrutura;
 using LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
 using LavaMais.Crm.Modulos.Catalogo.Infraestrutura;
@@ -22,12 +24,12 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
         await using var bancoB = new ContextoDeCatalogo(opcoes, tenantB);
         var dados = new DadosDoItemDeCatalogo(TipoDeItemDeCatalogo.Servico, "Lavagem de edredom", "Lavagem especializada", "Edredons", 80m);
 
-        await new GerenciadorDeCatalogo(bancoA, tenantA, TimeProvider.System).Criar(dados, ct);
-        await new GerenciadorDeCatalogo(bancoB, tenantB, TimeProvider.System).Criar(dados, ct);
+        await new GerenciadorDeCatalogo(bancoA, tenantA, TimeProvider.System, new AuditoriaNula()).Criar(dados, ct);
+        await new GerenciadorDeCatalogo(bancoB, tenantB, TimeProvider.System, new AuditoriaNula()).Criar(dados, ct);
 
         Assert.Single(await bancoA.Itens.AsNoTracking().ToListAsync(ct));
         Assert.Single(await bancoB.Itens.AsNoTracking().ToListAsync(ct));
-        await Assert.ThrowsAsync<ExcecaoDeConflito>(() => new GerenciadorDeCatalogo(bancoA, tenantA, TimeProvider.System).Criar(dados, ct));
+        await Assert.ThrowsAsync<ExcecaoDeConflito>(() => new GerenciadorDeCatalogo(bancoA, tenantA, TimeProvider.System, new AuditoriaNula()).Criar(dados, ct));
     }
 
     [Fact]
@@ -37,7 +39,8 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
         var ct = TestContext.Current.CancellationToken;
         var contexto = new Contexto(Guid.NewGuid());
         await using var banco = new ContextoDeCatalogo(OpcoesCatalogo(postgres.Conexao), contexto); await banco.Database.MigrateAsync(ct);
-        var gerenciador = new GerenciadorDeCatalogo(banco, contexto, TimeProvider.System);
+        await using var bancoAuditoria = new ContextoDeAuditoria(OpcoesAuditoria(postgres.Conexao), contexto); await bancoAuditoria.Database.MigrateAsync(ct);
+        var gerenciador = new GerenciadorDeCatalogo(banco, contexto, TimeProvider.System, new RegistradorDeAuditoria(bancoAuditoria, contexto));
 
         var item = await gerenciador.Criar(new(
             TipoDeItemDeCatalogo.Produto,
@@ -50,6 +53,7 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
 
         Assert.Equal(SituacaoDoItemDeCatalogo.Inativo, item.Situacao);
         Assert.Equal(SituacaoDoItemDeCatalogo.Inativo, (await banco.Itens.AsNoTracking().SingleAsync(ct)).Situacao);
+        Assert.Contains(await bancoAuditoria.Registros.AsNoTracking().ToListAsync(ct), x => x.RecursoId == item.Id && x.Tipo == "ItemDeCatalogoCriado");
     }
 
     [Fact]
@@ -59,7 +63,7 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
         var ct = TestContext.Current.CancellationToken;
         var contexto = new Contexto(Guid.NewGuid());
         await using var banco = new ContextoDeCatalogo(OpcoesCatalogo(postgres.Conexao), contexto); await banco.Database.MigrateAsync(ct);
-        var gerenciador = new GerenciadorDoCatalogoDeLavanderia(banco, contexto, TimeProvider.System);
+        var gerenciador = new GerenciadorDoCatalogoDeLavanderia(banco, contexto, TimeProvider.System, new AuditoriaNula());
         DefinicaoDeProdutoSinteticoDoEssence[] definicoes =
         [
             new("CAMISA", "Camisa", 12.50m),
@@ -89,7 +93,8 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
         var ct = TestContext.Current.CancellationToken;
         var contexto = new Contexto(Guid.NewGuid()); var opcoes = OpcoesModelos(postgres.Conexao);
         await using var banco = new ContextoDeModelos(opcoes, contexto); await banco.Database.MigrateAsync(ct);
-        var gerenciador = new GerenciadorDeModelos(banco, contexto, TimeProvider.System);
+        await using var bancoAuditoria = new ContextoDeAuditoria(OpcoesAuditoria(postgres.Conexao), contexto); await bancoAuditoria.Database.MigrateAsync(ct);
+        var gerenciador = new GerenciadorDeModelos(banco, contexto, TimeProvider.System, new RegistradorDeAuditoria(bancoAuditoria, contexto));
         var modelo = await gerenciador.Criar("Oferta de servico", ct);
 
         var primeira = await gerenciador.Publicar(modelo.Id, new("Ola {{nomeCliente}}, conheca {{itemCatalogo}}.", ["nomeCliente", "itemCatalogo"]), ct);
@@ -99,6 +104,9 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
         Assert.Equal(1, primeira.Numero); Assert.Equal(2, segunda.Numero);
         Assert.Equal("Ola {{nomeCliente}}, conheca {{itemCatalogo}}.", persistido.Versoes.Single(x => x.Numero == 1).ConteudoPreVisualizacao);
         Assert.Equal(segunda.Id, persistido.VersaoAtualId);
+        var eventos = await bancoAuditoria.Registros.AsNoTracking().Where(x => x.RecursoId == modelo.Id).Select(x => x.Tipo).ToListAsync(ct);
+        Assert.Equal(1, eventos.Count(x => x == "ModeloDeMensagemCriado"));
+        Assert.Equal(2, eventos.Count(x => x == "ModeloDeMensagemPublicado"));
     }
 
     [Fact]
@@ -110,5 +118,6 @@ public sealed class CatalogoEModelosTestes(PostgresCompartilhado postgres)
 
     private static DbContextOptions<ContextoDeCatalogo> OpcoesCatalogo(string conexao) => new DbContextOptionsBuilder<ContextoDeCatalogo>().UseNpgsql(conexao, p => p.MigrationsHistoryTable(ContextoDeCatalogo.Historico, ContextoDeCatalogo.Schema)).Options;
     private static DbContextOptions<ContextoDeModelos> OpcoesModelos(string conexao) => new DbContextOptionsBuilder<ContextoDeModelos>().UseNpgsql(conexao, p => p.MigrationsHistoryTable(ContextoDeModelos.Historico, ContextoDeModelos.Schema)).Options;
+    private static DbContextOptions<ContextoDeAuditoria> OpcoesAuditoria(string conexao) => new DbContextOptionsBuilder<ContextoDeAuditoria>().UseNpgsql(conexao, p => p.MigrationsHistoryTable(ContextoDeAuditoria.Historico, ContextoDeAuditoria.Schema)).Options;
     private sealed class Contexto(Guid tenantId) : IContextoDoUsuario { public bool Autenticado => true; public Guid TenantId { get; } = tenantId; public string UsuarioIdentidadeId => "gerente-teste"; }
 }

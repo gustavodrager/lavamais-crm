@@ -31,7 +31,7 @@ public sealed class GerenciadorDeRoteiros(
         var roteiro = RoteiroDiario.Criar(usuario.TenantId, data, motorista, agora);
         banco.Add(roteiro);
         await banco.SaveChangesAsync(ct);
-        await RegistrarAuditoria("RoteiroCriado", "RoteiroDiario", roteiro.Id, new { data, motorista }, transacao, agora, ct);
+        await RegistrarAuditoria("RoteiroCriado", "RoteiroDiario", roteiro.Id, new { data }, transacao, agora, ct);
         await transacao.CommitAsync(ct);
         return roteiro;
     }
@@ -41,7 +41,7 @@ public sealed class GerenciadorDeRoteiros(
         await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         var roteiro = await Carregar(roteiroId, ct); ValidarVersao(roteiro, versaoEsperada);
         var agora = relogio.GetUtcNow(); roteiro.AlterarMotorista(motorista, agora); await SalvarComConcorrencia(ct);
-        await RegistrarAuditoria("RoteiroMotoristaAlterado", "RoteiroDiario", roteiro.Id, new { motorista }, transacao, agora, ct); await transacao.CommitAsync(ct);
+        await RegistrarAuditoria("RoteiroMotoristaAlterado", "RoteiroDiario", roteiro.Id, new { }, transacao, agora, ct); await transacao.CommitAsync(ct);
     }
 
     public async Task Excluir(Guid roteiroId, uint versaoEsperada, CancellationToken ct)

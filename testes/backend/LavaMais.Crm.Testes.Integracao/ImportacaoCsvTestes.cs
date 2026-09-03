@@ -3,6 +3,8 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.Modulos.Clientes.Aplicacao;
 using LavaMais.Crm.Modulos.Clientes.Dominio;
 using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
+using LavaMais.Crm.Modulos.Auditoria.Aplicacao;
+using LavaMais.Crm.Modulos.Auditoria.Infraestrutura;
 using LavaMais.Crm.Modulos.Importacoes.Aplicacao;
 using LavaMais.Crm.Modulos.Importacoes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
@@ -19,22 +21,28 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         var contexto = new Contexto(Guid.NewGuid());
         var opcoesClientes = new DbContextOptionsBuilder<ContextoDeClientes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema)).Options;
         var opcoesImportacoes = new DbContextOptionsBuilder<ContextoDeImportacoes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema)).Options;
+        var opcoesAuditoria = new DbContextOptionsBuilder<ContextoDeAuditoria>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeAuditoria.Historico, ContextoDeAuditoria.Schema)).Options;
         await using var bancoClientes = new ContextoDeClientes(opcoesClientes, contexto); await bancoClientes.Database.MigrateAsync(ct);
         await using var bancoImportacoes = new ContextoDeImportacoes(opcoesImportacoes, contexto); await bancoImportacoes.Database.MigrateAsync(ct);
-        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
-        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System);
+        await using var bancoAuditoria = new ContextoDeAuditoria(opcoesAuditoria, contexto); await bancoAuditoria.Database.MigrateAsync(ct);
+        var auditoria = new RegistradorDeAuditoria(bancoAuditoria, contexto);
+        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System, auditoria);
+        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System, auditoria);
         var csv = "nome,whatsapp,bairro,marketing\nMaria,13997776655,Boqueirao,sim\nSem telefone,,Centro,nao\n";
         await using var fluxo = new MemoryStream(Encoding.UTF8.GetBytes(csv));
         var mapa = new MapeamentoCsv("nome", "whatsapp", null, "bairro", null, null, "marketing");
 
         var previa = await gerenciador.PreVisualizar("clientes.csv", fluxo, fluxo.Length, mapa, ct);
         await using var bancoConfirmacao = new ContextoDeImportacoes(opcoesImportacoes, contexto);
-        var gerenciadorConfirmacao = new GerenciadorDeImportacoes(bancoConfirmacao, gerenciadorClientes, contexto, TimeProvider.System);
+        var gerenciadorConfirmacao = new GerenciadorDeImportacoes(bancoConfirmacao, gerenciadorClientes, contexto, TimeProvider.System, auditoria);
         var resultado = await gerenciadorConfirmacao.Confirmar(previa.ReferenciaArquivo, mapa, ct);
 
         Assert.Equal(2, previa.TotalLinhas); Assert.Equal(1, resultado.TotalInseridas); Assert.Equal(1, resultado.TotalRejeitadas);
         Assert.Empty(resultado.ConteudoArquivo);
         Assert.Single(await bancoClientes.Clientes.AsNoTracking().ToListAsync(ct));
+        var eventos = await bancoAuditoria.Registros.AsNoTracking().Where(x => x.RecursoId == previa.ReferenciaArquivo).Select(x => x.Tipo).ToListAsync(ct);
+        Assert.Contains("ImportacaoDeClientesPreVisualizada", eventos);
+        Assert.Contains("ImportacaoDeClientesConfirmada", eventos);
     }
 
     [Fact]
@@ -64,8 +72,8 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         var opcoesImportacoes = new DbContextOptionsBuilder<ContextoDeImportacoes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema)).Options;
         await using var bancoClientes = new ContextoDeClientes(opcoesClientes, contexto); await bancoClientes.Database.MigrateAsync(ct);
         await using var bancoImportacoes = new ContextoDeImportacoes(opcoesImportacoes, contexto); await bancoImportacoes.Database.MigrateAsync(ct);
-        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
-        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System);
+        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System, new AuditoriaNula());
+        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System, new AuditoriaNula());
         var mapa = new MapeamentoCsv("nome", "whatsapp", null, null, null, null, null, "codigoExterno", "dataCadastroOrigem", 13, true);
 
         var primeira = "nome;whatsapp;codigoExterno;dataCadastroOrigem\nMaria;999776655;CLI-1;14/08/2026\n";
@@ -96,9 +104,9 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         var opcoesImportacoes = new DbContextOptionsBuilder<ContextoDeImportacoes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema)).Options;
         await using var bancoClientes = new ContextoDeClientes(opcoesClientes, contexto); await bancoClientes.Database.MigrateAsync(ct);
         await using var bancoImportacoes = new ContextoDeImportacoes(opcoesImportacoes, contexto); await bancoImportacoes.Database.MigrateAsync(ct);
-        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
+        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System, new AuditoriaNula());
         await gerenciadorClientes.Criar(new("Nome original", "13997776651", null, "Fisica", null, null, false, null, [], "CLI-1"), ct);
-        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System);
+        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System, new AuditoriaNula());
         var mapa = new MapeamentoCsv("nome", "whatsapp", "email", null, null, null, null, "codigoExterno");
         var emailInvalido = new string('a', 255) + "@teste.com";
         var csv = $"nome;whatsapp;email;codigoExterno\nNome indevido;13997776651;{emailInvalido};CLI-1\nCliente valido;13997776652;;CLI-2\n";
@@ -123,8 +131,8 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         var opcoesImportacoes = new DbContextOptionsBuilder<ContextoDeImportacoes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeImportacoes.Historico, ContextoDeImportacoes.Schema)).Options;
         await using var bancoClientes = new ContextoDeClientes(opcoesClientes, contexto); await bancoClientes.Database.MigrateAsync(ct);
         await using var bancoImportacoes = new ContextoDeImportacoes(opcoesImportacoes, contexto); await bancoImportacoes.Database.MigrateAsync(ct);
-        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
-        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System);
+        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System, new AuditoriaNula());
+        var gerenciador = new GerenciadorDeImportacoes(bancoImportacoes, gerenciadorClientes, contexto, TimeProvider.System, new AuditoriaNula());
         var mapa = new MapeamentoCsv("nome", "whatsapp", null, "bairro", "cidade", "tipo", "marketing", "codigoExterno");
         var csv = "nome;whatsapp;bairro;cidade;tipo;marketing;codigoExterno\nAna;13997776651;Centro;Santos;Fisica;true;CLI-1\nBia;13997776652;Forte;Praia Grande;Fisica;true;CLI-2\nCaio;13997776653;;;Fisica;true;CLI-3\n";
         await using var fluxo = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -145,7 +153,7 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         var contexto = new Contexto(Guid.NewGuid());
         var opcoesClientes = new DbContextOptionsBuilder<ContextoDeClientes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema)).Options;
         await using var bancoClientes = new ContextoDeClientes(opcoesClientes, contexto); await bancoClientes.Database.MigrateAsync(ct);
-        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System);
+        var gerenciadorClientes = new GerenciadorDeClientes(bancoClientes, contexto, TimeProvider.System, new AuditoriaNula());
         var criado = await gerenciadorClientes.Criar(new("Ana", "13997776651", null, "Fisica", null, null, false, null, [], "CLI-1"), ct);
         gerenciadorClientes.DescartarAlteracoesPendentes();
 
@@ -167,7 +175,7 @@ public sealed class ImportacaoCsvTestes(PostgresCompartilhado postgres)
         var contexto = new Contexto(Guid.NewGuid());
         var opcoesClientes = new DbContextOptionsBuilder<ContextoDeClientes>().UseNpgsql(postgres.Conexao, p => p.MigrationsHistoryTable(ContextoDeClientes.TabelaDeHistoricoDasMigrations, ContextoDeClientes.Schema)).Options;
         await using var banco = new ContextoDeClientes(opcoesClientes, contexto); await banco.Database.MigrateAsync(ct);
-        var gerenciador = new GerenciadorDeClientes(banco, contexto, TimeProvider.System);
+        var gerenciador = new GerenciadorDeClientes(banco, contexto, TimeProvider.System, new AuditoriaNula());
         var endereco = new DadosDoEndereco("Rua A", "10", null, "Centro", "Santos", "SP", "11000000");
         var dataOrigem = new DateTimeOffset(2025, 1, 10, 0, 0, 0, TimeSpan.Zero);
         var criado = await gerenciador.Criar(new(

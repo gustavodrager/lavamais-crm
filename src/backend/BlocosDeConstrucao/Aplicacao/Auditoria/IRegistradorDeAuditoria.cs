@@ -8,3 +8,16 @@ public interface IRegistradorDeAuditoria
 }
 
 public sealed record RegistroDeAuditoriaSolicitado(string Tipo, string Recurso, Guid RecursoId, string DadosJson, DateTimeOffset Data);
+
+public interface IRegistradorDeAuditoriaDeIdentidade
+{
+    Task Registrar(EventoDeAuditoriaDeIdentidade evento, Guid tenantId, Guid usuarioId, DbTransaction transacao, DateTimeOffset data, CancellationToken ct);
+}
+
+public enum EventoDeAuditoriaDeIdentidade
+{
+    UsuarioInicialAtivado,
+    SessaoCriada,
+    SessaoRevogada,
+    AutorizacaoInicialProvisionada
+}

@@ -24,14 +24,23 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
     public async Task<AcaoComercial> Criar(DadosDoRascunho dados, CancellationToken ct)
     {
         var json = await ValidarESerializar(dados, ct);
-        var acao = AcaoComercial.Criar(usuario.TenantId, usuario.UsuarioIdentidadeId, dados.Nome, dados.Objetivo, dados.ItemDeCatalogoId, dados.VersaoModeloId, json, relogio.GetUtcNow());
-        banco.Add(acao); await banco.SaveChangesAsync(ct); return acao;
+        var agora = relogio.GetUtcNow();
+        var acao = AcaoComercial.Criar(usuario.TenantId, usuario.UsuarioIdentidadeId, dados.Nome, dados.Objetivo, dados.ItemDeCatalogoId, dados.VersaoModeloId, json, agora);
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        banco.Add(acao); await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new("AcaoComercialCriada", "AcaoComercial", acao.Id, JsonSerializer.Serialize(new { dados.Criterios.Modo }, OpcoesJson), agora), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
+        return acao;
     }
 
     public async Task Atualizar(Guid id, DadosDoRascunho dados, CancellationToken ct)
     {
         var acao = await banco.Acoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
-        var json = await ValidarESerializar(dados, ct); acao.Atualizar(dados.Nome, dados.Objetivo, dados.ItemDeCatalogoId, dados.VersaoModeloId, json, relogio.GetUtcNow()); await banco.SaveChangesAsync(ct);
+        var json = await ValidarESerializar(dados, ct); var agora = relogio.GetUtcNow(); acao.Atualizar(dados.Nome, dados.Objetivo, dados.ItemDeCatalogoId, dados.VersaoModeloId, json, agora);
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new("AcaoComercialAtualizada", "AcaoComercial", acao.Id, JsonSerializer.Serialize(new { dados.Criterios.Modo }, OpcoesJson), agora), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
     }
 
     public async Task<ResultadoDaSimulacao> Simular(Guid id, int pagina, int tamanhoPagina, CancellationToken ct)
@@ -74,8 +83,11 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
     {
         var acao = await banco.Acoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
         if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario.");
-        acao.Cancelar(motivo, usuario.UsuarioIdentidadeId, relogio.GetUtcNow());
+        var agora = relogio.GetUtcNow(); acao.Cancelar(motivo, usuario.UsuarioIdentidadeId, agora);
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
         await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new("AcaoComercialCancelada", "AcaoComercial", acao.Id, "{}", agora), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
     }
 
     public Task<List<DestinatarioDaAcao>> ListarDestinatarios(Guid id, CancellationToken ct) => banco.Acoes.AsNoTracking().Where(x => x.Id == id).SelectMany(x => x.Destinatarios).OrderBy(x => x.NomeClienteSnapshot).ToListAsync(ct);

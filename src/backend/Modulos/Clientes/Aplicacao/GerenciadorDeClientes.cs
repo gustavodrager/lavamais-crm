@@ -1,16 +1,20 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Roteiros;
 using LavaMais.Crm.Modulos.Clientes.Dominio;
 using LavaMais.Crm.Modulos.Clientes.Infraestrutura;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Data.Common;
+using System.Text.Json;
 
 namespace LavaMais.Crm.Modulos.Clientes.Aplicacao;
 
-public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoUsuario contexto, TimeProvider relogio)
+public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoUsuario contexto, TimeProvider relogio, IRegistradorDeAuditoria auditoria)
 {
+    private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
     public async Task<(List<Cliente> Itens, int Total)> Listar(string? busca, int pagina, int tamanho, CancellationToken ct)
     {
         pagina = Math.Max(1, pagina); tamanho = Math.Clamp(tamanho, 1, 100);
@@ -35,7 +39,9 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
         AplicarDadosDeOrigem(cliente, dados);
         await ValidarCodigoExterno(cliente.CodigoExterno, null, ct);
         if (await WhatsappExiste(cliente, null, ct)) throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe cliente ativo com este WhatsApp no tenant.");
-        banco.Add(cliente); await banco.SaveChangesAsync(ct); return cliente;
+        banco.Add(cliente);
+        await SalvarComAuditoria("ClienteCriado", "Cliente", cliente.Id, new { origem = cliente.CodigoExterno is null ? "CadastroManual" : "Importacao" }, ct);
+        return cliente;
     }
 
     public async Task Atualizar(Guid id, DadosDoCliente dados, CancellationToken ct)
@@ -45,7 +51,7 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
         AplicarDadosDeOrigem(cliente, dados);
         await ValidarCodigoExterno(cliente.CodigoExterno, id, ct);
         if (await WhatsappExiste(cliente, id, ct)) throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe cliente ativo com este WhatsApp no tenant.");
-        await banco.SaveChangesAsync(ct);
+        await SalvarComAuditoria("ClienteAtualizado", "Cliente", cliente.Id, new { permiteMarketingWhatsapp = dados.PermiteMarketingWhatsapp }, ct);
     }
 
     public async Task<ResultadoDaImportacaoDeCliente> ImportarOuAtualizar(DadosDoCliente dados, CancellationToken ct)
@@ -65,7 +71,7 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
         AplicarDadosDeOrigem(cliente, dados);
         await ValidarCodigoExterno(cliente.CodigoExterno, cliente.Id, ct);
         if (await WhatsappExiste(cliente, cliente.Id, ct)) throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe outro cliente ativo com este WhatsApp no tenant.");
-        await banco.SaveChangesAsync(ct);
+        await SalvarComAuditoria("ClienteAtualizadoPorImportacao", "Cliente", cliente.Id, new { origem = "Importacao" }, ct);
         return new(cliente, true);
     }
 
@@ -115,7 +121,7 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
             relogio.GetUtcNow());
         if (await WhatsappExiste(cliente, cliente.Id, ct))
             throw new ExcecaoDeConflito("whatsapp_duplicado", "Ja existe outro cliente ativo com este WhatsApp no tenant.");
-        await banco.SaveChangesAsync(ct);
+        await SalvarComAuditoria("ClienteAtualizadoPorCargaControlada", "Cliente", cliente.Id, new { origem = "Essence" }, ct);
         return new(cliente, true);
     }
 
@@ -124,17 +130,28 @@ public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoU
     public async Task Inativar(Guid id, CancellationToken ct)
     {
         var cliente = await banco.Clientes.Include(x => x.Contatos).SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Cliente nao encontrado.");
-        cliente.Inativar(relogio.GetUtcNow()); await banco.SaveChangesAsync(ct);
+        cliente.Inativar(relogio.GetUtcNow());
+        await SalvarComAuditoria("ClienteInativado", "Cliente", cliente.Id, new { }, ct);
     }
 
     public async Task<Etiqueta> CriarEtiqueta(string nome, CancellationToken ct)
     {
         var etiqueta = Etiqueta.Criar(contexto.TenantId, nome, relogio.GetUtcNow());
         if (await banco.Etiquetas.AnyAsync(x => x.NomeNormalizado == etiqueta.NomeNormalizado, ct)) throw new ExcecaoDeConflito("etiqueta_duplicada", "A etiqueta ja existe.");
-        banco.Add(etiqueta); await banco.SaveChangesAsync(ct); return etiqueta;
+        banco.Add(etiqueta);
+        await SalvarComAuditoria("EtiquetaCriada", "Etiqueta", etiqueta.Id, new { }, ct);
+        return etiqueta;
     }
 
     public Task<List<Etiqueta>> ListarEtiquetas(CancellationToken ct) => banco.Etiquetas.AsNoTracking().OrderBy(x => x.Nome).ToListAsync(ct);
+
+    private async Task SalvarComAuditoria(string tipo, string recurso, Guid recursoId, object dados, CancellationToken ct)
+    {
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new(tipo, recurso, recursoId, JsonSerializer.Serialize(dados, OpcoesJson), relogio.GetUtcNow()), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
+    }
 
     private void Aplicar(Cliente cliente, DadosDoCliente d)
     {
