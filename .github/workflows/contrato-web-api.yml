@@ -1,0 +1,45 @@
+name: Contrato Web API
+
+on:
+  pull_request:
+    paths:
+      - "src/backend/**"
+      - "src/web/src/infraestrutura/crm-api-http.ts"
+      - "src/web/src/app/api/autenticacao/**"
+      - "src/web/src/app/entrar/**"
+      - "contratos/**"
+      - "scripts/verificar-contrato-web-api.mjs"
+      - ".github/workflows/contrato-web-api.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/backend/**"
+      - "src/web/src/infraestrutura/crm-api-http.ts"
+      - "src/web/src/app/api/autenticacao/**"
+      - "src/web/src/app/entrar/**"
+      - "contratos/**"
+      - "scripts/verificar-contrato-web-api.mjs"
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj
+      - run: dotnet build src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj --configuration Release --no-restore
+      - name: Publicar OpenAPI temporariamente
+        run: |
+          ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__Crm='Host=127.0.0.1;Port=5432;Database=contrato;Username=contrato;Password=contrato' dotnet run --project src/backend/LavaMais.Crm.Api/LavaMais.Crm.Api.csproj --configuration Release --no-build --urls http://127.0.0.1:4310 &
+          echo $! > /tmp/lavamais-api.pid
+          for tentativa in {1..30}; do
+            curl --fail --silent http://127.0.0.1:4310/openapi/v1.json --output /dev/null && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: Comparar contrato usado pelo Web
+        run: node scripts/verificar-contrato-web-api.mjs http://127.0.0.1:4310/openapi/v1.json
+      - if: always()
+        run: test ! -f /tmp/lavamais-api.pid || kill "$(cat /tmp/lavamais-api.pid)" || true
