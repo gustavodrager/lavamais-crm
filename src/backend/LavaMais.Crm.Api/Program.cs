@@ -16,6 +16,8 @@ using System.Text.Json.Serialization;
 
 var construtor = WebApplication.CreateBuilder(args);
 
+ValidacaoDaConfiguracao.Validar(construtor.Configuration, construtor.Environment);
+
 construtor.Logging.ClearProviders();
 construtor.Logging.AddJsonConsole(opcoes => opcoes.IncludeScopes = true);
 construtor.Services.AdicionarFundacaoDaApi(construtor.Configuration);
@@ -42,7 +44,8 @@ aplicacao.UsarFundacaoDaApi();
 aplicacao.UseRateLimiter();
 aplicacao.UseAuthentication();
 aplicacao.UseAuthorization();
-aplicacao.MapOpenApi("/openapi/{documentName}.json");
+if (aplicacao.Environment.IsDevelopment())
+    aplicacao.MapOpenApi("/openapi/{documentName}.json");
 aplicacao.MapearModuloIdentidade();
 aplicacao.MapearModuloAutorizacao();
 aplicacao.MapearModuloAuditoria();

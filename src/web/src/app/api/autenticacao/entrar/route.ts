@@ -33,6 +33,9 @@ export async function POST(requisicao: NextRequest) {
     const sessao = esquema.parse(await resposta.json()); const id = randomUUID(); const iniciais = sessao.nome.split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
     await salvarSessao(id, { apresentacao: { usuario: { nome: sessao.nome, iniciais }, tenant: { nome: sessao.nomeTenant }, papel: sessao.papel }, accessToken: sessao.token, expiraEm: new Date(sessao.expiraEm).getTime() });
     const destinoPadrao = sessao.papel === "Operador" ? "/inicio" : "/inicio";
-    const destino = NextResponse.redirect(criarUrlDaAplicacao(retorno ?? destinoPadrao, requisicao.url), 303); destino.cookies.set(NOME_COOKIE_SESSAO, id, { httpOnly: true, secure: true, sameSite: "lax", path: "/" }); return destino;
+    const destino = NextResponse.redirect(criarUrlDaAplicacao(retorno ?? destinoPadrao, requisicao.url), 303);
+    destino.cookies.set(NOME_COOKIE_SESSAO, id, { httpOnly: true, secure: true, sameSite: "lax", path: "/", expires: new Date(sessao.expiraEm), priority: "high" });
+    destino.headers.set("Cache-Control", "no-store");
+    return destino;
   } catch { return NextResponse.redirect(criarUrlDaAplicacao(`/entrar?${new URLSearchParams({ erro: "indisponivel", ...(retorno ? { retorno } : {}) })}`, requisicao.url), 303); }
 }

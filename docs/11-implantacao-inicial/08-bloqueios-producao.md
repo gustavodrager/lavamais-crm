@@ -9,6 +9,8 @@ Producao nao recebe aplicacao nem dados empresariais enquanto qualquer bloqueio 
 - [ ] sessoes persistentes validadas depois de reinicios;
 - [ ] papeis e isolamento de tenant validados;
 - [ ] dominio definitivo e acesso operacional controlado.
+- [ ] PII/credenciais anteriormente rastreadas tratadas e sessoes rotacionadas.
+- [x] auditoria critica minima transacional implementada nos modulos da Versao 1.0.
 
 ## Dados e recuperacao
 
@@ -17,6 +19,7 @@ Producao nao recebe aplicacao nem dados empresariais enquanto qualquer bloqueio 
 - [ ] restauracao isolada ensaiada;
 - [ ] RPO e RTO aprovados;
 - [ ] procedimento de incidente e responsaveis definidos.
+- [ ] topologia Railway confirmada em 2026-09-03; capacidades de PITR, restauracao e alertas ainda pendentes de ensaio.
 
 ## Comunicacao
 

@@ -1,6 +1,6 @@
 # Operacao do Backend
 
-Este runbook cobre a operacao tecnica inicial da CRM API, do BFF e do PostgreSQL. O PostgreSQL remoto inicial esta no projeto Railway `lavamais-crm`, nos ambientes isolados `homologacao` e `production`, conforme ADR-008.
+Este runbook cobre a operacao tecnica inicial da CRM API, do BFF e do PostgreSQL. A verificacao remota somente leitura de 2026-09-03 esta em `evidencias/2026-09-03-topologia-railway.md`; capacidades operacionais nao ensaiadas permanecem **A validar**.
 
 ## Checklists
 
@@ -8,6 +8,7 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do BFF e do PostgreSQL
 - [Producao](02-checklist-producao.md)
 - [Migrations e scripts PostgreSQL](03-migrations-e-scripts.md)
 - [Rollback e recuperacao](04-rollback.md)
+- [Prontidao para go-live](05-prontidao-go-live.md)
 - [Evidencias de homologacao](evidencias/README.md)
 
 ## Implantacao
@@ -19,9 +20,9 @@ Este runbook cobre a operacao tecnica inicial da CRM API, do BFF e do PostgreSQL
 5. vincular a conta da loja no proprio WhatsApp Web quando solicitado;
 6. executar uma acao com destinatario autorizado, enviar manualmente e conferir abertura, confirmacao e auditoria.
 
-Em 20 de agosto de 2026, a homologacao foi publicada no Railway com API e BFF separados. A API responde em `https://lavamais-crm-api-homologacao.up.railway.app` e o BFF em `https://lavamais-crm-web-homologacao.up.railway.app`. O migrador concluiu e encerrou com sucesso. Um servico antigo de processamento permaneceu com zero replicas; depois do ADR-021 ele e obsoleto, nunca deve ser ativado e pode ser removido em operacao controlada.
+Em 2026-09-03, a consulta somente leitura confirmou API e BFF online e Migrador concluido em homologacao. O worker esta offline e, depois do ADR-021, e obsoleto; nunca deve ser ativado e qualquer remocao exige aprovacao explicita.
 
-O ambiente de producao permanece somente com o PostgreSQL, sem aplicacao e sem dados empresariais. A promocao exige login local validado, procedimento do WhatsApp Web homologado e ensaio de restauracao.
+Em 2026-09-03, producao continha somente PostgreSQL online e o bucket de PITR, sem aplicacao. A existencia ou ausencia de dados empresariais nao foi consultada. A promocao exige login validado, procedimento do WhatsApp Web homologado e ensaio de restauracao remoto.
 
 Rollback de aplicacao deve reutilizar uma versao compatível com o schema já aplicado. Migrations destrutivas exigem plano específico e backup validado; não se executa `database update` automaticamente no startup.
 
@@ -47,22 +48,22 @@ Alertar ao menos para:
 
 ## Backup e restauração
 
-Em 20 de agosto de 2026, as instancias PostgreSQL de `homologacao` e `production` estavam ativas, com volumes e credenciais separados. O PITR do Railway foi habilitado nos dois ambientes, com bucket dedicado e janela esperada de aproximadamente quatro semanas depois da primeira copia-base. A cobertura inicial e o ensaio de restauracao ainda precisam ser confirmados antes de inserir dados empresariais em producao.
+Em 2026-09-03, a CLI informou PITR habilitado e bucket conectado nos dois ambientes. A verificacao ao vivo da cobertura e do arquivador nao concluiu por falta de vinculacao SSH; janela, retencao, ultimo ponto consistente e restauracao do provedor continuam **A validar**.
 
 Os scripts usam as variáveis padrão do PostgreSQL (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` e, quando necessário, `PGSSLMODE`). A senha nunca deve ser passada na linha de comando.
 O `pg_dump` deve ter versão igual ou superior à do servidor. Em ambiente local conteinerizado, `LAVAMAIS_POSTGRES_CONTAINER` faz os scripts usarem `pg_dump` e `pg_restore` do próprio contêiner, evitando incompatibilidade de versão.
 
 ```bash
 scripts/backend/criar-backup-postgres.sh lavamais_crm /caminho-seguro/lavamais.dump
-scripts/backend/restaurar-backup-postgres.sh lavamais_crm_restaurado /caminho-seguro/lavamais.dump
+LAVAMAIS_CONFIRMAR_RESTAURACAO=lavamais_crm_restaurado scripts/backend/restaurar-backup-postgres.sh lavamais_crm_restaurado /caminho-seguro/lavamais.dump
 scripts/backend/testar-backup-restauracao.sh
 ```
 
 Exemplo conteinerizado: `LAVAMAIS_POSTGRES_CONTAINER=nome-do-container scripts/backend/testar-backup-restauracao.sh`.
 
-O primeiro script cria backup customizado, restringe o arquivo ao usuário e valida o catálogo. A restauração usa `--clean` e é destrutiva para objetos existentes no banco de destino; deve ser executada primeiro em banco isolado. O teste cria dois bancos temporários com nomes exclusivos, valida o conteúdo restaurado e os remove ao terminar.
+O primeiro script cria backup customizado, restringe o arquivo, valida o catalogo e gera `.sha256`. A restauracao confere o checksum e exige confirmacao literal do destino; usa `--clean` e e destrutiva para objetos existentes, portanto deve ocorrer primeiro em banco isolado. O teste cria dois bancos temporarios, valida o conteudo e os remove ao terminar.
 
-Em 18 de agosto de 2026, o teste foi executado com PostgreSQL 17 em contêiner isolado: o catálogo do backup foi validado, o conteúdo foi restaurado e conferido, e os bancos temporários foram removidos. Essa prova técnica não substitui o ensaio no provedor e com a política de retenção de produção.
+Em 3 de setembro de 2026, o teste foi executado com PostgreSQL 17 em contêiner isolado: todas as migrations foram aplicadas, o catálogo e checksum do backup foram validados, a restauração completa foi feita em outro banco e o Migrador foi reaplicado com sucesso. O contêiner e os bancos temporários foram removidos. Essa prova técnica não substitui o ensaio no provedor e com a política de retenção de produção.
 
 Antes da produção ainda é obrigatório definir e testar com o provedor: agenda, retenção, criptografia, cópia externa, monitoramento, RPO, RTO e procedimento de recuperação completa.
 
