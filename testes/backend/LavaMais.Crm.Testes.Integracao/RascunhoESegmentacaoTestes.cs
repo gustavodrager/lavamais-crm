@@ -56,6 +56,8 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         Assert.Contains(resultado.Clientes, x => x.MotivoExclusao == MotivoDeExclusao.SemPermissao);
         Assert.Contains(resultado.Clientes, x => x.MotivoExclusao == MotivoDeExclusao.ClienteInativo);
         await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorAcoes.Preparar(acao.Id, acao.Versao + 1, ct));
+        await gerenciadorAcoes.SolicitarAprovacao(acao.Id, acao.Versao, ct);
+        acao = await bancoAcoes.Acoes.SingleAsync(x => x.Id == acao.Id, ct);
         await gerenciadorAcoes.Preparar(acao.Id, acao.Versao, ct);
         var preparada = await bancoAcoes.Acoes.AsNoTracking().Include(x => x.Destinatarios).SingleAsync(x => x.Id == acao.Id, ct);
         Assert.Equal(LavaMais.Crm.Modulos.AcoesComerciais.Dominio.SituacaoDaAcaoComercial.Preparada, preparada.Situacao);
@@ -63,7 +65,7 @@ public sealed class RascunhoESegmentacaoTestes(PostgresCompartilhado postgres)
         Assert.Null(preparada.NomeItemSnapshot);
         Assert.Equal(2, preparada.Destinatarios.Count); Assert.All(preparada.Destinatarios, d => Assert.Contains(d.NomeClienteSnapshot, d.ConteudoPreVisualizacaoSnapshot));
         await using var verificacaoAuditoria = new ContextoDeAuditoria(opcoesAuditoria, contexto);
-        Assert.Equal(2, await verificacaoAuditoria.Registros.AsNoTracking().CountAsync(x => x.RecursoId == acao.Id, ct));
+        Assert.Equal(3, await verificacaoAuditoria.Registros.AsNoTracking().CountAsync(x => x.RecursoId == acao.Id, ct));
         await Assert.ThrowsAsync<ExcecaoDeConflito>(() => gerenciadorAcoes.Atualizar(acao.Id, new("Alterada", null, null, versao.Id, criterios), ct));
         var primeiro = preparada.Destinatarios.OrderBy(x => x.NomeClienteSnapshot).First();
         var segundo = preparada.Destinatarios.OrderBy(x => x.NomeClienteSnapshot).Last();

@@ -24,6 +24,7 @@ Esta pasta registra decisoes arquiteturais e de produto que orientam todas as co
 | [ADR-019](ADR-019-composicao-sintetica-de-produtos-em-homologacao.md) | Composicao sintetica e reversivel de produtos em tickets de homologacao |
 | [ADR-020](ADR-020-perfis-operacionais-da-versao-1.md) | Limites de Administrador, Gerente e Operador na Versao 1.0 |
 | [ADR-021](ADR-021-whatsapp-web-assistido.md) | WhatsApp Web assistido, individual e sem provedor de envio |
+| [ADR-022](ADR-022-sugestoes-e-aprovacao-de-acoes.md) | Sugestoes comerciais com aprovacao humana antes do WhatsApp |
 
 ## Decisoes substituidas
 

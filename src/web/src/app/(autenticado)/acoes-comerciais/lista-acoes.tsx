@@ -13,7 +13,7 @@ import { rotuloProximaAcao } from "@/lib/acoes-comerciais";
 import { cn } from "@/lib/utils";
 
 const filtros: Array<{ rotulo: string; valor: "Todas" | SituacaoAcaoComercial }> = [
-  { rotulo: "Todas", valor: "Todas" }, { rotulo: "Rascunhos", valor: "Rascunho" }, { rotulo: "Preparadas", valor: "Preparada" }, { rotulo: "Em andamento", valor: "EmProcessamento" }, { rotulo: "Concluídas", valor: "Concluida" },
+  { rotulo: "Todas", valor: "Todas" }, { rotulo: "Rascunhos", valor: "Rascunho" }, { rotulo: "Para aprovar", valor: "AguardandoAprovacao" }, { rotulo: "Aprovadas", valor: "Preparada" }, { rotulo: "Em andamento", valor: "EmProcessamento" }, { rotulo: "Concluídas", valor: "Concluida" },
 ];
 
 export type FiltroOperador = "ParaEnviar" | "Retornos" | "Concluidas";
@@ -26,7 +26,7 @@ export function ListaAcoes({ acoes, modoOperador = false, filtroInicial = "ParaE
   const [filtroOperador, setFiltroOperador] = useState<FiltroOperador>(filtroInicial);
   const [busca, setBusca] = useState("");
   const termo = busca.trim().toLocaleLowerCase("pt-BR");
-  const acoesOperacionais = acoes.filter((acao) => acao.situacao !== "Rascunho" && acao.situacao !== "Cancelada");
+  const acoesOperacionais = acoes.filter((acao) => ["Preparada", "EmProcessamento", "Concluida", "ConcluidaComFalhas"].includes(acao.situacao));
   const base = modoOperador ? acoesOperacionais : acoes;
   const visiveis = base.filter((acao) => {
     const correspondeBusca = !termo || `${acao.nome} ${acao.objetivo ?? ""}`.toLocaleLowerCase("pt-BR").includes(termo);

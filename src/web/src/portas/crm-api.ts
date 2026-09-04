@@ -15,11 +15,16 @@ import type {
   ResumoMovimentacaoComercial,
   DetalheMovimentacaoComercial,
   RoteiroDiario,
+  SugestaoDeAcao,
 } from "@/contratos/apresentacao";
 
 export interface ConsultarAcoesComerciais {
   listarAcoes(): Promise<ResultadoPaginado<ResumoAcaoComercial>>;
   obter(id: string): Promise<DetalheAcaoComercial | null>;
+}
+
+export interface ConsultarSugestoesDeAcoes {
+  listarSugestoesDeAcoes(): Promise<SugestaoDeAcao[]>;
 }
 
 export interface ConsultarClientes {
@@ -98,6 +103,8 @@ export interface AtualizarESimularPublico {
 export interface PrepararAcaoComercial {
   atualizarModelo(id: string, versaoModeloId: string): Promise<void>;
   preparar(id: string, versao: number): Promise<void>;
+  solicitarAprovacao(id: string, versao: number): Promise<void>;
+  rejeitarAcao(id: string, motivo: string, versao: number): Promise<void>;
   cancelarAcao(id: string, motivo: string, versao: number): Promise<void>;
 }
 
@@ -138,6 +145,7 @@ export interface AdministrarRoteiros {
 // Implementacoes reais pertencem ao servidor/BFF e nunca devem receber tenantId do navegador.
 export interface PortaCrmApi
   extends ConsultarAcoesComerciais,
+    ConsultarSugestoesDeAcoes,
     ConsultarClientes,
     ImportarClientes,
     AdministrarConfiguracoes,

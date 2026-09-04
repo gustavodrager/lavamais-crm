@@ -28,6 +28,8 @@ public static class ExtensoesDoModuloAcoesComerciais
         grupo.MapPut("/{id:guid}", async (Guid id, DadosDoRascunho dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Atualizar(id, dados, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{id:guid}/simular-publico", async (Guid id, int pagina, int tamanhoPagina, GerenciadorDeAcoesComerciais g, CancellationToken ct) => Results.Ok(await g.Simular(id, pagina, tamanhoPagina, ct))).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{id:guid}/preparar", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Preparar(id, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        grupo.MapPost("/{id:guid}/solicitar-aprovacao", async (Guid id, PrepararAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.SolicitarAprovacao(id, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        grupo.MapPost("/{id:guid}/rejeitar", async (Guid id, RejeitarAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Rejeitar(id, dados.Motivo, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{id:guid}/cancelar", async (Guid id, CancelarAcao dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) => { await g.Cancelar(id, dados.Motivo, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
         grupo.MapPost("/{acaoId:guid}/destinatarios/{destinatarioId:guid}/abrir-whatsapp", async (Guid acaoId, Guid destinatarioId, RegistrarAberturaWhatsapp dados, GerenciadorDeAcoesComerciais g, CancellationToken ct) =>
         { await g.RegistrarAberturaWhatsapp(acaoId, destinatarioId, dados.Versao, ct); return Results.NoContent(); })
@@ -45,6 +47,7 @@ public static class ExtensoesDoModuloAcoesComerciais
 
     public sealed record PrepararAcao(uint Versao);
     public sealed record CancelarAcao(string Motivo, uint Versao);
+    public sealed record RejeitarAcao(string Motivo, uint Versao);
     public sealed record RegistrarAberturaWhatsapp(uint Versao);
     public sealed record ConfirmarEnvioWhatsapp(uint Versao);
     public sealed record RegistrarResultado(ResultadoComercial Resultado, decimal? ValorConvertido, uint Versao);

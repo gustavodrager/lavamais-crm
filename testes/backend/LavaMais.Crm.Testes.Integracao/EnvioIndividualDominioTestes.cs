@@ -6,6 +6,20 @@ namespace LavaMais.Crm.Testes.Integracao;
 public sealed class EnvioIndividualDominioTestes
 {
     [Fact]
+    public void Deve_exigir_aprovacao_antes_de_preparar_e_permitir_rejeicao()
+    {
+        var agora = DateTimeOffset.UtcNow;
+        var acao = AcaoComercial.Criar(Guid.NewGuid(), "usuario", "Acao", null, null, Guid.NewGuid(), "{}", agora);
+        Assert.Throws<ExcecaoDeConflito>(() => acao.Preparar(null, [new(Guid.NewGuid(), "Cliente", "5513999999999", "Ola")], agora));
+
+        acao.SolicitarAprovacao(agora);
+        Assert.Equal(SituacaoDaAcaoComercial.AguardandoAprovacao, acao.Situacao);
+        acao.Rejeitar("Publico precisa de revisao", agora.AddMinutes(1));
+
+        Assert.Equal(SituacaoDaAcaoComercial.Rejeitada, acao.Situacao);
+    }
+
+    [Fact]
     public void Deve_confirmar_manualmente_somente_o_destinatario_selecionado()
     {
         var acao = CriarPreparada();
@@ -78,6 +92,7 @@ public sealed class EnvioIndividualDominioTestes
     {
         var agora = DateTimeOffset.UtcNow;
         var acao = AcaoComercial.Criar(Guid.NewGuid(), "usuario", "Acao", null, Guid.NewGuid(), Guid.NewGuid(), "{}", agora);
+        acao.SolicitarAprovacao(agora);
         acao.Preparar("Servico", [
             new(Guid.NewGuid(), "Cliente 1", "5513999999991", "Ola 1"),
             new(Guid.NewGuid(), "Cliente 2", "5513999999992", "Ola 2")

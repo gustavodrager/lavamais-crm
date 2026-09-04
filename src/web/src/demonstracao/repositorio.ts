@@ -14,6 +14,9 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async listarAcoes() {
     return { itens: acoesDemonstracao, pagina: 1, tamanhoPagina: 20, total: acoesDemonstracao.length };
   },
+  async listarSugestoesDeAcoes() {
+    return [{ codigo: "segunda-compra", nome: "Cliente novo: segunda compra", motivo: "Clientes com uma compra realizada entre 7 e 30 dias atrás.", mensagemSugerida: "Oi, {{nomeCliente}}! Quando precisar novamente, podemos ajudar.", prioridade: 1, quantidadeClientes: 4, receitaHistorica: 480, clienteIds: clientesDemonstracao.slice(0, 4).map((cliente) => cliente.id) }];
+  },
   async obter(id) {
     const acao = acoesDemonstracao.find((item) => item.id === id);
     return acao ? { ...acao, totais: { destinatarios: acao.totalDestinatarios ?? 0, pendentes: 0, enviados: 0, naoInformados: 0, semRetorno: 0, responderam: 0, interessados: 0, convertidos: 0, semInteresse: 0, valorConvertido: 0 }, destinatarios: [] } : null;
@@ -25,6 +28,8 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async atualizarCriterios() {},
   async atualizarModelo() {},
   async preparar() {},
+  async solicitarAprovacao() {},
+  async rejeitarAcao() {},
   async cancelarAcao() {},
   async registrarAberturaWhatsapp() {},
   async confirmarEnvioWhatsapp(_id, destinatarioId, versao) { return { id: destinatarioId, situacaoEnvio: "Enviado", dataEnvioConfirmado: new Date().toISOString(), versao: versao + 1 }; },

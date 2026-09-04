@@ -5,7 +5,11 @@ import type { CriarAcaoComercialEntrada, DadosMutaveisCliente, PortaCrmApi } fro
 import type { CriteriosDeSegmentacao } from "@/contratos/apresentacao";
 import type { ResultadoComercial } from "@/contratos/apresentacao";
 
-const esquemaSituacao = z.enum(["Rascunho", "Preparada", "EmProcessamento", "Concluida", "ConcluidaComFalhas", "Cancelada"]);
+const esquemaSituacao = z.enum(["Rascunho", "AguardandoAprovacao", "Preparada", "EmProcessamento", "Concluida", "ConcluidaComFalhas", "Cancelada", "Rejeitada"]);
+const esquemaSugestao = z.object({
+  codigo: z.string(), nome: z.string(), motivo: z.string(), mensagemSugerida: z.string(), prioridade: z.number().int().positive(),
+  quantidadeClientes: z.number().int().nonnegative(), receitaHistorica: z.number().nonnegative(), clienteIds: z.array(z.string().uuid()),
+});
 const esquemaCriterios = z.object({
   versaoSchema: z.union([z.literal(1), z.literal(2)]),
   modo: z.enum(["Filtros", "Manual"]),
@@ -147,6 +151,10 @@ export class CrmApiHttp implements PortaCrmApi {
   async listarAcoes() {
     const itens = z.array(esquemaAcaoApi).parse(await this.requisitar("/api/v1/acoes-comerciais"));
     return { itens: itens.map((acao) => ({ ...acao, totalDestinatarios: acao.quantidadeDestinatarios ?? null })), pagina: 1, tamanhoPagina: itens.length, total: itens.length };
+  }
+
+  async listarSugestoesDeAcoes() {
+    return z.array(esquemaSugestao).parse(await this.requisitar("/api/v1/sugestoes-de-acoes"));
   }
 
   async obter(id: string) {
@@ -293,6 +301,12 @@ export class CrmApiHttp implements PortaCrmApi {
 
   async preparar(id: string, versao: number) {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/preparar`, { metodo: "POST", corpo: { versao } });
+  }
+  async solicitarAprovacao(id: string, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/solicitar-aprovacao`, { metodo: "POST", corpo: { versao } });
+  }
+  async rejeitarAcao(id: string, motivo: string, versao: number) {
+    await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/rejeitar`, { metodo: "POST", corpo: { motivo, versao } });
   }
   async cancelarAcao(id: string, motivo: string, versao: number) {
     await this.requisitar(`/api/v1/acoes-comerciais/${encodeURIComponent(id)}/cancelar`, { metodo: "POST", corpo: { motivo, versao } });

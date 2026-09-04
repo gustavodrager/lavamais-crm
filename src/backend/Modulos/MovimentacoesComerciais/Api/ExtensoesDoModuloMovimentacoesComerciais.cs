@@ -19,6 +19,7 @@ public static class ExtensoesDoModuloMovimentacoesComerciais
     {
         servicos.AdicionarContextoDoModulo<ContextoDeMovimentacoesComerciais>(configuracao, ContextoDeMovimentacoesComerciais.Historico, ContextoDeMovimentacoesComerciais.Schema);
         servicos.AddScoped<GerenciadorDeMovimentacoesComerciais>();
+        servicos.AddScoped<ConsultaDeSugestoesDeAcoes>();
         servicos.AddScoped<IConsultaDeMovimentacoesParaClientes, ConsultaDeMovimentacoesParaClientes>();
         return servicos;
     }
@@ -31,6 +32,8 @@ public static class ExtensoesDoModuloMovimentacoesComerciais
             RespostaDetalhada.Criar(await g.Obter(id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Movimentacao comercial nao encontrada.")));
         grupo.MapPost("/", async (DadosDaMovimentacao dados, GerenciadorDeMovimentacoesComerciais g, CancellationToken ct) => { var movimentacao = await g.Registrar(dados, ct); return Results.Created($"/api/v1/movimentacoes-comerciais/{movimentacao.Id}", Resposta.Criar(movimentacao)); });
         grupo.MapPost("/{id:guid}/cancelar", async (Guid id, CancelarMovimentacao dados, GerenciadorDeMovimentacoesComerciais g, CancellationToken ct) => { await g.Cancelar(id, dados.Motivo, dados.Versao, ct); return Results.NoContent(); }).RequireAuthorization(PoliticasDeAutorizacao.Gestor);
+        endpoints.MapGet("/api/v1/sugestoes-de-acoes", async (ConsultaDeSugestoesDeAcoes consulta, CancellationToken ct) => await consulta.Listar(ct))
+            .RequireAuthorization(PoliticasDeAutorizacao.Administrador).WithTags("Sugestoes de acoes");
         return endpoints;
     }
 

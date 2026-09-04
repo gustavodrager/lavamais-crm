@@ -79,6 +79,28 @@ public sealed class GerenciadorDeAcoesComerciais(ContextoDeAcoesComerciais banco
         await transacao.CommitAsync(ct);
     }
 
+    public async Task SolicitarAprovacao(Guid id, uint versaoEsperada, CancellationToken ct)
+    {
+        var acao = await banco.Acoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
+        if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario.");
+        var agora = relogio.GetUtcNow(); acao.SolicitarAprovacao(agora);
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new("AcaoComercialEnviadaParaAprovacao", "AcaoComercial", acao.Id, "{}", agora), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
+    }
+
+    public async Task Rejeitar(Guid id, string motivo, uint versaoEsperada, CancellationToken ct)
+    {
+        var acao = await banco.Acoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");
+        if (acao.Versao != versaoEsperada) throw new ExcecaoDeConflito("versao_desatualizada", "A acao comercial foi alterada por outro usuario.");
+        var agora = relogio.GetUtcNow(); acao.Rejeitar(motivo, agora);
+        await using var transacao = await banco.Database.BeginTransactionAsync(ct);
+        await banco.SaveChangesAsync(ct);
+        await auditoria.Registrar(new("AcaoComercialRejeitada", "AcaoComercial", acao.Id, JsonSerializer.Serialize(new { motivo }, OpcoesJson), agora), transacao.GetDbTransaction(), ct);
+        await transacao.CommitAsync(ct);
+    }
+
     public async Task Cancelar(Guid id, string motivo, uint versaoEsperada, CancellationToken ct)
     {
         var acao = await banco.Acoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Acao comercial nao encontrada.");

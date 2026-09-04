@@ -2,9 +2,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { PreparacaoAcao } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/preparacao";
-import { prepararAcao } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
+import { solicitarAprovacaoAcao } from "../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes";
 
-vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({ prepararAcao: vi.fn() }));
+vi.mock("../../../src/web/src/app/(autenticado)/acoes-comerciais/[id]/acoes", () => ({ solicitarAprovacaoAcao: vi.fn() }));
 
 function PreparacaoControlada() {
   const [modelo, setModelo] = useState("");
@@ -12,17 +12,17 @@ function PreparacaoControlada() {
 }
 
 describe("PreparacaoAcao", () => {
-  it("apresenta e permite preparar somente um modelo publicado", async () => {
+  it("apresenta e permite enviar para aprovacao somente um modelo publicado", async () => {
     const usuario = userEvent.setup();
-    vi.mocked(prepararAcao).mockResolvedValue({ sucesso: false, mensagem: "falha controlada" });
+    vi.mocked(solicitarAprovacaoAcao).mockResolvedValue({ sucesso: false, mensagem: "falha controlada" });
     render(<PreparacaoControlada />);
 
     await usuario.click(screen.getByRole("radio", { name: /Oferta de serviço/ }));
     expect(screen.getByText(/Olá, Ana Martins! Conheça Lavagem de edredom/)).toBeInTheDocument();
-    expect(screen.getByText("1 cliente")).toBeInTheDocument();
-    await usuario.click(screen.getByRole("button", { name: "Confirmar clientes e mensagem" }));
-    await usuario.click(screen.getByRole("button", { name: "Sim, começar os atendimentos" }));
+    expect(screen.getByText("1 cliente selecionado")).toBeInTheDocument();
+    await usuario.click(screen.getByRole("button", { name: "Enviar para aprovação" }));
+    await usuario.click(screen.getByRole("button", { name: "Sim, enviar para aprovação" }));
 
-    await waitFor(() => expect(prepararAcao).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", versaoModeloId: "6d3d0d64-a111-4cff-8db8-111111111116" }));
+    await waitFor(() => expect(solicitarAprovacaoAcao).toHaveBeenCalledWith({ acaoId: "6d3d0d64-a111-4cff-8db8-111111111111", versaoModeloId: "6d3d0d64-a111-4cff-8db8-111111111116" }));
   });
 });

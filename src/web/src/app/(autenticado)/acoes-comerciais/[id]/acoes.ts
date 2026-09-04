@@ -128,7 +128,7 @@ export async function atualizarInformacoesAcao(entrada: { acaoId: string; nome: 
   return { sucesso: true };
 }
 
-export async function prepararAcao(entrada: { acaoId: string; versaoModeloId: string }): Promise<ResultadoPrepararAcao> {
+export async function solicitarAprovacaoAcao(entrada: { acaoId: string; versaoModeloId: string }): Promise<ResultadoPrepararAcao> {
   const validacao = z.object({ acaoId: z.string().uuid(), versaoModeloId: z.string().uuid() }).safeParse(entrada);
   if (!validacao.success) return { sucesso: false, mensagem: "Selecione um modelo de mensagem publicado." };
   const sessao = await obterPortaSessao().obterSessao();
@@ -138,11 +138,41 @@ export async function prepararAcao(entrada: { acaoId: string; versaoModeloId: st
     await porta.atualizarModelo(validacao.data.acaoId, validacao.data.versaoModeloId);
     const acaoAtualizada = await porta.obter(validacao.data.acaoId);
     if (!acaoAtualizada) return { sucesso: false, mensagem: "A Ação Comercial não foi encontrada." };
-    await porta.preparar(validacao.data.acaoId, acaoAtualizada.versao);
+    await porta.solicitarAprovacao(validacao.data.acaoId, acaoAtualizada.versao);
   } catch (erro) {
-    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para preparar esta ação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e revise os dados." : erro.status === 422 ? erro.message : "Não foi possível preparar a ação agora. Tente novamente." };
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 403 ? "Seu perfil não possui permissão para enviar esta ação para aprovação." : erro.status === 409 ? "O rascunho foi alterado recentemente. Atualize a página e revise os dados." : erro.status === 422 ? erro.message : "Não foi possível enviar a ação para aprovação agora." };
     throw erro;
   }
+  redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
+}
+
+export async function aprovarAcao(entrada: { acaoId: string; versao: number }): Promise<ResultadoPrepararAcao> {
+  const validacao = z.object({ acaoId: z.string().uuid(), versao: z.number().int().nonnegative() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Os dados da ação estão desatualizados." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${entrada.acaoId}`);
+  if (sessao.papel === "Operador") return { sucesso: false, mensagem: "Somente gerentes e administradores podem aprovar ações." };
+  try { await obterPortaCrmApi().preparar(validacao.data.acaoId, validacao.data.versao); }
+  catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 409 ? "A ação mudou enquanto você analisava. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível aprovar a ação agora." };
+    throw erro;
+  }
+  revalidatePath(`/acoes-comerciais/${validacao.data.acaoId}`);
+  redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
+}
+
+export async function rejeitarAcao(entrada: { acaoId: string; motivo: string; versao: number }): Promise<ResultadoPrepararAcao> {
+  const validacao = z.object({ acaoId: z.string().uuid(), motivo: z.string().trim().min(3).max(300), versao: z.number().int().nonnegative() }).safeParse(entrada);
+  if (!validacao.success) return { sucesso: false, mensagem: "Informe o motivo da rejeição." };
+  const sessao = await obterPortaSessao().obterSessao();
+  if (!sessao) redirect(`/entrar?retorno=/acoes-comerciais/${entrada.acaoId}`);
+  if (sessao.papel === "Operador") return { sucesso: false, mensagem: "Somente gerentes e administradores podem rejeitar ações." };
+  try { await obterPortaCrmApi().rejeitarAcao(validacao.data.acaoId, validacao.data.motivo, validacao.data.versao); }
+  catch (erro) {
+    if (erro instanceof ErroCrmApi) return { sucesso: false, mensagem: erro.status === 409 ? "A ação mudou enquanto você analisava. Atualize a página." : erro.status === 422 ? erro.message : "Não foi possível rejeitar a ação agora." };
+    throw erro;
+  }
+  revalidatePath(`/acoes-comerciais/${validacao.data.acaoId}`);
   redirect(`/acoes-comerciais/${validacao.data.acaoId}`);
 }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Megaphone, Users, Upload, Settings, ReceiptText, Route } from "lucide-react";
+import { House, Lightbulb, Megaphone, Users, Upload, Settings, ReceiptText, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SessaoApresentacao } from "@/contratos/apresentacao";
 
@@ -13,6 +13,7 @@ export const itensNavegacao = [
   { href: "/inicio", rotulo: "Início", icone: House, papeis: todosPapeis },
   { href: "/clientes", rotulo: "Clientes", icone: Users, papeis: todosPapeis },
   { href: "/movimentacoes", rotulo: "Atendimentos", icone: ReceiptText, papeis: todosPapeis },
+  { href: "/sugestoes-acoes", rotulo: "Sugestões de Ações", icone: Lightbulb, papeis: administradores },
   { href: "/acoes-comerciais", rotulo: "Ações Comerciais", rotuloOperador: "Mensagens", icone: Megaphone, papeis: todosPapeis },
   { href: "/roteiros", hrefOperador: "/meu-roteiro", rotulo: "Roteiros", rotuloOperador: "Roteiro", icone: Route, papeis: todosPapeis },
   { href: "/importacao", rotulo: "Importação", icone: Upload, papeis: administradores },

@@ -2,7 +2,7 @@ using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 
 namespace LavaMais.Crm.Modulos.AcoesComerciais.Dominio;
 
-public enum SituacaoDaAcaoComercial { Rascunho = 1, Preparada = 2, EmProcessamento = 3, Concluida = 4, ConcluidaComFalhas = 5, Cancelada = 6 }
+public enum SituacaoDaAcaoComercial { Rascunho = 1, AguardandoAprovacao = 2, Preparada = 3, EmProcessamento = 4, Concluida = 5, ConcluidaComFalhas = 6, Cancelada = 7, Rejeitada = 8 }
 public enum SituacaoDoEnvio { Pendente = 1, Enviado = 2 }
 public enum ResultadoComercial { NaoInformado = 1, SemRetorno = 2, Respondeu = 3, Interessado = 4, Convertido = 5, NaoTemInteresse = 6 }
 
@@ -47,7 +47,7 @@ public sealed class AcaoComercial
 
     public void Preparar(string? nomeItem, IReadOnlyCollection<DestinatarioPreparado> destinatarios, DateTimeOffset agora)
     {
-        if (Situacao != SituacaoDaAcaoComercial.Rascunho) throw new ExcecaoDeConflito("acao_ja_preparada", "A acao comercial nao esta em rascunho.");
+        if (Situacao != SituacaoDaAcaoComercial.AguardandoAprovacao) throw new ExcecaoDeConflito("acao_nao_aguarda_aprovacao", "A acao comercial nao esta aguardando aprovacao.");
         if (VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Uma versao publicada de modelo e obrigatoria para preparar.");
         if (destinatarios.Count == 0) throw new ExcecaoDeRegraDeNegocio("publico_vazio", "A acao nao possui clientes elegiveis.");
         foreach (var destinatario in destinatarios.DistinctBy(x => x.ClienteId))
@@ -55,10 +55,24 @@ public sealed class AcaoComercial
         NomeItemSnapshot = nomeItem; QuantidadeDestinatarios = Destinatarios.Count; Situacao = SituacaoDaAcaoComercial.Preparada; DataPreparacao = agora; DataAtualizacao = agora;
     }
 
+    public void SolicitarAprovacao(DateTimeOffset agora)
+    {
+        if (Situacao != SituacaoDaAcaoComercial.Rascunho) throw new ExcecaoDeConflito("acao_nao_editavel", "Somente uma acao em rascunho pode ser enviada para aprovacao.");
+        if (VersaoModeloId is null) throw new ExcecaoDeRegraDeNegocio("modelo_obrigatorio", "Escolha uma mensagem aprovada antes de enviar a acao para aprovacao.");
+        Situacao = SituacaoDaAcaoComercial.AguardandoAprovacao; DataAtualizacao = agora;
+    }
+
+    public void Rejeitar(string motivo, DateTimeOffset agora)
+    {
+        if (Situacao != SituacaoDaAcaoComercial.AguardandoAprovacao) throw new ExcecaoDeConflito("acao_nao_aguarda_aprovacao", "A acao comercial nao esta aguardando aprovacao.");
+        if (string.IsNullOrWhiteSpace(motivo)) throw new ExcecaoDeRegraDeNegocio("motivo_obrigatorio", "Informe o motivo da rejeicao.");
+        Situacao = SituacaoDaAcaoComercial.Rejeitada; DataAtualizacao = agora;
+    }
+
     public void Cancelar(string motivo, string usuarioId, DateTimeOffset agora)
     {
-        if (Situacao is not (SituacaoDaAcaoComercial.Rascunho or SituacaoDaAcaoComercial.Preparada))
-            throw new ExcecaoDeConflito("acao_nao_cancelavel", "Somente uma acao em rascunho ou preparada pode ser cancelada.");
+        if (Situacao is not (SituacaoDaAcaoComercial.Rascunho or SituacaoDaAcaoComercial.AguardandoAprovacao or SituacaoDaAcaoComercial.Preparada))
+            throw new ExcecaoDeConflito("acao_nao_cancelavel", "A acao comercial nao pode mais ser cancelada.");
         if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length > 300)
             throw new ExcecaoDeRegraDeNegocio("motivo_invalido", "Informe o motivo do cancelamento.");
         Situacao = SituacaoDaAcaoComercial.Cancelada;

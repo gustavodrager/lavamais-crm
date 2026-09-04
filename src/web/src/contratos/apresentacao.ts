@@ -1,10 +1,23 @@
 export type SituacaoAcaoComercial =
   | "Rascunho"
+  | "AguardandoAprovacao"
   | "Preparada"
   | "EmProcessamento"
   | "Concluida"
   | "ConcluidaComFalhas"
-  | "Cancelada";
+  | "Cancelada"
+  | "Rejeitada";
+
+export interface SugestaoDeAcao {
+  codigo: string;
+  nome: string;
+  motivo: string;
+  mensagemSugerida: string;
+  prioridade: number;
+  quantidadeClientes: number;
+  receitaHistorica: number;
+  clienteIds: string[];
+}
 
 export interface ResumoAcaoComercial {
   id: string;
