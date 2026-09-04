@@ -151,8 +151,9 @@ export class CrmApiHttp implements PortaCrmApi {
     return { ...detalhe.acao, totalDestinatarios: detalhe.totais.destinatarios, totais: detalhe.totais, destinatarios: detalhe.destinatarios };
   }
 
-  async listarClientes(busca?: string, pagina = 1, tamanhoPagina = 20) {
+  async listarClientes(busca?: string, pagina = 1, tamanhoPagina = 20, movimentacao?: "Todos" | "ComMovimentacao" | "SemMovimentacao") {
     const parametros = new URLSearchParams({ pagina: String(pagina), tamanhoPagina: String(tamanhoPagina) }); if (busca) parametros.set("busca", busca);
+    if (movimentacao) parametros.set("movimentacao", movimentacao);
     const resultado = esquemaPaginado(esquemaClienteApi).parse(await this.requisitar(`/api/v1/clientes?${parametros}`));
     return { ...resultado, itens: resultado.itens.map((cliente) => ({ id: cliente.id, nome: cliente.nome, whatsapp: cliente.whatsapp, localidade: [cliente.endereco?.bairro, cliente.endereco?.cidade].filter(Boolean).join(" · ") || "Não informada", quantidadeEtiquetas: cliente.etiquetaIds.length, permiteWhatsapp: cliente.permiteMarketingWhatsapp, temEnderecoOperacional: Boolean(cliente.endereco?.logradouro && cliente.endereco?.numero && cliente.endereco?.cidade), situacao: cliente.situacao, codigoExterno: cliente.codigoExterno })) };
   }

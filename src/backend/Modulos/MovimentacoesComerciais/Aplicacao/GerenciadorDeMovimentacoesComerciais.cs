@@ -1,5 +1,6 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Auditoria;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Clientes;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio;
@@ -201,6 +202,16 @@ public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoes
 public sealed record DadosDaMovimentacao(Guid ClienteId, IReadOnlyCollection<DadosDaLinha> Linhas, DateTimeOffset? DataMovimentacao, string? CodigoExterno, string? Observacao);
 public sealed record DadosDaLinha(Guid OfertaDeServicoId, int Quantidade, decimal? PrecoUnitario);
 public sealed record ResultadoDaImportacaoDeMovimentacao(MovimentacaoComercial Movimentacao, bool Existente);
+
+public sealed class ConsultaDeMovimentacoesParaClientes(ContextoDeMovimentacoesComerciais banco) : IConsultaDeMovimentacoesParaClientes
+{
+    public async Task<IReadOnlyCollection<Guid>> ListarClienteIdsComMovimentacao(CancellationToken cancellationToken) =>
+        await banco.Movimentacoes.AsNoTracking()
+            .Where(x => x.Situacao == SituacaoDaMovimentacao.Registrada)
+            .Select(x => x.ClienteId)
+            .Distinct()
+            .ToArrayAsync(cancellationToken);
+}
 public enum SituacaoDaSubstituicaoDeComposicao { Ausente, Inalterada, Atualizada }
 public sealed record ResultadoDaSubstituicaoDeComposicao(
     SituacaoDaSubstituicaoDeComposicao Situacao,

@@ -22,11 +22,13 @@ export interface ConsultarAcoesComerciais {
 }
 
 export interface ConsultarClientes {
-  listarClientes(busca?: string, pagina?: number, tamanhoPagina?: number): Promise<ResultadoPaginado<ResumoCliente>>;
+  listarClientes(busca?: string, pagina?: number, tamanhoPagina?: number, movimentacao?: FiltroDeMovimentacaoDoCliente): Promise<ResultadoPaginado<ResumoCliente>>;
   obterCliente(id: string): Promise<DetalheCliente | null>;
   criarCliente(entrada: DadosMutaveisCliente): Promise<{ id: string }>;
   atualizarCliente(id: string, entrada: DadosMutaveisCliente): Promise<void>;
 }
+
+export type FiltroDeMovimentacaoDoCliente = "Todos" | "ComMovimentacao" | "SemMovimentacao";
 
 export interface DadosMutaveisCliente {
   nome: string;

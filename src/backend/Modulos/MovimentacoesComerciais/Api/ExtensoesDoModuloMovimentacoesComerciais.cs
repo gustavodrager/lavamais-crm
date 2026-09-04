@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Clientes;
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Aplicacao;
 using LavaMais.Crm.Modulos.MovimentacoesComerciais.Dominio;
@@ -16,7 +17,9 @@ public static class ExtensoesDoModuloMovimentacoesComerciais
     public static IServiceCollection AdicionarModuloMovimentacoesComerciais(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AdicionarContextoDoModulo<ContextoDeMovimentacoesComerciais>(configuracao, ContextoDeMovimentacoesComerciais.Historico, ContextoDeMovimentacoesComerciais.Schema);
-        servicos.AddScoped<GerenciadorDeMovimentacoesComerciais>(); return servicos;
+        servicos.AddScoped<GerenciadorDeMovimentacoesComerciais>();
+        servicos.AddScoped<IConsultaDeMovimentacoesParaClientes, ConsultaDeMovimentacoesParaClientes>();
+        return servicos;
     }
 
     public static IEndpointRouteBuilder MapearModuloMovimentacoesComerciais(this IEndpointRouteBuilder endpoints)

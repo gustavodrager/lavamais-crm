@@ -41,9 +41,10 @@ export const repositorioDemonstracao: PortaCrmApi = {
       ],
     };
   },
-  async listarClientes(_busca, pagina = 1, tamanhoPagina = 20) {
+  async listarClientes(_busca, pagina = 1, tamanhoPagina = 20, movimentacao = "Todos") {
+    const clientes = movimentacao === "SemMovimentacao" ? [] : clientesDemonstracao;
     const inicio = (pagina - 1) * tamanhoPagina;
-    return { itens: clientesDemonstracao.slice(inicio, inicio + tamanhoPagina), pagina, tamanhoPagina, total: clientesDemonstracao.length };
+    return { itens: clientes.slice(inicio, inicio + tamanhoPagina), pagina, tamanhoPagina, total: clientes.length };
   },
   async obterCliente(id) {
     const cliente = clientesDemonstracao.find((item) => item.id === id);

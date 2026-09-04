@@ -15,10 +15,17 @@ namespace LavaMais.Crm.Modulos.Clientes.Aplicacao;
 public sealed class GerenciadorDeClientes(ContextoDeClientes banco, IContextoDoUsuario contexto, TimeProvider relogio, IRegistradorDeAuditoria auditoria)
 {
     private static readonly JsonSerializerOptions OpcoesJson = new(JsonSerializerDefaults.Web);
-    public async Task<(List<Cliente> Itens, int Total)> Listar(string? busca, int pagina, int tamanho, CancellationToken ct)
+    public async Task<(List<Cliente> Itens, int Total)> Listar(string? busca, int pagina, int tamanho, CancellationToken ct, FiltroDeMovimentacaoDoCliente filtroDeMovimentacao = FiltroDeMovimentacaoDoCliente.Todos, IReadOnlyCollection<Guid>? clienteIdsComMovimentacao = null)
     {
         pagina = Math.Max(1, pagina); tamanho = Math.Clamp(tamanho, 1, 100);
         var consulta = banco.Clientes.AsNoTracking().Include(x => x.Contatos).Include(x => x.Endereco).Include(x => x.Permissoes).Include(x => x.Etiquetas).AsQueryable();
+        if (filtroDeMovimentacao != FiltroDeMovimentacaoDoCliente.Todos)
+        {
+            var ids = clienteIdsComMovimentacao?.ToArray() ?? [];
+            consulta = filtroDeMovimentacao == FiltroDeMovimentacaoDoCliente.ComMovimentacao
+                ? consulta.Where(x => ids.Contains(x.Id))
+                : consulta.Where(x => !ids.Contains(x.Id));
+        }
         if (!string.IsNullOrWhiteSpace(busca))
         {
             var termo = busca.Trim(); var telefone = new string(termo.Where(char.IsDigit).ToArray());
@@ -201,6 +208,7 @@ public sealed record DadosDoCliente(string Nome, string Whatsapp, string? NomeFa
 public sealed record DadosBasicosDoClienteNaOrigem(string CodigoExterno, string Nome, string Whatsapp, DateTimeOffset? DataCadastroOrigem = null);
 public sealed record DadosDoEndereco(string? Logradouro, string? Numero, string? Complemento, string? Bairro, string? Cidade, string? Estado, string? Cep);
 public sealed record ResultadoDaImportacaoDeCliente(Cliente Cliente, bool Atualizado);
+public enum FiltroDeMovimentacaoDoCliente { Todos = 1, ComMovimentacao = 2, SemMovimentacao = 3 }
 
 public sealed class ConsultaDeClientesParaSegmentacao(ContextoDeClientes banco)
 {

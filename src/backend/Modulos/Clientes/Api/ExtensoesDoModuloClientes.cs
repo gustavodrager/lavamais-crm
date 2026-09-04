@@ -1,4 +1,5 @@
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
+using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Clientes;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.MovimentacoesComerciais;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Roteiros;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao;
@@ -25,9 +26,11 @@ public static class ExtensoesDoModuloClientes
     public static IEndpointRouteBuilder MapearModuloClientes(this IEndpointRouteBuilder endpoints)
     {
         var clientes = endpoints.MapGroup("/api/v1/clientes").RequireAuthorization(PoliticasDeAutorizacao.UsuarioAtivo).WithTags("Clientes");
-        clientes.MapGet("/", async (string? busca, int pagina, int tamanhoPagina, GerenciadorDeClientes g, CancellationToken ct) =>
+        clientes.MapGet("/", async (string? busca, int pagina, int tamanhoPagina, FiltroDeMovimentacaoDoCliente? movimentacao, GerenciadorDeClientes g, IConsultaDeMovimentacoesParaClientes consultaDeMovimentacoes, CancellationToken ct) =>
         {
-            var resultado = await g.Listar(busca, pagina, tamanhoPagina == 0 ? 20 : tamanhoPagina, ct);
+            var filtro = movimentacao ?? FiltroDeMovimentacaoDoCliente.Todos;
+            var clienteIdsComMovimentacao = filtro == FiltroDeMovimentacaoDoCliente.Todos ? null : await consultaDeMovimentacoes.ListarClienteIdsComMovimentacao(ct);
+            var resultado = await g.Listar(busca, pagina, tamanhoPagina == 0 ? 20 : tamanhoPagina, ct, filtro, clienteIdsComMovimentacao);
             return Results.Ok(new { itens = resultado.Itens.Select(RespostaDeCliente.Criar), total = resultado.Total, pagina = Math.Max(1, pagina), tamanhoPagina = tamanhoPagina == 0 ? 20 : Math.Clamp(tamanhoPagina, 1, 100) });
         });
         clientes.MapGet("/{id:guid}", async (Guid id, GerenciadorDeClientes g, CancellationToken ct) =>

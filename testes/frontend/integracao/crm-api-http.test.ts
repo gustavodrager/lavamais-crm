@@ -70,6 +70,12 @@ describe("CrmApiHttp", () => {
     expect(resultado.itens[0]).toEqual({ id: "6d3d0d64-a111-4cff-8db8-111111111113", nome: "Ana", whatsapp: "5513999999999", localidade: "Centro · Praia Grande", quantidadeEtiquetas: 1, permiteWhatsapp: true, temEnderecoOperacional: false, situacao: "Ativo", codigoExterno: "CLI-1" });
     expect(requisitar.mock.calls[0][0].toString()).toBe("http://crm.test/api/v1/clientes?pagina=1&tamanhoPagina=20");
   });
+  it("envia o filtro de movimentacao quando solicitado", async () => {
+    const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify({ itens: [], pagina: 1, tamanhoPagina: 10, total: 0 }), { status: 200 }));
+    vi.stubGlobal("fetch", requisitar);
+    await new CrmApiHttp("http://crm.test", async () => "token").listarClientes(undefined, 1, 10, "SemMovimentacao");
+    expect(requisitar.mock.calls[0][0].toString()).toBe("http://crm.test/api/v1/clientes?pagina=1&tamanhoPagina=10&movimentacao=SemMovimentacao");
+  });
   it("preserva todos os dados cadastrais no detalhe do cliente", async () => {
     const requisitar = vi.fn().mockResolvedValue(new Response(JSON.stringify(clienteApi), { status: 200 }));
     vi.stubGlobal("fetch", requisitar);
