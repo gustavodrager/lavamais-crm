@@ -118,6 +118,11 @@ public sealed class GerenciadorDeMovimentacoesComerciais(ContextoDeMovimentacoes
         return consulta.OrderByDescending(x => x.DataMovimentacao).Take(Math.Clamp(limite, 1, 100)).ToListAsync(ct);
     }
 
+    public Task<MovimentacaoComercial?> Obter(Guid id, CancellationToken ct) =>
+        banco.Movimentacoes.AsNoTracking()
+            .Include(x => x.Linhas)
+            .SingleOrDefaultAsync(x => x.Id == id, ct);
+
     public async Task Cancelar(Guid id, string motivo, uint versaoEsperada, CancellationToken ct)
     {
         var movimentacao = await banco.Movimentacoes.SingleOrDefaultAsync(x => x.Id == id, ct) ?? throw new ExcecaoDeRecursoNaoEncontrado("Movimentacao comercial nao encontrada.");

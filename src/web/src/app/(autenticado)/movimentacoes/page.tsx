@@ -88,6 +88,7 @@ export default async function Movimentacoes({ searchParams }: { searchParams: Pr
       {parametros.sucesso === "1" && clienteConcluidoId ? (
         <SucessoAtendimento
           clienteId={clienteConcluidoId}
+          atendimentoId={parametros.movimentacaoId}
           nomeCliente={movimentacaoConcluida ? formatarNome(movimentacaoConcluida.nomeCliente) : undefined}
           valorTotal={movimentacaoConcluida?.valorTotal}
         />
@@ -222,9 +223,10 @@ function AtendimentoRecente({
 }) {
   const descricao = resumirLinhas(item.linhas);
   return (
-    <article className="space-y-2 p-4">
+    <article className="relative space-y-2 p-4 transition-colors hover:bg-muted/30">
+      <Link href={`/clientes/${item.clienteId}/atendimentos/${item.id}`} className="absolute inset-0 rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50" aria-label={`Ver detalhes do atendimento de ${formatarNome(item.nomeCliente)}`} />
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+        <div className="relative z-10 min-w-0">
           <Link
             href={`/clientes/${item.clienteId}`}
             className="font-medium text-primary underline-offset-4 hover:underline"
@@ -233,23 +235,23 @@ function AtendimentoRecente({
           </Link>
           <p className="mt-0.5 text-xs text-muted-foreground">{formatarData(item.dataMovimentacao)}</p>
         </div>
-        <Badge variant={item.situacao === "Cancelada" ? "destructive" : "outline"}>
+        <Badge className="pointer-events-none relative" variant={item.situacao === "Cancelada" ? "destructive" : "outline"}>
           {item.situacao === "Cancelada" ? "Cancelado" : "Registrado"}
         </Badge>
       </div>
-      <p className="line-clamp-2 text-sm leading-5">{descricao}</p>
-      <div className="flex items-center justify-between gap-3">
+      <p className="pointer-events-none relative line-clamp-2 text-sm leading-5">{descricao}</p>
+      <div className="pointer-events-none relative flex items-center justify-between gap-3">
         <div className="min-w-0">
           <strong className="text-sm tabular-nums">{moeda.format(item.valorTotal)}</strong>
           {mostrarOrigem ? <p className="truncate text-xs text-muted-foreground">{rotuloOrigem(item.origem)}</p> : null}
         </div>
         {podeCancelar && item.situacao === "Registrada" ? (
-          <CancelarMovimentacao
+          <span className="pointer-events-auto relative z-10"><CancelarMovimentacao
             id={item.id}
             versao={item.versao}
             nomeCliente={formatarNome(item.nomeCliente)}
             descricao={descricao}
-          />
+          /></span>
         ) : null}
       </div>
     </article>

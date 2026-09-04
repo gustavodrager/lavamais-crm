@@ -74,6 +74,7 @@ export const repositorioDemonstracao: PortaCrmApi = {
   async criarEtiqueta() { return { id: crypto.randomUUID() }; },
   async criarEPublicarModelo() { return { id: crypto.randomUUID() }; },
   async listarMovimentacoes() { return []; },
+  async obterMovimentacao() { return null; },
   async listarOfertasDoCatalogoDeLavanderia() { return [{ id: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Camisa", categoria: "Vestuário", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem e passadoria", precoUnitario: 16.20 }]; },
   async carregarCatalogoInicialDeLavanderia() { return { artigosCriados: 0, servicosCriados: 0, ofertasCriadas: 0 }; },
   async registrarMovimentacao() { return { id: crypto.randomUUID() }; },

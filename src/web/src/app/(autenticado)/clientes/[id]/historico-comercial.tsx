@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CalendarClock, CircleDollarSign, ReceiptText, Sparkles } from "lucide-react";
 import type { ResumoMovimentacaoComercial } from "@/contratos/apresentacao";
 import { CancelarMovimentacao } from "@/app/(autenticado)/movimentacoes/cancelar-movimentacao";
@@ -25,7 +26,7 @@ export function HistoricoComercial({
   const servicos = new Set(validas.flatMap((item) => item.linhas.map((linha) => linha.servicoDeLavanderiaId))).size;
 
   return (
-    <section aria-labelledby="titulo-historico" className="space-y-5">
+    <section id="historico-atendimentos" aria-labelledby="titulo-historico" className="scroll-mt-24 space-y-5">
       <div>
         <h2 id="titulo-historico" className="font-heading text-xl font-semibold">Histórico de atendimentos</h2>
         <p className="text-sm text-muted-foreground">Atendimentos registrados pelo CRM para este cliente.</p>
@@ -54,8 +55,9 @@ export function HistoricoComercial({
                 {ordenadas.map((item) => {
                   const descricao = resumirLinhas(item);
                   return (
-                    <article key={item.id} className="space-y-3 p-4">
-                      <div className="flex items-start justify-between gap-3">
+                    <article key={item.id} className="relative space-y-3 p-4 transition-colors hover:bg-muted/30">
+                      <Link href={`/clientes/${item.clienteId}/atendimentos/${item.id}`} className="absolute inset-0 rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring/50" aria-label={`Ver detalhes do atendimento de ${formatarData(item.dataMovimentacao)}`} />
+                      <div className="pointer-events-none relative flex items-start justify-between gap-3">
                         <div>
                           <p className="font-medium">{descricao}</p>
                           <p className="mt-1 text-xs text-muted-foreground">{formatarData(item.dataMovimentacao)}</p>
@@ -64,11 +66,11 @@ export function HistoricoComercial({
                           {item.situacao === "Registrada" ? "Registrado" : "Cancelado"}
                         </Badge>
                       </div>
-                      {item.observacao ? <p className="text-sm text-muted-foreground">{item.observacao}</p> : null}
-                      <div className="flex items-center justify-between gap-3">
+                      {item.observacao ? <p className="pointer-events-none relative text-sm text-muted-foreground">{item.observacao}</p> : null}
+                      <div className="pointer-events-none relative flex items-center justify-between gap-3">
                         <strong className="text-sm tabular-nums">{moeda.format(item.valorTotal)}</strong>
                         {podeCancelar && item.situacao === "Registrada" ? (
-                          <CancelarMovimentacao id={item.id} versao={item.versao} nomeCliente={item.nomeCliente} descricao={descricao} />
+                          <span className="pointer-events-auto relative z-10"><CancelarMovimentacao id={item.id} versao={item.versao} nomeCliente={item.nomeCliente} descricao={descricao} /></span>
                         ) : null}
                       </div>
                     </article>
@@ -93,7 +95,7 @@ export function HistoricoComercial({
                       return (
                         <TableRow key={item.id}>
                           <TableCell className="whitespace-nowrap">{formatarData(item.dataMovimentacao)}</TableCell>
-                          <TableCell className="font-medium">{descricao}</TableCell>
+                          <TableCell className="font-medium"><Link href={`/clientes/${item.clienteId}/atendimentos/${item.id}`} className="block rounded-sm py-2 text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">{descricao}</Link></TableCell>
                           <TableCell>
                             <Badge variant={item.situacao === "Registrada" ? "secondary" : "destructive"}>
                               {item.situacao === "Registrada" ? "Registrado" : "Cancelado"}

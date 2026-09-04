@@ -32,6 +32,7 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
         var ct = TestContext.Current.CancellationToken;
         var tenantA = Guid.NewGuid();
         var tenantB = Guid.NewGuid();
+        var movimentacaoId = Guid.Empty;
         var opcoes = new DbContextOptionsBuilder<ContextoDeMovimentacoesComerciais>()
             .UseNpgsql(postgres.Conexao, postgres => postgres.MigrationsHistoryTable(
                 ContextoDeMovimentacoesComerciais.Historico,
@@ -42,16 +43,23 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
         {
             await preparacao.Database.MigrateAsync(ct);
             await preparacao.Movimentacoes.IgnoreQueryFilters().ExecuteDeleteAsync(ct);
-            preparacao.Add(CriarMovimentacao(tenantA, DateTimeOffset.UtcNow));
+            var movimentacao = CriarMovimentacao(tenantA, DateTimeOffset.UtcNow);
+            movimentacaoId = movimentacao.Id;
+            preparacao.Add(movimentacao);
             await preparacao.SaveChangesAsync(ct);
         }
 
         await using (var outroTenant = new ContextoDeMovimentacoesComerciais(opcoes, new UsuarioDeTeste(tenantB)))
+        {
             Assert.Empty(await outroTenant.Movimentacoes.AsNoTracking().ToListAsync(ct));
+            var gerenciadorOutroTenant = CriarGerenciador(outroTenant, new UsuarioDeTeste(tenantB));
+            Assert.Null(await gerenciadorOutroTenant.Obter(movimentacaoId, ct));
+        }
 
         await using var primeiraSessao = new ContextoDeMovimentacoesComerciais(opcoes, new UsuarioDeTeste(tenantA));
         await using var segundaSessao = new ContextoDeMovimentacoesComerciais(opcoes, new UsuarioDeTeste(tenantA));
         var primeira = await primeiraSessao.Movimentacoes.SingleAsync(ct);
+        Assert.NotNull(await CriarGerenciador(primeiraSessao, new UsuarioDeTeste(tenantA)).Obter(movimentacaoId, ct));
         var segunda = await segundaSessao.Movimentacoes.SingleAsync(ct);
         primeira.Cancelar("Primeiro cancelamento", "usuario-a", DateTimeOffset.UtcNow);
         segunda.Cancelar("Cancelamento concorrente", "usuario-b", DateTimeOffset.UtcNow);
@@ -161,6 +169,9 @@ public sealed class MovimentacoesComerciaisTestes(PostgresCompartilhado postgres
 
     private static LinhaPreparada CriarLinha(int quantidade, decimal preco) =>
         new(Guid.NewGuid(), Guid.NewGuid(), "Tapete", Guid.NewGuid(), "Lavagem", quantidade, 125m, preco);
+
+    private static GerenciadorDeMovimentacoesComerciais CriarGerenciador(ContextoDeMovimentacoesComerciais banco, UsuarioDeTeste usuario) =>
+        new(banco, new ConsultaDeClienteDeTeste(Guid.NewGuid()), new ConsultaDeCatalogoDeTeste(new(Guid.NewGuid(), Guid.NewGuid(), "Artigo", Guid.NewGuid(), "Servico", 1m)), usuario, TimeProvider.System, new AuditoriaNula());
 
     private sealed record UsuarioDeTeste(Guid TenantId) : IContextoDoUsuario
     {

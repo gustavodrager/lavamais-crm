@@ -9,11 +9,12 @@ import { chaveRascunhoAtendimento } from "./formulario-movimentacao";
 
 type PropriedadesSucesso = {
   clienteId: string;
+  atendimentoId?: string;
   nomeCliente?: string;
   valorTotal?: number;
 };
 
-export function SucessoAtendimento({ clienteId, nomeCliente, valorTotal }: PropriedadesSucesso) {
+export function SucessoAtendimento({ clienteId, atendimentoId, nomeCliente, valorTotal }: PropriedadesSucesso) {
   useEffect(() => {
     window.sessionStorage.removeItem(chaveRascunhoAtendimento(clienteId));
     window.setTimeout(() => document.getElementById("busca")?.focus(), 0);
@@ -38,6 +39,7 @@ export function SucessoAtendimento({ clienteId, nomeCliente, valorTotal }: Propr
         )}
         <div className="mt-3 flex flex-wrap gap-2">
           <Button type="button" size="sm" onClick={focarBusca}>Atender próximo cliente</Button>
+          {atendimentoId ? <Button asChild size="sm"><Link href={`/clientes/${clienteId}/atendimentos/${atendimentoId}`}>Ver atendimento</Link></Button> : null}
           <Button asChild size="sm" variant="outline">
             <Link href={`/clientes/${clienteId}`}>Abrir histórico do cliente</Link>
           </Button>

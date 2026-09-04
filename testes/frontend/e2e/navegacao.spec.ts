@@ -210,6 +210,24 @@ test("registra um atendimento comercial e exibe a confirmação", async ({ page 
   await expect(page.getByText("Ana Martins · R$ 150,00", { exact: true })).toBeVisible();
 });
 
+test("abre os detalhes de um atendimento pelo historico do cliente", async ({ page }, testInfo) => {
+  const atendimentoId = "7d3d0d64-a111-4cff-8db8-111111111111";
+  const clienteId = "6d3d0d64-a111-4cff-8db8-111111111113";
+  await page.goto(`/clientes/${clienteId}`);
+  await page.locator(`a[href="/clientes/${clienteId}/atendimentos/${atendimentoId}"]:visible`).first().click();
+  await expect(page).toHaveURL(`/clientes/${clienteId}/atendimentos/${atendimentoId}`);
+  await expect(page.getByRole("heading", { name: "Detalhes do atendimento" })).toBeVisible();
+  await expect(page.getByText("Itens e serviços", { exact: true })).toBeVisible();
+  if (testInfo.project.name === "desktop") {
+    await expect(page.getByRole("cell", { name: "Edredom", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "R$ 75,00", exact: true }).first()).toBeVisible();
+  } else {
+    await expect(page.getByText("Edredom", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("R$ 75,00", { exact: true }).first()).toBeVisible();
+  }
+  await expect(page.getByText("Registro comercial informativo")).toBeVisible();
+});
+
 test("apresenta o roteiro manual em modo de execução", async ({ page }) => {
   await page.goto("/meu-roteiro");
   await expect(page.getByRole("heading", { name: "Roteiro em execução" })).toBeVisible();

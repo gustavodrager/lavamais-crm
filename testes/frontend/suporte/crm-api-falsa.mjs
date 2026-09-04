@@ -43,8 +43,8 @@ const roteiroAmanha = { id: "8d3d0d64-a111-4cff-8db8-222222222221", data: dataAm
   { id: "8d3d0d64-a111-4cff-8db8-222222222223", clienteId: "6d3d0d64-a111-4cff-8db8-111111111117", nomeCliente: "Paulo Mendes", whatsapp: "5513955555555", enderecoCompleto: "Av. Paris, 210", tipo: "Entrega", periodo: "10h–12h", observacao: null, ordem: 2, situacao: "Pendente", motivoNaoRealizacao: null, dataInicio: null, dataConclusao: null },
 ] };
 const movimentacoesIniciais = [
-  { id: "7d3d0d64-a111-4cff-8db8-111111111111", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", valorTotal: 75, dataMovimentacao: `${dataHoje}T15:00:00Z`, codigoExterno: null, observacao: null, origem: "Recepcao", situacao: "Registrada", versao: 1, linhas: [{ id: "7d3d0d64-a111-4cff-8db8-111111111112", ofertaDeServicoId: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", quantidade: 1, precoTabela: 75, precoUnitario: 75, subtotal: 75 }] },
-  { id: "7d3d0d64-a111-4cff-8db8-111111111121", clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nomeCliente: "Patricia Souza", valorTotal: 40, dataMovimentacao: `${dataHoje}T14:00:00Z`, codigoExterno: null, observacao: "Registro corrigido", origem: "Recepcao", situacao: "Cancelada", versao: 2, linhas: [] },
+  { id: "7d3d0d64-a111-4cff-8db8-111111111111", clienteId: "6d3d0d64-a111-4cff-8db8-111111111113", nomeCliente: "Ana Martins", valorTotal: 75, dataMovimentacao: `${dataHoje}T15:00:00Z`, codigoExterno: null, observacao: null, origem: "Recepcao", situacao: "Registrada", dataCriacao: `${dataHoje}T15:01:00Z`, dataCancelamento: null, motivoCancelamento: null, versao: 1, linhas: [{ id: "7d3d0d64-a111-4cff-8db8-111111111112", ofertaDeServicoId: "2d3d0d64-a111-4cff-8db8-111111111112", artigoDeLavanderiaId: "3d3d0d64-a111-4cff-8db8-111111111112", nomeArtigo: "Edredom", servicoDeLavanderiaId: "4d3d0d64-a111-4cff-8db8-111111111112", nomeServico: "Lavagem", quantidade: 1, precoTabela: 75, precoUnitario: 75, subtotal: 75 }] },
+  { id: "7d3d0d64-a111-4cff-8db8-111111111121", clienteId: "6d3d0d64-a111-4cff-8db8-111111111114", nomeCliente: "Patricia Souza", valorTotal: 40, dataMovimentacao: `${dataHoje}T14:00:00Z`, codigoExterno: null, observacao: "Registro corrigido", origem: "Recepcao", situacao: "Cancelada", dataCriacao: `${dataHoje}T14:01:00Z`, dataCancelamento: `${dataHoje}T14:10:00Z`, motivoCancelamento: "Registro duplicado", versao: 2, linhas: [] },
 ];
 let movimentacoesHoje = structuredClone(movimentacoesIniciais);
 const ofertasDoCatalogoDeLavanderia = [
@@ -102,7 +102,7 @@ http.createServer((req, res) => {
         const precoUnitario = linha.precoUnitario ?? oferta.precoUnitario;
         return { id: `7d3d0d64-a111-4cff-8db8-${String(140 + indice).padStart(12, "0")}`, ofertaDeServicoId: oferta.id, artigoDeLavanderiaId: oferta.artigoDeLavanderiaId, nomeArtigo: oferta.nomeArtigo, servicoDeLavanderiaId: oferta.servicoDeLavanderiaId, nomeServico: oferta.nomeServico, quantidade: linha.quantidade, precoTabela: oferta.precoUnitario, precoUnitario, subtotal: precoUnitario * linha.quantidade };
       });
-      const novaMovimentacao = { id: "7d3d0d64-a111-4cff-8db8-111111111131", clienteId: dados.clienteId, nomeCliente: clienteDetalhado.nome, valorTotal: linhas.reduce((total, linha) => total + linha.subtotal, 0), dataMovimentacao: dados.dataMovimentacao ?? new Date().toISOString(), codigoExterno: dados.codigoExterno, observacao: dados.observacao, origem: "Recepcao", situacao: "Registrada", versao: 1, linhas };
+      const novaMovimentacao = { id: "7d3d0d64-a111-4cff-8db8-111111111131", clienteId: dados.clienteId, nomeCliente: clienteDetalhado.nome, valorTotal: linhas.reduce((total, linha) => total + linha.subtotal, 0), dataMovimentacao: dados.dataMovimentacao ?? new Date().toISOString(), codigoExterno: dados.codigoExterno, observacao: dados.observacao, origem: "Recepcao", situacao: "Registrada", dataCriacao: new Date().toISOString(), dataCancelamento: null, motivoCancelamento: null, versao: 1, linhas };
       movimentacoesHoje.unshift(novaMovimentacao);
       res.statusCode = 201;
       res.end(JSON.stringify({ id: novaMovimentacao.id }));
@@ -127,6 +127,8 @@ http.createServer((req, res) => {
     if (data === dataAmanha) return res.end(JSON.stringify(roteiroAmanha));
     res.statusCode = 404; return res.end(JSON.stringify({ title: "Roteiro não encontrado" }));
   }
+  const movimentacaoConsultada = movimentacoesHoje.find((movimentacao) => caminho === `/api/v1/movimentacoes-comerciais/${movimentacao.id}`);
+  if (movimentacaoConsultada) return res.end(JSON.stringify(movimentacaoConsultada));
   if (new URL(req.url, "http://127.0.0.1:4310").pathname === "/api/v1/movimentacoes-comerciais") return res.end(JSON.stringify(movimentacoesHoje));
   res.statusCode = 404; res.end(JSON.stringify({ title: "Nao encontrado" }));
 }).listen(4310, "127.0.0.1");

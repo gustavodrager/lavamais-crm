@@ -110,6 +110,11 @@ const esquemaMovimentacao = z.object({
     precoTabela: z.number().nonnegative(), precoUnitario: z.number().nonnegative(), subtotal: z.number().nonnegative(),
   })),
 });
+const esquemaDetalheMovimentacao = esquemaMovimentacao.extend({
+  dataCriacao: z.string().datetime({ offset: true }),
+  dataCancelamento: z.string().datetime({ offset: true }).nullable(),
+  motivoCancelamento: z.string().nullable(),
+});
 const esquemaOfertaDoCatalogoDeLavanderia = z.object({
   id: z.string().uuid(), artigoDeLavanderiaId: z.string().uuid(), nomeArtigo: z.string(), categoria: z.string(),
   servicoDeLavanderiaId: z.string().uuid(), nomeServico: z.string(), precoUnitario: z.number().nonnegative(),
@@ -193,6 +198,11 @@ export class CrmApiHttp implements PortaCrmApi {
     const parametros = new URLSearchParams({ limite: String(limite) }); if (clienteId) parametros.set("clienteId", clienteId);
     const movimentacoes = z.array(esquemaMovimentacao).parse(await this.requisitar(`/api/v1/movimentacoes-comerciais?${parametros}`));
     return [...movimentacoes].sort((a, b) => new Date(b.dataMovimentacao).getTime() - new Date(a.dataMovimentacao).getTime());
+  }
+
+  async obterMovimentacao(id: string) {
+    const resposta = await this.requisitar(`/api/v1/movimentacoes-comerciais/${encodeURIComponent(id)}`, { aceitarNaoEncontrado: true });
+    return resposta === null ? null : esquemaDetalheMovimentacao.parse(resposta);
   }
 
   async listarOfertasDoCatalogoDeLavanderia() {

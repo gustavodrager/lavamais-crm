@@ -21,5 +21,6 @@ describe("HistoricoComercial", () => {
     expect(screen.getByText("Atendimentos").parentElement).toHaveTextContent("2");
     expect(screen.getByText("Média informada").parentElement).toHaveTextContent("75,00");
     expect(within(screen.getByRole("table")).getAllByText("Cancelado")).toHaveLength(1);
+    expect(screen.getAllByRole("link", { name: /Edredom casal · Lavagem/ }).map((link) => link.getAttribute("href"))).toContain(`/clientes/${base.clienteId}/atendimentos/${base.id}`);
   });
 });

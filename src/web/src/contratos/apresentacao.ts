@@ -213,6 +213,12 @@ export interface ResumoMovimentacaoComercial {
   }>;
 }
 
+export interface DetalheMovimentacaoComercial extends ResumoMovimentacaoComercial {
+  dataCriacao: string;
+  dataCancelamento: string | null;
+  motivoCancelamento: string | null;
+}
+
 export interface RoteiroDiario {
   id: string;
   data: string;
