@@ -41,6 +41,22 @@
 
 O projeto `LavaMais.Crm.ImportadorEssence` executa a carga descrita no ADR-016. Ele nao aplica migrations e nao e iniciado pela aplicacao. Antes da confirmacao:
 
+Quando a origem estiver nos relatorios XLSX validados em setembro de 2026, normalize-os primeiro com a ferramenta controlada. O diretorio de saida deve ser seguro e nao versionado, pois os CSVs contem dados pessoais:
+
+```bash
+python3 -m pip install -r scripts/importacoes/requirements.txt
+python3 scripts/importacoes/normalizar-exportacoes-essence.py \
+  --movimentacoes <rel_movi.xlsx> \
+  --itens <rel_item.xlsx> \
+  --historico <tickets_em_saida.xlsx> \
+  --produtos <rank_produtos.xlsx> \
+  --saida <diretorio-seguro>
+```
+
+Revise `normalizacao.json` antes da simulacao. Clientes com telefone ausente, multiplo ou compartilhado e identidades com nomes divergentes nao entram na carga automatica. A planilha de itens serve para reconciliar quantidade por ticket; ela nao cria controle de producao. Produtos repetidos no ranking sao consolidados como referencias historicas inativas.
+
+Em seguida use `clientes.csv`, `movimentacoes.csv` e `produtos.csv` gerados pelo normalizador no comando abaixo.
+
 1. normalizar os tres CSVs de clientes, movimentacoes e produtos;
 2. executar sem `--confirmar` e revisar o JSON de reconciliacao;
 3. confirmar tenant, ambiente e string de conexao;

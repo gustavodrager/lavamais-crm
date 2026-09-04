@@ -6,6 +6,7 @@
     <InternalsVisibleTo Include="LavaMais.Crm.Testes.Unidade" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../BlocosDeConstrucao/LavaMais.Crm.BlocosDeConstrucao.csproj" />
+    <ProjectReference Include="../Modulos/Auditoria/LavaMais.Crm.Modulos.Auditoria.csproj" />
     <ProjectReference Include="../Modulos/Catalogo/LavaMais.Crm.Modulos.Catalogo.csproj" />
     <ProjectReference Include="../Modulos/Clientes/LavaMais.Crm.Modulos.Clientes.csproj" />
     <ProjectReference Include="../Modulos/Importacoes/LavaMais.Crm.Modulos.Importacoes.csproj" />

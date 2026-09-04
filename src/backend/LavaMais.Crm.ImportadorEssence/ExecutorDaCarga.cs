@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.Json;
 using LavaMais.Crm.BlocosDeConstrucao.Aplicacao.Identidade;
 using LavaMais.Crm.BlocosDeConstrucao.Infraestrutura.BancoDeDados;
+using LavaMais.Crm.Modulos.Auditoria.Api;
+using LavaMais.Crm.Modulos.Auditoria.Infraestrutura;
 using LavaMais.Crm.Modulos.Catalogo.Api;
 using LavaMais.Crm.Modulos.Catalogo.Aplicacao;
 using LavaMais.Crm.Modulos.Catalogo.Dominio;
@@ -70,7 +72,7 @@ internal static class ExecutorDaCarga
         return relatorio.Erros.Count == 0 ? 0 : 2;
     }
 
-    private static ServiceProvider CriarProvedor(OpcoesDaCarga opcoes)
+    internal static ServiceProvider CriarProvedor(OpcoesDaCarga opcoes)
     {
         var conexao = ConfiguracaoPostgres.ObterStringDeConexaoParaFerramentas();
         var configuracao = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
@@ -80,6 +82,7 @@ internal static class ExecutorDaCarga
         var servicos = new ServiceCollection();
         servicos.AddSingleton<IContextoDoUsuario>(new ContextoDoImportador(opcoes.TenantId, opcoes.Ambiente));
         servicos.AddSingleton(TimeProvider.System);
+        servicos.AdicionarModuloAuditoria(configuracao);
         servicos.AdicionarModuloClientes(configuracao);
         servicos.AdicionarModuloCatalogo(configuracao);
         servicos.AdicionarModuloMovimentacoesComerciais(configuracao);
@@ -90,6 +93,7 @@ internal static class ExecutorDaCarga
     {
         var contextos = new DbContext[]
         {
+            servicos.GetRequiredService<ContextoDeAuditoria>(),
             servicos.GetRequiredService<ContextoDeClientes>(),
             servicos.GetRequiredService<ContextoDeCatalogo>(),
             servicos.GetRequiredService<ContextoDeMovimentacoesComerciais>()
