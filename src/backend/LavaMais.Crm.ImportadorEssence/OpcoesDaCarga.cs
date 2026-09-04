@@ -8,8 +8,11 @@ internal sealed record OpcoesDaCarga(
     string ArquivoMovimentacoes,
     string? ArquivoProdutos,
     string ArquivoRelatorio,
-    bool Confirmar)
+    bool Confirmar,
+    bool ProducaoAutorizada)
 {
+    internal const string ConfirmacaoDeProducao = "EU-AUTORIZO-CARGA-LAVAMAIS-PRODUCAO";
+
     public static OpcoesDaCarga Interpretar(string[] argumentos)
     {
         var valores = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -33,7 +36,14 @@ internal sealed record OpcoesDaCarga(
 
         var ambienteInformado = Obrigatorio(valores, "--ambiente");
         if (!Enum.TryParse<AmbienteDaCarga>(ambienteInformado, true, out var ambiente))
-            throw new ArgumentException("O argumento --ambiente deve ser Local ou Homologacao. A carga em producao permanece bloqueada.");
+            throw new ArgumentException("O argumento --ambiente deve ser Local, Homologacao ou Producao.");
+
+        var producaoAutorizada = string.Equals(
+            valores.GetValueOrDefault("--confirmar-producao"),
+            ConfirmacaoDeProducao,
+            StringComparison.Ordinal);
+        if (ambiente == AmbienteDaCarga.Producao && !producaoAutorizada)
+            throw new ArgumentException($"A carga em producao exige --confirmar-producao {ConfirmacaoDeProducao}.");
 
         var tenant = Obrigatorio(valores, "--tenant-id");
         if (!Guid.TryParse(tenant, out var tenantId) || tenantId == Guid.Empty)
@@ -51,14 +61,15 @@ internal sealed record OpcoesDaCarga(
                 ? CaminhoOpcional(valores, "--produtos")
                 : CaminhoExistente(Obrigatorio(valores, "--produtos"), "--produtos"),
             Path.GetFullPath(Obrigatorio(valores, "--relatorio")),
-            confirmar);
+            confirmar,
+            producaoAutorizada);
     }
 
     public static string Ajuda =>
         "Uso: dotnet run --project src/backend/LavaMais.Crm.ImportadorEssence -- " +
         "--operacao <CargaHistorica|ComposicaoSintetica|ReversaoComposicaoSintetica> " +
-        "--ambiente <Local|Homologacao> --tenant-id <uuid> [--clientes <csv>] --movimentacoes <csv> [--produtos <csv>] " +
-        "--relatorio <json> [--confirmar]";
+        "--ambiente <Local|Homologacao|Producao> --tenant-id <uuid> [--clientes <csv>] --movimentacoes <csv> [--produtos <csv>] " +
+        $"--relatorio <json> [--confirmar] [--confirmar-producao {ConfirmacaoDeProducao}]";
 
     private static string Obrigatorio(IReadOnlyDictionary<string, string> valores, string nome) =>
         valores.TryGetValue(nome, out var valor) && !string.IsNullOrWhiteSpace(valor)
@@ -79,5 +90,5 @@ internal sealed record OpcoesDaCarga(
             : null;
 }
 
-internal enum AmbienteDaCarga { Local, Homologacao }
+internal enum AmbienteDaCarga { Local, Homologacao, Producao }
 internal enum OperacaoDaCarga { CargaHistorica, ComposicaoSintetica, ReversaoComposicaoSintetica }

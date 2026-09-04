@@ -34,7 +34,7 @@ internal static class ExecutorDaCarga
         {
             opcoes = OpcoesDaCarga.Interpretar(argumentos);
             dados = await LeituraDaCarga.Ler(opcoes, ct);
-            ValidarBloqueioDeProducao();
+            ValidarAmbienteDeExecucao(opcoes);
         }
         catch (Exception ex)
         {
@@ -469,11 +469,14 @@ internal static class ExecutorDaCarga
         Console.WriteLine($"Ocorrencias: {relatorio.Erros.Count} erro(s), {relatorio.Pendencias.Count} pendencia(s).");
     }
 
-    private static void ValidarBloqueioDeProducao()
+    private static void ValidarAmbienteDeExecucao(OpcoesDaCarga opcoes)
     {
         var ambienteRailway = Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT_NAME") ?? string.Empty;
-        if (ambienteRailway.Contains("prod", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("A carga em producao permanece bloqueada pela decisao operacional vigente.");
+        var executandoEmProducao = ambienteRailway.Contains("prod", StringComparison.OrdinalIgnoreCase);
+        if (executandoEmProducao && (opcoes.Ambiente != AmbienteDaCarga.Producao || !opcoes.ProducaoAutorizada))
+            throw new InvalidOperationException("A carga em producao exige ambiente Producao e a confirmacao operacional literal.");
+        if (!executandoEmProducao && opcoes.Ambiente == AmbienteDaCarga.Producao)
+            throw new InvalidOperationException("O ambiente Producao somente pode ser usado dentro do Railway de producao.");
     }
 
     private sealed record ContextoDoImportador(Guid TenantId, AmbienteDaCarga Ambiente) : IContextoDoUsuario

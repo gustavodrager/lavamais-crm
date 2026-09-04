@@ -17,11 +17,27 @@ public sealed class ExecutorDaCargaTestes
             "movimentacoes.csv",
             "produtos.csv",
             "relatorio.json",
-            true);
+            true,
+            false);
 
         using var provedor = ExecutorDaCarga.CriarProvedor(opcoes);
         using var escopo = provedor.CreateScope();
 
         Assert.NotNull(escopo.ServiceProvider.GetRequiredService<IRegistradorDeAuditoria>());
+    }
+
+    [Fact]
+    public void ProducaoExigeConfirmacaoLiteral()
+    {
+        var excecao = Assert.Throws<ArgumentException>(() => OpcoesDaCarga.Interpretar([
+            "--ambiente", "Producao",
+            "--tenant-id", Guid.NewGuid().ToString(),
+            "--clientes", "inexistente.csv",
+            "--movimentacoes", "inexistente.csv",
+            "--produtos", "inexistente.csv",
+            "--relatorio", "relatorio.json"
+        ]));
+
+        Assert.Contains("--confirmar-producao", excecao.Message);
     }
 }
